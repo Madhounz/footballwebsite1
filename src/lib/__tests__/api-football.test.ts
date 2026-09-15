@@ -312,3 +312,23 @@ describe("ApiFootballProvider", () => {
     expect(await p.fetchMatches(epl, window)).toEqual([]); // disabled after the token error
   });
 });
+
+describe("live refresh shape", () => {
+  it("does not spend requests on whole-season lists unless seeding", async () => {
+    const calls: string[] = [];
+    const p = new ApiFootballProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      resolvePlayer,
+      detailStore: store([]),
+      detailsEnabled: false,
+      primaryFor: ["uel"],
+      seasonFetchEnabled: false,
+      fetchImpl: fakeFetch(calls),
+      now,
+    });
+    expect(await p.fetchMatches(uel, window)).toEqual([]);
+    expect(calls).toEqual([]);
+  });
+});

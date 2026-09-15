@@ -20,6 +20,12 @@ export interface SyncOptions {
   trigger?: string;
   /** Also fetch teams and squads and write them before matches. Needed on the first run. */
   seed?: boolean;
+  /**
+   * "full" walks the season competition by competition. "live" asks each
+   * provider for every competition in one request, which is what the
+   * minute-by-minute refresh needs.
+   */
+  mode?: "full" | "live";
   log?: (line: string) => void;
 }
 
@@ -32,6 +38,8 @@ export interface SyncResult {
   unresolved: Conflict[];
   /** "competition/provider" pairs that were skipped because the provider refused them. */
   skipped: string[];
+  /** Requests each provider spent, for budget reporting. */
+  providerRequests: Record<string, number>;
 }
 
 /**
@@ -42,9 +50,11 @@ export interface SyncResult {
 export async function runSync(opts: SyncOptions): Promise<SyncResult> {
   const log = opts.log ?? (() => {});
   const weights = Object.fromEntries(opts.providers.map((p) => [p.id, p.weight]));
+  const mode = opts.mode ?? "full";
   const runId = await opts.store.beginRun(
     opts.trigger ?? "manual",
     opts.providers.map((p) => p.id),
+    opts.seed ? "seed" : mode,
   );
   const result: SyncResult = {
     seeded: { teams: 0, players: 0 },
@@ -54,6 +64,7 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     aiResolved: 0,
     unresolved: [],
     skipped: [],
+    providerRequests: {},
   };
   let error: string | undefined;
   // Providers that refused a competition (403) are not asked about it again this run.
@@ -61,7 +72,35 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
   // Teams whose squad was already written this run (a club in a league and a cup).
   const squadDone = new Set<string>();
 
+  /** provider id -> competition id -> records, filled once when a provider can serve them together. */
+  const prefetched = new Map<string, Map<string, ProviderRecord<ProviderMatch>[]>>();
+
   try {
+    if (mode === "live") {
+      for (const p of opts.providers) {
+        if (!p.fetchAcross) continue;
+        const supported = opts.competitions.filter((c) => p.supports(c.id));
+        if (supported.length === 0) continue;
+        try {
+          const records = await p.fetchAcross(supported, opts.window);
+          const grouped = new Map<string, ProviderRecord<ProviderMatch>[]>();
+          for (const r of records) {
+            const list = grouped.get(r.value.competitionId) ?? [];
+            list.push(r);
+            grouped.set(r.value.competitionId, list);
+          }
+          prefetched.set(p.id, grouped);
+          log(
+            `${p.id}: ${records.length} matches across ${supported.length} competitions in one pass`,
+          );
+        } catch (e) {
+          log(
+            `${p.id}: combined fetch failed, falling back per competition: ${String(e instanceof Error ? e.message : e)}`,
+          );
+        }
+      }
+    }
+
     for (const competition of opts.competitions) {
       const providers = opts.providers.filter((p) => p.supports(competition.id));
       if (providers.length === 0) {
@@ -77,7 +116,12 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
         continue;
       }
       const settled = await Promise.allSettled(
-        active.map((p) => p.fetchMatches(competition, opts.window)),
+        active.map((p) => {
+          const ready = prefetched.get(p.id);
+          return ready
+            ? Promise.resolve(ready.get(competition.id) ?? [])
+            : p.fetchMatches(competition, opts.window);
+        }),
       );
       const records: ProviderRecord<ProviderMatch>[] = [];
       const recency: Record<string, string | undefined> = {};
@@ -132,11 +176,13 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     log(`sync failed: ${error}`);
     throw e;
   } finally {
+    for (const p of opts.providers) result.providerRequests[p.id] = p.requestsMade ?? 0;
     await opts.store.finishRun(runId, {
       fetched: result.fetched,
       written: result.written,
       conflicts: result.conflicts,
       aiResolved: result.aiResolved,
+      providerRequests: result.providerRequests,
       error,
     });
   }

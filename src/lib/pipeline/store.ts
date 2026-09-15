@@ -4,7 +4,11 @@ import type { Conflict, DetailStore, PlayerResolver, ProviderTeam, Resolution } 
 
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
 export interface SyncStore extends DetailStore {
-  beginRun(trigger: string, providers: string[]): Promise<string>;
+  beginRun(trigger: string, providers: string[], mode?: string): Promise<string>;
+  /** True when a run started within `withinSeconds` and has not finished. Stops overlapping refreshes. */
+  isSyncRunning(withinSeconds: number): Promise<boolean>;
+  /** Minutes since the last run that spent detail requests, or null if there has never been one. */
+  minutesSinceLastDetailRun(): Promise<number | null>;
   /** Delete every competition, team, player, match and event. Only for an explicit --reset. */
   reset(): Promise<void>;
   /** Whether any known match kicks off within [now - afterMin, now + beforeMin]. Gates paid detail fetches. */
@@ -29,6 +33,7 @@ export interface SyncStore extends DetailStore {
       written: number;
       conflicts: number;
       aiResolved: number;
+      providerRequests?: Record<string, number>;
       error?: string;
     },
   ): Promise<void>;
@@ -36,9 +41,17 @@ export interface SyncStore extends DetailStore {
 
 export class DryRunStore implements SyncStore {
   constructor(private readonly log: (line: string) => void = console.log) {}
-  async beginRun(trigger: string, providers: string[]) {
-    this.log(`[dry-run] run trigger=${trigger} providers=${providers.join(",") || "none"}`);
+  async beginRun(trigger: string, providers: string[], mode = "full") {
+    this.log(
+      `[dry-run] run trigger=${trigger} mode=${mode} providers=${providers.join(",") || "none"}`,
+    );
     return "dry-run";
+  }
+  async isSyncRunning() {
+    return false;
+  }
+  async minutesSinceLastDetailRun() {
+    return null;
   }
   async reset() {
     this.log("[dry-run] reset: would delete all competitions, teams, players and matches");

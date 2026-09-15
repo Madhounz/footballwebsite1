@@ -145,6 +145,12 @@ export interface ApiFootballOptions {
   detailStore: DetailStore;
   /** Competitions this provider is the only source for (fetch their whole season). */
   primaryFor?: string[];
+  /**
+   * Whether to spend requests on whole-season fixture lists for `primaryFor`.
+   * Off during the minute-by-minute refresh: a fixture list does not change
+   * that often, and each call is 1% of the daily budget.
+   */
+  seasonFetchEnabled?: boolean;
   /** Whether to spend requests on match details this run. */
   detailsEnabled?: boolean;
   /** Requests left for the day that must not be spent. */
@@ -269,7 +275,7 @@ export class ApiFootballProvider implements Provider {
     const out: ProviderRecord<ProviderMatch>[] = [];
 
     // 1. Whole season when we are the only source (e.g. Europa League).
-    if (this.opts.primaryFor?.includes(competition.id)) {
+    if ((this.opts.seasonFetchEnabled ?? true) && this.opts.primaryFor?.includes(competition.id)) {
       const season = (await this.fixturesForSeason(league)).filter((f) => {
         const day = f.fixture.date.slice(0, 10);
         return day >= window.fromDate && day <= window.toDate;

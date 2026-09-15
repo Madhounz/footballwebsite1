@@ -17,9 +17,25 @@ export class PrismaSyncStore implements SyncStore {
     return getPrisma();
   }
 
-  async beginRun(trigger: string, providers: string[]) {
-    const run = await this.db.syncRun.create({ data: { trigger, providers } });
+  async beginRun(trigger: string, providers: string[], mode = "full") {
+    const run = await this.db.syncRun.create({ data: { trigger, providers, mode } });
     return run.id;
+  }
+
+  async isSyncRunning(withinSeconds: number) {
+    const n = await this.db.syncRun.count({
+      where: { finishedAt: null, startedAt: { gte: new Date(Date.now() - withinSeconds * 1000) } },
+    });
+    return n > 0;
+  }
+
+  async minutesSinceLastDetailRun() {
+    const last = await this.db.syncRun.findFirst({
+      where: { detailRequests: { gt: 0 } },
+      orderBy: { startedAt: "desc" },
+      select: { startedAt: true },
+    });
+    return last ? (Date.now() - last.startedAt.getTime()) / 60_000 : null;
   }
 
   async hasMatchesAround(now: Date, beforeMin: number, afterMin: number) {
@@ -352,12 +368,18 @@ export class PrismaSyncStore implements SyncStore {
       written: number;
       conflicts: number;
       aiResolved: number;
+      providerRequests?: Record<string, number>;
       error?: string;
     },
   ) {
+    const { providerRequests, ...counts } = stats;
     await this.db.syncRun.update({
       where: { id: runId },
-      data: { finishedAt: new Date(), ...stats },
+      data: {
+        finishedAt: new Date(),
+        ...counts,
+        detailRequests: providerRequests?.["api-football"] ?? 0,
+      },
     });
   }
 }

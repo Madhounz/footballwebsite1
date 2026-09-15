@@ -161,13 +161,19 @@ model SyncRun {
   startedAt   DateTime  @default(now())
   finishedAt  DateTime?
   trigger     String // cron | manual
+  /** full = whole season, live = today only, seed = also teams and squads. */
+  mode        String    @default("full")
   providers   String[]
   fetched     Int       @default(0)
   written     Int       @default(0)
   conflicts   Int       @default(0)
   aiResolved  Int       @default(0)
+  /** Requests spent on the metered detail provider; paces the live refresh. */
+  detailRequests Int    @default(0)
   error       String?
   discrepancies Discrepancy[]
+
+  @@index([startedAt])
 }
 
 model SourceRecord {

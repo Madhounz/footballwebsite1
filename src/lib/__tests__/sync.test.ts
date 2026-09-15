@@ -109,3 +109,52 @@ describe("runSync", () => {
     expect(result.seeded.players).toBe(7);
   });
 });
+
+describe("runSync in live mode", () => {
+  it("uses one combined request per provider instead of asking competition by competition", async () => {
+    const perCompetition: string[] = [];
+    const provider = fakeProvider();
+    const combined: Provider & { acrossCalls: number } = {
+      ...provider,
+      acrossCalls: 0,
+      async fetchAcross(competitions) {
+        this.acrossCalls++;
+        return competitions.map((c) => match(c.id, "a", "b"));
+      },
+      async fetchMatches(c: Competition) {
+        perCompetition.push(c.id);
+        return [];
+      },
+    };
+    const result = await runSync({
+      competitions: [comp("epl"), comp("laliga")],
+      providers: [combined],
+      window: { fromDate: "2026-09-19", toDate: "2026-09-20" },
+      store: new DryRunStore(() => {}),
+      mode: "live",
+      log: () => {},
+    });
+    expect(combined.acrossCalls).toBe(1);
+    expect(perCompetition).toEqual([]);
+    expect(result.written).toBe(2);
+  });
+
+  it("falls back to per-competition requests when the combined one throws", async () => {
+    const provider = fakeProvider();
+    const broken: Provider = {
+      ...provider,
+      async fetchAcross() {
+        throw new Error("not on this plan");
+      },
+    };
+    const result = await runSync({
+      competitions: [comp("epl")],
+      providers: [broken],
+      window: { fromDate: "2026-09-19", toDate: "2026-09-20" },
+      store: new DryRunStore(() => {}),
+      mode: "live",
+      log: () => {},
+    });
+    expect(result.written).toBe(1);
+  });
+});

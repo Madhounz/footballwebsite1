@@ -8,13 +8,14 @@
  *   pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
  *   pnpm sync -- --no-ai              # deterministic reconciliation only
  *   pnpm sync -- --details            # force API-Football match details even with no match near kick-off
+ *   pnpm sync -- --live               # today only, one combined request per provider (what /api/sync runs)
  *
  * Reads FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, ANTHROPIC_API_KEY, DATABASE_URL.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { todayISO } from "../src/lib/dates";
+import { addDays, todayISO } from "../src/lib/dates";
 import type { Competition, Team } from "../src/lib/types";
 import { AIValidator } from "../src/lib/pipeline/ai-validator";
 import { providersFromEnv } from "../src/lib/pipeline/providers";
@@ -36,9 +37,10 @@ async function main() {
   const seasonStart =
     today.slice(5) >= "07-01" ? Number(today.slice(0, 4)) : Number(today.slice(0, 4)) - 1;
   const season = `${seasonStart}/${String(seasonStart + 1).slice(2)}`;
+  const live = flag("live");
   const window = {
-    fromDate: arg("from") ?? `${seasonStart}-07-01`,
-    toDate: arg("to") ?? `${seasonStart + 1}-06-30`,
+    fromDate: arg("from") ?? (live ? addDays(today, -1) : `${seasonStart}-07-01`),
+    toDate: arg("to") ?? (live ? addDays(today, 1) : `${seasonStart + 1}-06-30`),
   };
   const dryRun = flag("dry-run");
   const seed = flag("seed");
@@ -80,6 +82,8 @@ async function main() {
     resolvePlayer: store.playerResolver(),
     detailStore: store,
     detailsEnabled,
+    seed,
+    mode: live ? "live" : "full",
     onUnknownTeam: (provider, name, externalId) => unknown.set(name, { provider, externalId }),
     log: console.log,
   });
@@ -89,7 +93,7 @@ async function main() {
   }
   const ai = useAI ? new AIValidator() : null;
   console.log(
-    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} details=${detailsEnabled} ${dryRun ? "(dry run)" : ""}`,
+    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} mode=${live ? "live" : "full"} details=${detailsEnabled} ${dryRun ? "(dry run)" : ""}`,
   );
 
   if (reset) {
@@ -104,6 +108,7 @@ async function main() {
     store,
     ai,
     seed,
+    mode: live ? "live" : "full",
     trigger: process.env.GITHUB_ACTIONS ? "cron" : "manual",
     log: console.log,
   });

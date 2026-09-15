@@ -57,6 +57,43 @@ The model is `claude-opus-5` (override with `NINETY_AI_MODEL`). The system promp
 - `Discrepancy` — per field: values by provider, resolution, who resolved it (`consensus | majority | weight | ai | unresolved`), confidence, reasoning;
 - `SourceRecord` / `EntityAlias` — raw payloads and id mappings (tables exist; wiring raw payload storage is on the roadmap).
 
+## Keeping it fresh
+
+GitHub Actions' scheduler is best-effort: short-interval cron entries are
+routinely delayed or skipped, which for a scores site means a finished match
+can still read "not started" an hour later. So the work is split in two.
+
+| Job                          | Runs                                          | Does                                                                                                  |
+| ---------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `GET/POST /api/sync`         | every minute, from an external cron service   | today's matches only: one combined request per provider, plus metered detail when a match is in range |
+| `.github/workflows/sync.yml` | daily (plus a best-effort 15-minute backstop) | the whole season, and on the daily run teams and squads too                                           |
+
+The endpoint (`src/app/api/sync/route.ts` → `src/lib/pipeline/live.ts`) is
+deliberately narrow so it finishes well inside a serverless timeout:
+
+- **Window**: yesterday to tomorrow, so late finishes and early kick-offs are covered.
+- **One request per provider**: `fetchAcross` asks football-data's `/v4/matches`
+  for every competition at once; if the plan refuses that endpoint it falls back
+  to one request per competition, still only for the three-day window.
+- **Overlap lock**: a run that began under 150 seconds ago and has not finished
+  blocks the next one, so a slow minute cannot pile up.
+- **Metered detail**: API-Football is touched only while a match is within 70
+  minutes before or 240 minutes after kick-off, and no more often than
+  `NINETY_DETAIL_INTERVAL_MIN` (default 5). Line-ups and final events are still
+  fetched once per match, so a normal day stays inside the 100-request budget.
+  If the budget runs out the refresh keeps working on scores alone.
+
+Authenticate with `Authorization: Bearer $SYNC_SECRET`, or `?key=` for cron
+services that cannot send headers. The comparison is constant-time. The route
+answers 200 when it did work, 202 when it deliberately skipped (lock held,
+nothing seeded yet), 401/409/503 when it cannot run at all.
+
+Set up:
+
+1. `openssl rand -hex 32` → add as `SYNC_SECRET` in Vercel, then redeploy.
+2. Create a free job at cron-job.org (or any equivalent) pointing at
+   `https://<site>/api/sync`, every minute, with the bearer header.
+
 ## Running it
 
 ```bash

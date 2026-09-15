@@ -95,10 +95,20 @@ export interface Provider {
   id: ProviderId;
   /** Relative trust used to break ties when there is no majority. 0..1 */
   weight: number;
+  /** Requests spent this run, when the provider meters itself. */
+  readonly requestsMade?: number;
   /** Competitions this provider can serve (our ids). */
   supports(competitionId: string): boolean;
   fetchMatches(
     competition: Competition,
+    window: FetchWindow,
+  ): Promise<ProviderRecord<ProviderMatch>[]>;
+  /**
+   * Optional: several competitions in one request. The live refresh prefers it
+   * so a minute-by-minute poll costs one call rather than one per competition.
+   */
+  fetchAcross?(
+    competitions: Competition[],
     window: FetchWindow,
   ): Promise<ProviderRecord<ProviderMatch>[]>;
   fetchTeams(competition: Competition): Promise<ProviderRecord<ProviderTeam>[]>;

@@ -23,6 +23,8 @@ const MIN_GAP_MS = 6_500; // 10 requests / minute with headroom
 
 interface FDMatch {
   id: number;
+  /** Present only on /v4/matches, which spans competitions. */
+  competition?: { id: number; code: string; name: string };
   utcDate: string;
   status:
     | "SCHEDULED"
@@ -92,8 +94,15 @@ export interface FootballDataOptions {
   fetchImpl?: typeof fetch;
   /** Called for provider team names that map to no known team. */
   onUnknownTeam?: (name: string, externalId: string) => void;
+  log?: (line: string) => void;
   /** Disable the rate-limit pacing (tests). */
   noThrottle?: boolean;
+  /**
+   * Milliseconds to wait between requests. The free tier allows 10 a minute;
+   * the default paces a season-wide run, the live refresh sets it lower
+   * because it makes at most a handful of calls per minute.
+   */
+  minGapMs?: number;
 }
 
 export class FootballDataProvider implements Provider {
@@ -101,9 +110,13 @@ export class FootballDataProvider implements Provider {
   readonly weight = 0.8;
   private fetchImpl: typeof fetch;
   private lastRequest = 0;
+  private readonly minGap: number;
+  /** Requests spent this run. */
+  requestsMade = 0;
 
   constructor(private readonly opts: FootballDataOptions) {
     this.fetchImpl = opts.fetchImpl ?? fetch;
+    this.minGap = opts.minGapMs ?? MIN_GAP_MS;
   }
 
   supports(competitionId: string): boolean {
@@ -112,13 +125,14 @@ export class FootballDataProvider implements Provider {
 
   private async get<T>(path: string): Promise<T> {
     if (!this.opts.noThrottle) {
-      const wait = this.lastRequest + MIN_GAP_MS - Date.now();
+      const wait = this.lastRequest + this.minGap - Date.now();
       if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       this.lastRequest = Date.now();
     }
     const res = await this.fetchImpl(`${BASE}${path}`, {
       headers: { "X-Auth-Token": this.opts.apiKey },
     });
+    this.requestsMade++;
     if (res.status === 429) {
       throw new Error(
         `football-data rate limited; retry in ${res.headers.get("X-RequestCounter-Reset") ?? "?"}s`,
@@ -156,47 +170,98 @@ export class FootballDataProvider implements Provider {
     for (const m of data.matches) {
       const day = m.utcDate.slice(0, 10);
       if (day < window.fromDate || day > window.toDate) continue;
-      const home = this.teamId(m.homeTeam);
-      const away = this.teamId(m.awayTeam);
-      if (!home || !away) continue;
-      const status = STATUS[m.status] ?? "scheduled";
-      const ft = m.score.fullTime;
-      const ht = m.score.halfTime;
-      out.push({
-        provider: this.id,
-        externalId: String(m.id),
-        updatedAt: m.lastUpdated,
-        value: {
-          id: "",
-          competitionId: competition.id,
-          round: m.matchday ?? 0,
-          stage: competition.kind === "cup" ? humanStage(m.stage) : undefined,
-          kickoff: new Date(m.utcDate).toISOString(),
-          homeTeamId: home,
-          awayTeamId: away,
-          status,
-          phase:
-            status === "finished"
-              ? m.score.duration === "PENALTY_SHOOTOUT"
-                ? "PEN"
-                : m.score.duration === "EXTRA_TIME"
-                  ? "ET"
-                  : "FT"
-              : status === "live"
-                ? m.status === "PAUSED"
-                  ? "HT"
-                  : "2H"
-                : "NS",
-          minute: m.minute ?? null,
-          score: ft.home != null && ft.away != null ? { home: ft.home, away: ft.away } : null,
-          halfTimeScore:
-            ht.home != null && ht.away != null ? { home: ht.home, away: ht.away } : null,
-          venue: m.venue,
-          referee: m.referees?.find((r) => r.type === "REFEREE")?.name,
-        },
-      });
+      const rec = this.toRecord(competition, m);
+      if (rec) out.push(rec);
     }
     return out;
+  }
+
+  /**
+   * Every competition in one request. `/v4/matches` takes a date range and a
+   * list of competition codes, so the live refresh costs a single call instead
+   * of one per competition. Falls back to per-competition requests when the
+   * endpoint is unavailable on the plan.
+   */
+  async fetchAcross(
+    competitions: Competition[],
+    window: FetchWindow,
+  ): Promise<ProviderRecord<ProviderMatch>[]> {
+    const byCode = new Map<string, Competition>();
+    for (const c of competitions) {
+      const code = COMPETITION_CODES[c.id]?.footballData;
+      if (code) byCode.set(code, c);
+    }
+    if (byCode.size === 0) return [];
+    const codes = [...byCode.keys()].join(",");
+    const query = `?competitions=${codes}&dateFrom=${window.fromDate}&dateTo=${window.toDate}`;
+    let matches: FDMatch[];
+    try {
+      matches = (await this.get<{ matches: FDMatch[] }>(`/matches${query}`)).matches;
+    } catch (e) {
+      this.opts.log?.(
+        `football-data: combined match request failed (${String(e instanceof Error ? e.message : e)}); asking per competition`,
+      );
+      const out: ProviderRecord<ProviderMatch>[] = [];
+      for (const [code, competition] of byCode) {
+        const data = await this.get<{ matches: FDMatch[] }>(
+          `/competitions/${code}/matches?dateFrom=${window.fromDate}&dateTo=${window.toDate}`,
+        );
+        for (const m of data.matches) {
+          const rec = this.toRecord(competition, m);
+          if (rec) out.push(rec);
+        }
+      }
+      return out;
+    }
+    const out: ProviderRecord<ProviderMatch>[] = [];
+    for (const m of matches) {
+      const competition = m.competition?.code ? byCode.get(m.competition.code) : undefined;
+      if (!competition) continue;
+      const rec = this.toRecord(competition, m);
+      if (rec) out.push(rec);
+    }
+    return out;
+  }
+
+  private toRecord(competition: Competition, m: FDMatch): ProviderRecord<ProviderMatch> | null {
+    const home = this.teamId(m.homeTeam);
+    const away = this.teamId(m.awayTeam);
+    if (!home || !away) return null;
+    const status = STATUS[m.status] ?? "scheduled";
+    const ft = m.score.fullTime;
+    const ht = m.score.halfTime;
+    return {
+      provider: this.id,
+      externalId: String(m.id),
+      updatedAt: m.lastUpdated,
+      value: {
+        id: "",
+        competitionId: competition.id,
+        round: m.matchday ?? 0,
+        stage: competition.kind === "cup" ? humanStage(m.stage) : undefined,
+        kickoff: new Date(m.utcDate).toISOString(),
+        homeTeamId: home,
+        awayTeamId: away,
+        status,
+        phase:
+          status === "finished"
+            ? m.score.duration === "PENALTY_SHOOTOUT"
+              ? "PEN"
+              : m.score.duration === "EXTRA_TIME"
+                ? "ET"
+                : "FT"
+            : status === "live"
+              ? m.status === "PAUSED"
+                ? "HT"
+                : "2H"
+              : "NS",
+        minute: m.minute ?? null,
+        score: ft.home != null && ft.away != null ? { home: ft.home, away: ft.away } : null,
+        halfTimeScore: ht.home != null && ht.away != null ? { home: ht.home, away: ht.away } : null,
+        venue: m.venue,
+        referee: m.referees?.find((r) => r.type === "REFEREE")?.name,
+      },
+    };
   }
 
   /**

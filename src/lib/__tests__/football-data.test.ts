@@ -204,3 +204,125 @@ describe("FootballDataProvider", () => {
     expect(mapPosition(null)).toBe("MF");
   });
 });
+
+describe("FootballDataProvider.fetchAcross", () => {
+  const laliga: Competition = { ...comp, id: "laliga", shortName: "LL", name: "La Liga" };
+  const across = {
+    matches: [
+      {
+        id: 7,
+        competition: { id: 2021, code: "PL", name: "Premier League" },
+        utcDate: "2026-09-19T14:00:00Z",
+        status: "FINISHED",
+        matchday: 5,
+        stage: "REGULAR_SEASON",
+        lastUpdated: "2026-09-19T16:00:00Z",
+        homeTeam: { id: 57, name: "Arsenal FC", shortName: "Arsenal", tla: "ARS" },
+        awayTeam: { id: 61, name: "Chelsea FC", shortName: "Chelsea", tla: "CHE" },
+        score: {
+          duration: "REGULAR",
+          fullTime: { home: 3, away: 0 },
+          halfTime: { home: 2, away: 0 },
+        },
+      },
+      {
+        id: 8,
+        competition: { id: 2014, code: "PD", name: "La Liga" },
+        utcDate: "2026-09-19T19:00:00Z",
+        status: "IN_PLAY",
+        matchday: 5,
+        stage: "REGULAR_SEASON",
+        lastUpdated: "2026-09-19T19:30:00Z",
+        homeTeam: { id: 86, name: "Real Madrid CF", shortName: "Real Madrid", tla: "RMA" },
+        awayTeam: { id: 81, name: "FC Barcelona", shortName: "Barça", tla: "FCB" },
+        score: {
+          duration: "REGULAR",
+          fullTime: { home: 1, away: 1 },
+          halfTime: { home: 0, away: 1 },
+        },
+      },
+      {
+        id: 9,
+        competition: { id: 9999, code: "XX", name: "Somewhere else" },
+        utcDate: "2026-09-19T19:00:00Z",
+        status: "FINISHED",
+        matchday: 1,
+        stage: "REGULAR_SEASON",
+        lastUpdated: "2026-09-19T21:00:00Z",
+        homeTeam: { id: 1, name: "Nowhere FC", shortName: "Nowhere", tla: "NOW" },
+        awayTeam: { id: 2, name: "Elsewhere FC", shortName: "Elsewhere", tla: "ELS" },
+        score: {
+          duration: "REGULAR",
+          fullTime: { home: 0, away: 0 },
+          halfTime: { home: 0, away: 0 },
+        },
+      },
+    ],
+  };
+  const teams = [
+    { id: "arsenal", name: "Arsenal", shortName: "Arsenal" },
+    { id: "chelsea", name: "Chelsea", shortName: "Chelsea" },
+    { id: "real-madrid", name: "Real Madrid", shortName: "Real Madrid" },
+    { id: "barcelona", name: "FC Barcelona", shortName: "Barcelona" },
+  ];
+
+  it("asks for every competition in one request and routes each match home", async () => {
+    const calls: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...teams],
+      noThrottle: true,
+      fetchImpl: (async (url: string | URL | Request) => {
+        calls.push(String(url));
+        return new Response(JSON.stringify(across), { status: 200 });
+      }) as typeof fetch,
+    });
+    const out = await p.fetchAcross([comp, laliga], {
+      fromDate: "2026-09-19",
+      toDate: "2026-09-20",
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain("/matches?competitions=PL,PD&dateFrom=2026-09-19&dateTo=2026-09-20");
+    // the third match belongs to a competition we did not ask about and is ignored
+    expect(out).toHaveLength(2);
+    expect(out[0].value).toMatchObject({
+      competitionId: "epl",
+      status: "finished",
+      score: { home: 3, away: 0 },
+    });
+    expect(out[1].value).toMatchObject({
+      competitionId: "laliga",
+      status: "live",
+      phase: "2H",
+      score: { home: 1, away: 1 },
+    });
+    expect(p.requestsMade).toBe(1);
+  });
+
+  it("falls back to one request per competition when the combined endpoint is refused", async () => {
+    const calls: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...teams],
+      noThrottle: true,
+      fetchImpl: (async (url: string | URL | Request) => {
+        const u = String(url);
+        calls.push(u);
+        if (u.includes("/matches?competitions=")) return new Response("no", { status: 403 });
+        const code = /competitions\/(\w+)\//.exec(u)![1];
+        return new Response(
+          JSON.stringify({ matches: across.matches.filter((m) => m.competition.code === code) }),
+          { status: 200 },
+        );
+      }) as typeof fetch,
+    });
+    const out = await p.fetchAcross([comp, laliga], {
+      fromDate: "2026-09-19",
+      toDate: "2026-09-20",
+    });
+    expect(calls).toHaveLength(3); // the refused combined call, then one per competition
+    expect(out.map((r) => r.value.competitionId)).toEqual(["epl", "laliga"]);
+  });
+});

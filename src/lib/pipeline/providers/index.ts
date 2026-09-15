@@ -12,6 +12,10 @@ export interface ProviderSetup {
   detailStore: DetailStore;
   /** Spend API-Football requests on match details this run. */
   detailsEnabled: boolean;
+  /** Seed runs may also pull whole-season fixture lists from the metered provider. */
+  seed?: boolean;
+  /** "live" paces football-data for a handful of calls rather than a season walk. */
+  mode?: "full" | "live";
   onUnknownTeam?: (provider: string, name: string, externalId: string) => void;
   log?: (line: string) => void;
 }
@@ -26,7 +30,9 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
         apiKey: env.FOOTBALL_DATA_API_KEY,
         season: seasonStartYear,
         knownTeams,
+        minGapMs: setup.mode === "live" ? 1_200 : undefined,
         onUnknownTeam: (n, id) => onUnknownTeam?.("football-data", n, id),
+        log: setup.log,
       }),
     );
   }
@@ -43,6 +49,7 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
           ? ["uel"]
           : ["epl", "laliga", "bundesliga", "seriea", "ucl", "uel"],
         detailsEnabled: setup.detailsEnabled,
+        seasonFetchEnabled: setup.seed ?? false,
         onUnknownTeam: (n, id) => onUnknownTeam?.("api-football", n, id),
         log: setup.log,
       }),

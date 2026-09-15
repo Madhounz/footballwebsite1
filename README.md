@@ -39,7 +39,7 @@ Copy `.env.example` to `.env.local` (Next.js) and `.env` (Prisma and scripts) to
 - **Matches** — score with live minute, goal list, line-ups on a pitch by formation, bench, two-sided event timeline, both teams' form and head-to-head.
 - **Search** — `⌘K` or `/` jumps to any league or club, in either script.
 - **Arabic** — full right-to-left interface at `/ar` with Arabic club and competition names; the language is detected from the browser and switchable in the header.
-- **API** — `/api/matches?date=YYYY-MM-DD`, `/api/live`, `/api/health`.
+- **API** — `/api/matches?date=YYYY-MM-DD`, `/api/live`, `/api/health`, and `/api/sync` (secret-protected, refreshes today's matches; an external cron calls it every minute).
 
 ## Stack
 
