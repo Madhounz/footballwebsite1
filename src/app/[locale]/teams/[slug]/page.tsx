@@ -6,6 +6,7 @@ import { FormBadges } from "@/components/Form";
 import { LocalTime } from "@/components/LocalTime";
 import { MatchRow } from "@/components/MatchRow";
 import { Empty, Section, Stat } from "@/components/Section";
+import { Score } from "@/components/Score";
 import { StandingsTable } from "@/components/StandingsTable";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
@@ -119,7 +120,7 @@ export default async function TeamPage({ params }: { params: Params }) {
           value={
             next ? (
               live ? (
-                <span dir="ltr">{`${live.match.score?.home}–${live.match.score?.away}`}</span>
+                <Score home={live.match.score?.home ?? 0} away={live.match.score?.away ?? 0} />
               ) : (
                 <LocalTime iso={next.match.kickoff} withDate className="text-base" />
               )

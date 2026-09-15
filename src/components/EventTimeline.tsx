@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import type { MatchEvent, Player, Team } from "@/lib/types";
 import { teamShortName } from "@/lib/i18n/names";
 import { getLocale } from "next-intl/server";
+import { Score } from "./Score";
 
 const ICON: Record<MatchEvent["type"], string> = {
   goal: "⚽",
@@ -23,17 +24,23 @@ export async function EventTimeline({
   away,
   players,
   halfTime,
+  finished = false,
 }: {
   events: MatchEvent[];
   home: Team;
   away: Team;
   players: Record<string, Player>;
   halfTime: { home: number; away: number } | null;
+  finished?: boolean;
 }) {
   const t = await getTranslations("match");
   const locale = await getLocale();
   if (events.length === 0) {
-    return <div className="card px-6 py-10 text-center text-sm text-muted">{t("noEvents")}</div>;
+    return (
+      <div className="card px-6 py-10 text-center text-sm text-muted">
+        {finished ? t("eventsUnavailable") : t("noEvents")}
+      </div>
+    );
   }
   const first = events.filter((e) => e.minute <= 45);
   const second = events.filter((e) => e.minute > 45);
@@ -57,11 +64,9 @@ export async function EventTimeline({
         ))}
         {halfTime && (
           <li className="relative flex justify-center py-2">
-            <span
-              className="tnum rounded-full border border-line bg-surface px-3 py-0.5 text-[11px] font-medium text-muted"
-              dir="ltr"
-            >
-              {t("ht")} {halfTime.home}–{halfTime.away}
+            <span className="rounded-full border border-line bg-surface px-3 py-0.5 text-[11px] font-medium text-muted">
+              {t("ht")}{" "}
+              <Score home={halfTime.home} away={halfTime.away} className="[&>span]:mx-0.5" />
             </span>
           </li>
         )}

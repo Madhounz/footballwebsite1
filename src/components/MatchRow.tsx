@@ -4,6 +4,7 @@ import type { MatchView } from "@/lib/types";
 import { livePhaseLabel } from "@/lib/format";
 import { teamName, teamShortName } from "@/lib/i18n/names";
 import { LocalTime } from "./LocalTime";
+import { Score } from "./Score";
 import { TeamCrest } from "./TeamCrest";
 
 /**
@@ -63,11 +64,11 @@ export async function MatchRow({
 
       <span className="flex w-[72px] shrink-0 flex-col items-center justify-center sm:w-[96px]">
         {m.score ? (
-          <span className="tnum text-lg font-semibold leading-none tracking-tight" dir="ltr">
-            {m.score.home}
-            <span className="mx-1 text-faint">–</span>
-            {m.score.away}
-          </span>
+          <Score
+            home={m.score.home}
+            away={m.score.away}
+            className="text-lg font-semibold leading-none tracking-tight"
+          />
         ) : m.status === "scheduled" ? (
           <LocalTime iso={m.kickoff} className="text-[15px] font-medium leading-none" />
         ) : (

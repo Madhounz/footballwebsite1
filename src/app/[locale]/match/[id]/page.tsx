@@ -8,6 +8,7 @@ import { LineupPitch } from "@/components/LineupPitch";
 import { LocalTime } from "@/components/LocalTime";
 import { MatchRow } from "@/components/MatchRow";
 import { Empty, Section } from "@/components/Section";
+import { Score } from "@/components/Score";
 import { StageLabel } from "@/components/StageLabel";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
@@ -97,10 +98,8 @@ export default async function MatchPage({ params }: { params: Params }) {
           <TeamHeader team={home} align="end" locale={locale} />
           <div className="flex flex-col items-center gap-1">
             {m.score ? (
-              <div className="tnum text-4xl font-semibold tracking-tight sm:text-5xl" dir="ltr">
-                {m.score.home}
-                <span className="mx-2 text-faint">–</span>
-                {m.score.away}
+              <div className="text-4xl font-semibold tracking-tight sm:text-5xl">
+                <Score home={m.score.home} away={m.score.away} className="[&>span]:mx-2" />
               </div>
             ) : (
               <div className="text-3xl font-semibold tracking-tight">
@@ -114,8 +113,13 @@ export default async function MatchPage({ params }: { params: Params }) {
               {status}
             </div>
             {m.halfTimeScore && m.status !== "scheduled" && (
-              <div className="tnum text-xs text-faint" dir="ltr">
-                {t("ht")} {m.halfTimeScore.home}–{m.halfTimeScore.away}
+              <div className="text-xs text-faint">
+                {t("ht")}{" "}
+                <Score
+                  home={m.halfTimeScore.home}
+                  away={m.halfTimeScore.away}
+                  className="[&>span]:mx-0.5"
+                />
               </div>
             )}
           </div>
@@ -180,7 +184,7 @@ export default async function MatchPage({ params }: { params: Params }) {
               players={players}
             />
           ) : (
-            <Empty>{t("lineupsLater")}</Empty>
+            <Empty>{m.status === "scheduled" ? t("lineupsLater") : t("lineupsUnavailable")}</Empty>
           )}
         </Section>
         <div className="space-y-8">
@@ -196,6 +200,7 @@ export default async function MatchPage({ params }: { params: Params }) {
                 away={away}
                 players={players}
                 halfTime={m.halfTimeScore}
+                finished={m.status === "finished"}
               />
             )}
           </Section>
