@@ -1,0 +1,92 @@
+import Link from "next/link";
+import { getRepository } from "@/lib/data";
+import { todayISO, type ISODate } from "@/lib/dates";
+import { AutoRefresh } from "./AutoRefresh";
+import { DateStrip } from "./DateStrip";
+import { MatchList } from "./MatchList";
+import { TeamCrest } from "./TeamCrest";
+
+/** Shared body for `/` and `/matches/[date]`. */
+export async function DayPage({ date }: { date: ISODate }) {
+  const repo = await getRepository();
+  const today = todayISO();
+  const [views, competitions] = await Promise.all([
+    repo.getMatchesOnDate(date),
+    repo.listCompetitions(),
+  ]);
+  const live = views.filter((v) => v.match.status === "live").length;
+  const isToday = date === today;
+
+  // Sidebar: leaders of each league + who plays next
+  const snapshots = await Promise.all(
+    competitions.map(async (c) => {
+      const s = await repo.getStandings(c.id);
+      const top = s.rows.slice(0, 3);
+      const teams = new Map((await repo.listTeams(c.id)).map((t) => [t.id, t]));
+      return { competition: c, top, teams };
+    }),
+  );
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <AutoRefresh enabled={isToday && live > 0} seconds={30} />
+      <div className="min-w-0 space-y-5">
+        <DateStrip date={date} today={today} />
+        {live > 0 && (
+          <p className="flex items-center gap-2 text-sm text-live">
+            <span className="live-dot" /> {live} {live === 1 ? "match" : "matches"} in play — scores
+            refresh automatically.
+          </p>
+        )}
+        <MatchList
+          views={views}
+          competitions={competitions}
+          emptyText={
+            isToday
+              ? "No matches in the tracked competitions today. Try tomorrow or pick a date."
+              : "No matches in the tracked competitions on this day."
+          }
+        />
+      </div>
+      <aside className="min-w-0 space-y-4 lg:pt-[52px]">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">At the top</h2>
+        {snapshots.map(({ competition, top, teams }) => (
+          <div key={competition.id} className="card overflow-hidden">
+            <Link
+              href={`/leagues/${competition.slug}`}
+              className="flex items-center justify-between px-4 py-2.5 text-sm font-semibold hover:bg-surface-2"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: competition.color }}
+                  aria-hidden="true"
+                />
+                {competition.name}
+              </span>
+              <span className="text-faint">→</span>
+            </Link>
+            <ol className="tnum divide-y divide-line border-t border-line text-sm">
+              {top.map((r) => {
+                const t = teams.get(r.teamId)!;
+                return (
+                  <li key={r.teamId}>
+                    <Link
+                      href={`/teams/${t.slug}`}
+                      className="row-hover flex items-center gap-2 px-4 py-1.5"
+                    >
+                      <span className="w-4 text-faint">{r.position}</span>
+                      <TeamCrest team={t} size={18} />
+                      <span className="flex-1 truncate">{t.shortName}</span>
+                      <span className="font-semibold">{r.points}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        ))}
+      </aside>
+    </div>
+  );
+}

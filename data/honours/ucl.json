@@ -1,0 +1,627 @@
+{
+  "competitionId": "ucl",
+  "name": "UEFA Champions League",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Paris Saint-Germain",
+      "runnerUp": "Inter",
+      "detail": "5–0, Munich",
+      "winnerTeamId": "psg",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Real Madrid",
+      "runnerUp": "Borussia Dortmund",
+      "detail": "2–0, London",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Manchester City",
+      "runnerUp": "Inter",
+      "detail": "1–0, Istanbul",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Real Madrid",
+      "runnerUp": "Liverpool",
+      "detail": "1–0, Paris",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Chelsea",
+      "runnerUp": "Manchester City",
+      "detail": "1–0, Porto",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "manchester-city"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Bayern München",
+      "runnerUp": "Paris Saint-Germain",
+      "detail": "1–0, Lisbon",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "psg"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Liverpool",
+      "runnerUp": "Tottenham Hotspur",
+      "detail": "2–0, Madrid",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "tottenham-hotspur"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Real Madrid",
+      "runnerUp": "Liverpool",
+      "detail": "3–1, Kyiv",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Real Madrid",
+      "runnerUp": "Juventus",
+      "detail": "4–1, Cardiff",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Real Madrid",
+      "runnerUp": "Atlético Madrid",
+      "detail": "1–1, 5–3 pens, Milan",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "atletico-madrid"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Barcelona",
+      "runnerUp": "Juventus",
+      "detail": "3–1, Berlin",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Real Madrid",
+      "runnerUp": "Atlético Madrid",
+      "detail": "4–1 aet, Lisbon",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "atletico-madrid"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "detail": "2–1, London",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Chelsea",
+      "runnerUp": "Bayern München",
+      "detail": "1–1, 4–3 pens, Munich",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Barcelona",
+      "runnerUp": "Manchester United",
+      "detail": "3–1, London",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Inter",
+      "runnerUp": "Bayern München",
+      "detail": "2–0, Madrid",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "2008/09",
+      "winner": "Barcelona",
+      "runnerUp": "Manchester United",
+      "detail": "2–0, Rome",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Manchester United",
+      "runnerUp": "Chelsea",
+      "detail": "1–1, 6–5 pens, Moscow",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "chelsea"
+    },
+    {
+      "season": "2006/07",
+      "winner": "Milan",
+      "runnerUp": "Liverpool",
+      "detail": "2–1, Athens",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Barcelona",
+      "runnerUp": "Arsenal",
+      "detail": "2–1, Paris",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2004/05",
+      "winner": "Liverpool",
+      "runnerUp": "Milan",
+      "detail": "3–3, 3–2 pens, Istanbul",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Porto",
+      "runnerUp": "Monaco",
+      "detail": "3–0, Gelsenkirchen",
+      "winnerTeamId": "porto",
+      "runnerUpTeamId": "monaco"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Milan",
+      "runnerUp": "Juventus",
+      "detail": "0–0, 3–2 pens, Manchester",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Real Madrid",
+      "runnerUp": "Bayer Leverkusen",
+      "detail": "2–1, Glasgow",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "bayer-leverkusen"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Bayern München",
+      "runnerUp": "Valencia",
+      "detail": "1–1, 5–4 pens, Milan",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "valencia"
+    },
+    {
+      "season": "1999/00",
+      "winner": "Real Madrid",
+      "runnerUp": "Valencia",
+      "detail": "3–0, Paris",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "valencia"
+    },
+    {
+      "season": "1998/99",
+      "winner": "Manchester United",
+      "runnerUp": "Bayern München",
+      "detail": "2–1, Barcelona",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "1997/98",
+      "winner": "Real Madrid",
+      "runnerUp": "Juventus",
+      "detail": "1–0, Amsterdam",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "1996/97",
+      "winner": "Borussia Dortmund",
+      "runnerUp": "Juventus",
+      "detail": "3–1, Munich",
+      "winnerTeamId": "borussia-dortmund",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "1995/96",
+      "winner": "Juventus",
+      "runnerUp": "Ajax",
+      "detail": "1–1, 4–2 pens, Rome",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "ajax"
+    },
+    {
+      "season": "1994/95",
+      "winner": "Ajax",
+      "runnerUp": "Milan",
+      "detail": "1–0, Vienna",
+      "winnerTeamId": "ajax",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "1993/94",
+      "winner": "Milan",
+      "runnerUp": "Barcelona",
+      "detail": "4–0, Athens",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "1992/93",
+      "winner": "Marseille",
+      "runnerUp": "Milan",
+      "detail": "1–0, Munich",
+      "winnerTeamId": "marseille",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "1991/92",
+      "winner": "Barcelona",
+      "runnerUp": "Sampdoria",
+      "detail": "1–0 aet, London",
+      "winnerTeamId": "barcelona"
+    },
+    {
+      "season": "1990/91",
+      "winner": "Crvena Zvezda",
+      "runnerUp": "Marseille",
+      "detail": "0–0, 5–3 pens, Bari",
+      "winnerTeamId": "crvena-zvezda",
+      "runnerUpTeamId": "marseille"
+    },
+    {
+      "season": "1989/90",
+      "winner": "Milan",
+      "runnerUp": "Benfica",
+      "detail": "1–0, Vienna",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1988/89",
+      "winner": "Milan",
+      "runnerUp": "Steaua București",
+      "detail": "4–0, Barcelona",
+      "winnerTeamId": "milan"
+    },
+    {
+      "season": "1987/88",
+      "winner": "PSV",
+      "runnerUp": "Benfica",
+      "detail": "0–0, 6–5 pens, Stuttgart",
+      "winnerTeamId": "psv",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1986/87",
+      "winner": "Porto",
+      "runnerUp": "Bayern München",
+      "detail": "2–1, Vienna",
+      "winnerTeamId": "porto",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "1985/86",
+      "winner": "Steaua București",
+      "runnerUp": "Barcelona",
+      "detail": "0–0, 2–0 pens, Seville",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "1984/85",
+      "winner": "Juventus",
+      "runnerUp": "Liverpool",
+      "detail": "1–0, Brussels",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "1983/84",
+      "winner": "Liverpool",
+      "runnerUp": "Roma",
+      "detail": "1–1, 4–2 pens, Rome",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "1982/83",
+      "winner": "Hamburger SV",
+      "runnerUp": "Juventus",
+      "detail": "1–0, Athens",
+      "winnerTeamId": "hamburger-sv",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "1981/82",
+      "winner": "Aston Villa",
+      "runnerUp": "Bayern München",
+      "detail": "1–0, Rotterdam",
+      "winnerTeamId": "aston-villa",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "1980/81",
+      "winner": "Liverpool",
+      "runnerUp": "Real Madrid",
+      "detail": "1–0, Paris",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "1979/80",
+      "winner": "Nottingham Forest",
+      "runnerUp": "Hamburger SV",
+      "detail": "1–0, Madrid",
+      "winnerTeamId": "nottingham-forest",
+      "runnerUpTeamId": "hamburger-sv"
+    },
+    {
+      "season": "1978/79",
+      "winner": "Nottingham Forest",
+      "runnerUp": "Malmö FF",
+      "detail": "1–0, Munich",
+      "winnerTeamId": "nottingham-forest",
+      "runnerUpTeamId": "malmo"
+    },
+    {
+      "season": "1977/78",
+      "winner": "Liverpool",
+      "runnerUp": "Club Brugge",
+      "detail": "1–0, London",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "club-brugge"
+    },
+    {
+      "season": "1976/77",
+      "winner": "Liverpool",
+      "runnerUp": "Borussia Mönchengladbach",
+      "detail": "3–1, Rome",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "borussia-monchengladbach"
+    },
+    {
+      "season": "1975/76",
+      "winner": "Bayern München",
+      "runnerUp": "Saint-Étienne",
+      "detail": "1–0, Glasgow",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
+      "season": "1974/75",
+      "winner": "Bayern München",
+      "runnerUp": "Leeds United",
+      "detail": "2–0, Paris",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "leeds-united"
+    },
+    {
+      "season": "1973/74",
+      "winner": "Bayern München",
+      "runnerUp": "Atlético Madrid",
+      "detail": "1–1, 4–0 replay, Brussels",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "atletico-madrid"
+    },
+    {
+      "season": "1972/73",
+      "winner": "Ajax",
+      "runnerUp": "Juventus",
+      "detail": "1–0, Belgrade",
+      "winnerTeamId": "ajax",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "1971/72",
+      "winner": "Ajax",
+      "runnerUp": "Inter",
+      "detail": "2–0, Rotterdam",
+      "winnerTeamId": "ajax",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "1970/71",
+      "winner": "Ajax",
+      "runnerUp": "Panathinaikos",
+      "detail": "2–0, London",
+      "winnerTeamId": "ajax",
+      "runnerUpTeamId": "panathinaikos"
+    },
+    {
+      "season": "1969/70",
+      "winner": "Feyenoord",
+      "runnerUp": "Celtic",
+      "detail": "2–1 aet, Milan",
+      "winnerTeamId": "feyenoord",
+      "runnerUpTeamId": "celtic"
+    },
+    {
+      "season": "1968/69",
+      "winner": "Milan",
+      "runnerUp": "Ajax",
+      "detail": "4–1, Madrid",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "ajax"
+    },
+    {
+      "season": "1967/68",
+      "winner": "Manchester United",
+      "runnerUp": "Benfica",
+      "detail": "4–1 aet, London",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1966/67",
+      "winner": "Celtic",
+      "runnerUp": "Inter",
+      "detail": "2–1, Lisbon",
+      "winnerTeamId": "celtic",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "1965/66",
+      "winner": "Real Madrid",
+      "runnerUp": "Partizan",
+      "detail": "2–1, Brussels",
+      "winnerTeamId": "real-madrid"
+    },
+    {
+      "season": "1964/65",
+      "winner": "Inter",
+      "runnerUp": "Benfica",
+      "detail": "1–0, Milan",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1963/64",
+      "winner": "Inter",
+      "runnerUp": "Real Madrid",
+      "detail": "3–1, Vienna",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "1962/63",
+      "winner": "Milan",
+      "runnerUp": "Benfica",
+      "detail": "2–1, London",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1961/62",
+      "winner": "Benfica",
+      "runnerUp": "Real Madrid",
+      "detail": "5–3, Amsterdam",
+      "winnerTeamId": "benfica",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "1960/61",
+      "winner": "Benfica",
+      "runnerUp": "Barcelona",
+      "detail": "3–2, Bern",
+      "winnerTeamId": "benfica",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "1959/60",
+      "winner": "Real Madrid",
+      "runnerUp": "Eintracht Frankfurt",
+      "detail": "7–3, Glasgow",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "eintracht-frankfurt"
+    },
+    {
+      "season": "1958/59",
+      "winner": "Real Madrid",
+      "runnerUp": "Reims",
+      "detail": "2–0, Stuttgart",
+      "winnerTeamId": "real-madrid"
+    },
+    {
+      "season": "1957/58",
+      "winner": "Real Madrid",
+      "runnerUp": "Milan",
+      "detail": "3–2 aet, Brussels",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "1956/57",
+      "winner": "Real Madrid",
+      "runnerUp": "Fiorentina",
+      "detail": "2–0, Madrid",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "fiorentina"
+    },
+    {
+      "season": "1955/56",
+      "winner": "Real Madrid",
+      "runnerUp": "Reims",
+      "detail": "4–3, Paris",
+      "winnerTeamId": "real-madrid"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Real Madrid",
+      "count": 15,
+      "teamId": "real-madrid"
+    },
+    {
+      "team": "Milan",
+      "count": 7,
+      "teamId": "milan"
+    },
+    {
+      "team": "Bayern München",
+      "count": 6,
+      "teamId": "bayern-munich"
+    },
+    {
+      "team": "Liverpool",
+      "count": 6,
+      "teamId": "liverpool"
+    },
+    {
+      "team": "Barcelona",
+      "count": 5,
+      "teamId": "barcelona"
+    },
+    {
+      "team": "Ajax",
+      "count": 4,
+      "teamId": "ajax"
+    },
+    {
+      "team": "Inter",
+      "count": 3,
+      "teamId": "inter"
+    },
+    {
+      "team": "Manchester United",
+      "count": 3,
+      "teamId": "manchester-united"
+    },
+    {
+      "team": "Juventus",
+      "count": 2,
+      "teamId": "juventus"
+    },
+    {
+      "team": "Benfica",
+      "count": 2,
+      "teamId": "benfica"
+    },
+    {
+      "team": "Nottingham Forest",
+      "count": 2,
+      "teamId": "nottingham-forest"
+    },
+    {
+      "team": "Porto",
+      "count": 2,
+      "teamId": "porto"
+    },
+    {
+      "team": "Chelsea",
+      "count": 2,
+      "teamId": "chelsea"
+    }
+  ],
+  "note": "Includes the European Cup (1955–1992)."
+}

@@ -1,0 +1,115 @@
+[
+  {
+    "id": "epl",
+    "slug": "premier-league",
+    "name": "Premier League",
+    "shortName": "PL",
+    "country": "England",
+    "countryCode": "GB-ENG",
+    "kind": "league",
+    "order": 1,
+    "teamCount": 20,
+    "rounds": 38,
+    "color": "#3d195b",
+    "zones": [
+      { "from": 1, "to": 4, "label": "Champions League", "tone": "top" },
+      { "from": 5, "to": 5, "label": "Europa League", "tone": "second" },
+      { "from": 6, "to": 6, "label": "Conference League", "tone": "third" },
+      { "from": 18, "to": 20, "label": "Relegation", "tone": "bottom" }
+    ]
+  },
+  {
+    "id": "laliga",
+    "slug": "la-liga",
+    "name": "La Liga",
+    "shortName": "LL",
+    "country": "Spain",
+    "countryCode": "ES",
+    "kind": "league",
+    "order": 2,
+    "teamCount": 20,
+    "rounds": 38,
+    "color": "#ee8707",
+    "zones": [
+      { "from": 1, "to": 4, "label": "Champions League", "tone": "top" },
+      { "from": 5, "to": 6, "label": "Europa League", "tone": "second" },
+      { "from": 7, "to": 7, "label": "Conference League", "tone": "third" },
+      { "from": 18, "to": 20, "label": "Relegation", "tone": "bottom" }
+    ]
+  },
+  {
+    "id": "bundesliga",
+    "slug": "bundesliga",
+    "name": "Bundesliga",
+    "shortName": "BL",
+    "country": "Germany",
+    "countryCode": "DE",
+    "kind": "league",
+    "order": 3,
+    "teamCount": 18,
+    "rounds": 34,
+    "color": "#d20515",
+    "zones": [
+      { "from": 1, "to": 4, "label": "Champions League", "tone": "top" },
+      { "from": 5, "to": 5, "label": "Europa League", "tone": "second" },
+      { "from": 6, "to": 6, "label": "Conference League", "tone": "third" },
+      { "from": 16, "to": 16, "label": "Relegation play-off", "tone": "third" },
+      { "from": 17, "to": 18, "label": "Relegation", "tone": "bottom" }
+    ]
+  },
+  {
+    "id": "seriea",
+    "slug": "serie-a",
+    "name": "Serie A",
+    "shortName": "SA",
+    "country": "Italy",
+    "countryCode": "IT",
+    "kind": "league",
+    "order": 4,
+    "teamCount": 20,
+    "rounds": 38,
+    "color": "#024494",
+    "zones": [
+      { "from": 1, "to": 4, "label": "Champions League", "tone": "top" },
+      { "from": 5, "to": 5, "label": "Europa League", "tone": "second" },
+      { "from": 6, "to": 6, "label": "Conference League", "tone": "third" },
+      { "from": 18, "to": 20, "label": "Relegation", "tone": "bottom" }
+    ]
+  },
+  {
+    "id": "ucl",
+    "slug": "champions-league",
+    "name": "UEFA Champions League",
+    "shortName": "UCL",
+    "country": "Europe",
+    "countryCode": "EU",
+    "kind": "cup",
+    "order": 5,
+    "teamCount": 36,
+    "rounds": 8,
+    "color": "#0b1d51",
+    "zones": [
+      { "from": 1, "to": 8, "label": "Round of 16", "tone": "top" },
+      { "from": 9, "to": 24, "label": "Knockout play-offs", "tone": "second" },
+      { "from": 25, "to": 36, "label": "Eliminated", "tone": "bottom" }
+    ]
+  },
+  {
+    "id": "uel",
+    "slug": "europa-league",
+    "name": "UEFA Europa League",
+    "shortName": "UEL",
+    "country": "Europe",
+    "countryCode": "EU",
+    "kind": "cup",
+    "order": 6,
+    "teamCount": 36,
+    "rounds": 8,
+    "color": "#f68b1f",
+    "zones": [
+      { "from": 1, "to": 8, "label": "Round of 16", "tone": "top" },
+      { "from": 9, "to": 24, "label": "Knockout play-offs", "tone": "second" },
+      { "from": 25, "to": 36, "label": "Eliminated", "tone": "bottom" }
+    ]
+  }
+]

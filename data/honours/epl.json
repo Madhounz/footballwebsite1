@@ -1,0 +1,296 @@
+{
+  "competitionId": "epl",
+  "name": "Premier League",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Liverpool",
+      "runnerUp": "Arsenal",
+      "detail": "20th English title",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Manchester City",
+      "runnerUp": "Arsenal",
+      "detail": "Fourth title in a row",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Manchester City",
+      "runnerUp": "Arsenal",
+      "detail": "Treble season",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Manchester City",
+      "runnerUp": "Liverpool",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Manchester City",
+      "runnerUp": "Manchester United",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Liverpool",
+      "runnerUp": "Manchester City",
+      "detail": "First Liverpool title in 30 years",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "manchester-city"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Manchester City",
+      "runnerUp": "Liverpool",
+      "detail": "98 v 97 points",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Manchester City",
+      "runnerUp": "Manchester United",
+      "detail": "100 points",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Chelsea",
+      "runnerUp": "Tottenham Hotspur",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "tottenham-hotspur"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Leicester City",
+      "runnerUp": "Arsenal",
+      "detail": "5000/1 pre-season odds",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Chelsea",
+      "runnerUp": "Manchester City",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "manchester-city"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Manchester City",
+      "runnerUp": "Liverpool",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Manchester United",
+      "runnerUp": "Manchester City",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "manchester-city"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Manchester City",
+      "runnerUp": "Manchester United",
+      "detail": "Won on goal difference, Agüero 93:20",
+      "winnerTeamId": "manchester-city",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Manchester United",
+      "runnerUp": "Chelsea",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "chelsea"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Chelsea",
+      "runnerUp": "Manchester United",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2008/09",
+      "winner": "Manchester United",
+      "runnerUp": "Liverpool",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Manchester United",
+      "runnerUp": "Chelsea",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "chelsea"
+    },
+    {
+      "season": "2006/07",
+      "winner": "Manchester United",
+      "runnerUp": "Chelsea",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "chelsea"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Chelsea",
+      "runnerUp": "Manchester United",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2004/05",
+      "winner": "Chelsea",
+      "runnerUp": "Arsenal",
+      "detail": "Record 95 points at the time",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Arsenal",
+      "runnerUp": "Chelsea",
+      "detail": "Unbeaten season, 26W 12D 0L",
+      "winnerTeamId": "arsenal",
+      "runnerUpTeamId": "chelsea"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Manchester United",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Arsenal",
+      "runnerUp": "Liverpool",
+      "winnerTeamId": "arsenal",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Manchester United",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "1999/00",
+      "winner": "Manchester United",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "1998/99",
+      "winner": "Manchester United",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "1997/98",
+      "winner": "Arsenal",
+      "runnerUp": "Manchester United",
+      "winnerTeamId": "arsenal",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "1996/97",
+      "winner": "Manchester United",
+      "runnerUp": "Newcastle United",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "newcastle-united"
+    },
+    {
+      "season": "1995/96",
+      "winner": "Manchester United",
+      "runnerUp": "Newcastle United",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "newcastle-united"
+    },
+    {
+      "season": "1994/95",
+      "winner": "Blackburn Rovers",
+      "runnerUp": "Manchester United",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "1993/94",
+      "winner": "Manchester United",
+      "runnerUp": "Blackburn Rovers",
+      "winnerTeamId": "manchester-united"
+    },
+    {
+      "season": "1992/93",
+      "winner": "Manchester United",
+      "runnerUp": "Aston Villa",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "aston-villa"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Manchester United",
+      "count": 20,
+      "teamId": "manchester-united"
+    },
+    {
+      "team": "Liverpool",
+      "count": 20,
+      "teamId": "liverpool"
+    },
+    {
+      "team": "Arsenal",
+      "count": 13,
+      "teamId": "arsenal"
+    },
+    {
+      "team": "Manchester City",
+      "count": 10,
+      "teamId": "manchester-city"
+    },
+    {
+      "team": "Everton",
+      "count": 9,
+      "teamId": "everton"
+    },
+    {
+      "team": "Aston Villa",
+      "count": 7,
+      "teamId": "aston-villa"
+    },
+    {
+      "team": "Sunderland",
+      "count": 6,
+      "teamId": "sunderland"
+    },
+    {
+      "team": "Chelsea",
+      "count": 6,
+      "teamId": "chelsea"
+    },
+    {
+      "team": "Newcastle United",
+      "count": 4,
+      "teamId": "newcastle-united"
+    },
+    {
+      "team": "Sheffield Wednesday",
+      "count": 4
+    }
+  ],
+  "note": "Most-titles counts include the pre-1992 First Division."
+}

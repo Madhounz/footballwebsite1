@@ -1,0 +1,16 @@
+# Local PostgreSQL for DATA_SOURCE=db and the sync pipeline.
+#   docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ninety
+      POSTGRES_PASSWORD: ninety
+      POSTGRES_DB: ninety
+    ports:
+      - "5432:5432"
+    volumes:
+      - ninety-pg:/var/lib/postgresql/data
+volumes:
+  ninety-pg:

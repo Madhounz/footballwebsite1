@@ -1,0 +1,231 @@
+{
+  "competitionId": "laliga",
+  "name": "La Liga",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Atlético Madrid",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "atletico-madrid",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Barcelona",
+      "runnerUp": "Atlético Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "atletico-madrid"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Barcelona",
+      "runnerUp": "Atlético Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "atletico-madrid"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "detail": "Treble season",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Atlético Madrid",
+      "runnerUp": "Barcelona",
+      "detail": "Decided at Camp Nou on the final day",
+      "winnerTeamId": "atletico-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "detail": "100 points",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "detail": "100 points",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "detail": "99 points",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2008/09",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "detail": "Treble season",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Real Madrid",
+      "runnerUp": "Villarreal",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "villarreal"
+    },
+    {
+      "season": "2006/07",
+      "winner": "Real Madrid",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2004/05",
+      "winner": "Barcelona",
+      "runnerUp": "Real Madrid",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Valencia",
+      "runnerUp": "Barcelona",
+      "winnerTeamId": "valencia",
+      "runnerUpTeamId": "barcelona"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Real Madrid",
+      "runnerUp": "Real Sociedad",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "real-sociedad"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Valencia",
+      "runnerUp": "Deportivo La Coruña",
+      "winnerTeamId": "valencia"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Real Madrid",
+      "runnerUp": "Deportivo La Coruña",
+      "winnerTeamId": "real-madrid"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Real Madrid",
+      "count": 36,
+      "teamId": "real-madrid"
+    },
+    {
+      "team": "Barcelona",
+      "count": 28,
+      "teamId": "barcelona"
+    },
+    {
+      "team": "Atlético Madrid",
+      "count": 11,
+      "teamId": "atletico-madrid"
+    },
+    {
+      "team": "Athletic Club",
+      "count": 8,
+      "teamId": "athletic-club"
+    },
+    {
+      "team": "Valencia",
+      "count": 6,
+      "teamId": "valencia"
+    },
+    {
+      "team": "Real Sociedad",
+      "count": 2,
+      "teamId": "real-sociedad"
+    },
+    {
+      "team": "Deportivo La Coruña",
+      "count": 1
+    },
+    {
+      "team": "Sevilla",
+      "count": 1,
+      "teamId": "sevilla"
+    },
+    {
+      "team": "Real Betis",
+      "count": 1,
+      "teamId": "real-betis"
+    }
+  ]
+}

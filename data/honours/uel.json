@@ -1,0 +1,444 @@
+{
+  "competitionId": "uel",
+  "name": "UEFA Europa League",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Tottenham Hotspur",
+      "runnerUp": "Manchester United",
+      "detail": "1–0, Bilbao",
+      "winnerTeamId": "tottenham-hotspur",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Atalanta",
+      "runnerUp": "Bayer Leverkusen",
+      "detail": "Ended Leverkusen's 51-game unbeaten run",
+      "winnerTeamId": "atalanta",
+      "runnerUpTeamId": "bayer-leverkusen"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Sevilla",
+      "runnerUp": "Roma",
+      "detail": "Record seventh title",
+      "winnerTeamId": "sevilla",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Eintracht Frankfurt",
+      "runnerUp": "Rangers",
+      "winnerTeamId": "eintracht-frankfurt",
+      "runnerUpTeamId": "rangers"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Villarreal",
+      "runnerUp": "Manchester United",
+      "detail": "11–10 on penalties",
+      "winnerTeamId": "villarreal",
+      "runnerUpTeamId": "manchester-united"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Sevilla",
+      "runnerUp": "Inter",
+      "winnerTeamId": "sevilla",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Chelsea",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Atlético Madrid",
+      "runnerUp": "Marseille",
+      "winnerTeamId": "atletico-madrid",
+      "runnerUpTeamId": "marseille"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Manchester United",
+      "runnerUp": "Ajax",
+      "winnerTeamId": "manchester-united",
+      "runnerUpTeamId": "ajax"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Sevilla",
+      "runnerUp": "Liverpool",
+      "detail": "Third in a row",
+      "winnerTeamId": "sevilla",
+      "runnerUpTeamId": "liverpool"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Sevilla",
+      "runnerUp": "Dnipro",
+      "winnerTeamId": "sevilla"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Sevilla",
+      "runnerUp": "Benfica",
+      "winnerTeamId": "sevilla",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Chelsea",
+      "runnerUp": "Benfica",
+      "winnerTeamId": "chelsea",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Atlético Madrid",
+      "runnerUp": "Athletic Club",
+      "winnerTeamId": "atletico-madrid",
+      "runnerUpTeamId": "athletic-club"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Porto",
+      "runnerUp": "Braga",
+      "winnerTeamId": "porto",
+      "runnerUpTeamId": "braga"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Atlético Madrid",
+      "runnerUp": "Fulham",
+      "detail": "Renamed UEFA Europa League",
+      "winnerTeamId": "atletico-madrid"
+    },
+    {
+      "season": "2008/09",
+      "winner": "Shakhtar Donetsk",
+      "runnerUp": "Werder Bremen",
+      "runnerUpTeamId": "werder-bremen"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Zenit",
+      "runnerUp": "Rangers",
+      "runnerUpTeamId": "rangers"
+    },
+    {
+      "season": "2006/07",
+      "winner": "Sevilla",
+      "runnerUp": "Espanyol",
+      "winnerTeamId": "sevilla",
+      "runnerUpTeamId": "espanyol"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Sevilla",
+      "runnerUp": "Middlesbrough",
+      "winnerTeamId": "sevilla"
+    },
+    {
+      "season": "2004/05",
+      "winner": "CSKA Moscow",
+      "runnerUp": "Sporting CP",
+      "runnerUpTeamId": "sporting-cp"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Valencia",
+      "runnerUp": "Marseille",
+      "winnerTeamId": "valencia",
+      "runnerUpTeamId": "marseille"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Porto",
+      "runnerUp": "Celtic",
+      "winnerTeamId": "porto",
+      "runnerUpTeamId": "celtic"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Feyenoord",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "feyenoord",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Liverpool",
+      "runnerUp": "Alavés",
+      "detail": "5–4 golden goal, Dortmund",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "alaves"
+    },
+    {
+      "season": "1999/00",
+      "winner": "Galatasaray",
+      "runnerUp": "Arsenal",
+      "winnerTeamId": "galatasaray",
+      "runnerUpTeamId": "arsenal"
+    },
+    {
+      "season": "1998/99",
+      "winner": "Parma",
+      "runnerUp": "Marseille",
+      "winnerTeamId": "parma",
+      "runnerUpTeamId": "marseille"
+    },
+    {
+      "season": "1997/98",
+      "winner": "Inter",
+      "runnerUp": "Lazio",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "lazio"
+    },
+    {
+      "season": "1996/97",
+      "winner": "Schalke 04",
+      "runnerUp": "Inter",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "1995/96",
+      "winner": "Bayern München",
+      "runnerUp": "Bordeaux",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
+      "season": "1994/95",
+      "winner": "Parma",
+      "runnerUp": "Juventus",
+      "winnerTeamId": "parma",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "1993/94",
+      "winner": "Inter",
+      "runnerUp": "Salzburg",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "salzburg"
+    },
+    {
+      "season": "1992/93",
+      "winner": "Juventus",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "1991/92",
+      "winner": "Ajax",
+      "runnerUp": "Torino",
+      "winnerTeamId": "ajax",
+      "runnerUpTeamId": "torino"
+    },
+    {
+      "season": "1990/91",
+      "winner": "Inter",
+      "runnerUp": "Roma",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "1989/90",
+      "winner": "Juventus",
+      "runnerUp": "Fiorentina",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "fiorentina"
+    },
+    {
+      "season": "1988/89",
+      "winner": "Napoli",
+      "runnerUp": "VfB Stuttgart",
+      "winnerTeamId": "napoli",
+      "runnerUpTeamId": "vfb-stuttgart"
+    },
+    {
+      "season": "1987/88",
+      "winner": "Bayer Leverkusen",
+      "runnerUp": "Espanyol",
+      "winnerTeamId": "bayer-leverkusen",
+      "runnerUpTeamId": "espanyol"
+    },
+    {
+      "season": "1986/87",
+      "winner": "IFK Göteborg",
+      "runnerUp": "Dundee United"
+    },
+    {
+      "season": "1985/86",
+      "winner": "Real Madrid",
+      "runnerUp": "1. FC Köln",
+      "winnerTeamId": "real-madrid",
+      "runnerUpTeamId": "fc-koln"
+    },
+    {
+      "season": "1984/85",
+      "winner": "Real Madrid",
+      "runnerUp": "Videoton",
+      "winnerTeamId": "real-madrid"
+    },
+    {
+      "season": "1983/84",
+      "winner": "Tottenham Hotspur",
+      "runnerUp": "Anderlecht",
+      "winnerTeamId": "tottenham-hotspur"
+    },
+    {
+      "season": "1982/83",
+      "winner": "Anderlecht",
+      "runnerUp": "Benfica",
+      "runnerUpTeamId": "benfica"
+    },
+    {
+      "season": "1981/82",
+      "winner": "IFK Göteborg",
+      "runnerUp": "Hamburger SV",
+      "runnerUpTeamId": "hamburger-sv"
+    },
+    {
+      "season": "1980/81",
+      "winner": "Ipswich Town",
+      "runnerUp": "AZ"
+    },
+    {
+      "season": "1979/80",
+      "winner": "Eintracht Frankfurt",
+      "runnerUp": "Borussia Mönchengladbach",
+      "winnerTeamId": "eintracht-frankfurt",
+      "runnerUpTeamId": "borussia-monchengladbach"
+    },
+    {
+      "season": "1978/79",
+      "winner": "Borussia Mönchengladbach",
+      "runnerUp": "Crvena Zvezda",
+      "winnerTeamId": "borussia-monchengladbach",
+      "runnerUpTeamId": "crvena-zvezda"
+    },
+    {
+      "season": "1977/78",
+      "winner": "PSV",
+      "runnerUp": "Bastia",
+      "winnerTeamId": "psv"
+    },
+    {
+      "season": "1976/77",
+      "winner": "Juventus",
+      "runnerUp": "Athletic Club",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "athletic-club"
+    },
+    {
+      "season": "1975/76",
+      "winner": "Liverpool",
+      "runnerUp": "Club Brugge",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "club-brugge"
+    },
+    {
+      "season": "1974/75",
+      "winner": "Borussia Mönchengladbach",
+      "runnerUp": "Twente",
+      "winnerTeamId": "borussia-monchengladbach"
+    },
+    {
+      "season": "1973/74",
+      "winner": "Feyenoord",
+      "runnerUp": "Tottenham Hotspur",
+      "winnerTeamId": "feyenoord",
+      "runnerUpTeamId": "tottenham-hotspur"
+    },
+    {
+      "season": "1972/73",
+      "winner": "Liverpool",
+      "runnerUp": "Borussia Mönchengladbach",
+      "winnerTeamId": "liverpool",
+      "runnerUpTeamId": "borussia-monchengladbach"
+    },
+    {
+      "season": "1971/72",
+      "winner": "Tottenham Hotspur",
+      "runnerUp": "Wolverhampton Wanderers",
+      "winnerTeamId": "tottenham-hotspur"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Sevilla",
+      "count": 7,
+      "teamId": "sevilla"
+    },
+    {
+      "team": "Inter",
+      "count": 3,
+      "teamId": "inter"
+    },
+    {
+      "team": "Liverpool",
+      "count": 3,
+      "teamId": "liverpool"
+    },
+    {
+      "team": "Juventus",
+      "count": 3,
+      "teamId": "juventus"
+    },
+    {
+      "team": "Atlético Madrid",
+      "count": 3,
+      "teamId": "atletico-madrid"
+    },
+    {
+      "team": "Tottenham Hotspur",
+      "count": 3,
+      "teamId": "tottenham-hotspur"
+    },
+    {
+      "team": "Chelsea",
+      "count": 2,
+      "teamId": "chelsea"
+    },
+    {
+      "team": "Porto",
+      "count": 2,
+      "teamId": "porto"
+    },
+    {
+      "team": "Real Madrid",
+      "count": 2,
+      "teamId": "real-madrid"
+    },
+    {
+      "team": "Feyenoord",
+      "count": 2,
+      "teamId": "feyenoord"
+    },
+    {
+      "team": "IFK Göteborg",
+      "count": 2
+    },
+    {
+      "team": "Parma",
+      "count": 2,
+      "teamId": "parma"
+    },
+    {
+      "team": "Borussia Mönchengladbach",
+      "count": 2,
+      "teamId": "borussia-monchengladbach"
+    },
+    {
+      "team": "Eintracht Frankfurt",
+      "count": 2,
+      "teamId": "eintracht-frankfurt"
+    }
+  ],
+  "note": "Includes the UEFA Cup (1971–2009)."
+}

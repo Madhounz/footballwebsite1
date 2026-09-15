@@ -1,0 +1,234 @@
+{
+  "competitionId": "bundesliga",
+  "name": "Bundesliga",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Bayern München",
+      "runnerUp": "Bayer Leverkusen",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "bayer-leverkusen"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Bayer Leverkusen",
+      "runnerUp": "VfB Stuttgart",
+      "detail": "Unbeaten league season, first title",
+      "winnerTeamId": "bayer-leverkusen",
+      "runnerUpTeamId": "vfb-stuttgart"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "detail": "Won on goal difference on the final day",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Bayern München",
+      "runnerUp": "RB Leipzig",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "rb-leipzig"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "detail": "Treble season",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Bayern München",
+      "runnerUp": "Schalke 04",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Bayern München",
+      "runnerUp": "RB Leipzig",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "rb-leipzig"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Bayern München",
+      "runnerUp": "VfL Wolfsburg",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "vfl-wolfsburg"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Bayern München",
+      "runnerUp": "Borussia Dortmund",
+      "detail": "91 points, treble season",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Borussia Dortmund",
+      "runnerUp": "Bayern München",
+      "detail": "Record 81 points at the time",
+      "winnerTeamId": "borussia-dortmund",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Borussia Dortmund",
+      "runnerUp": "Bayer Leverkusen",
+      "winnerTeamId": "borussia-dortmund",
+      "runnerUpTeamId": "bayer-leverkusen"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Bayern München",
+      "runnerUp": "Schalke 04",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
+      "season": "2008/09",
+      "winner": "VfL Wolfsburg",
+      "runnerUp": "Bayern München",
+      "winnerTeamId": "vfl-wolfsburg",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Bayern München",
+      "runnerUp": "Werder Bremen",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "werder-bremen"
+    },
+    {
+      "season": "2006/07",
+      "winner": "VfB Stuttgart",
+      "runnerUp": "Schalke 04",
+      "winnerTeamId": "vfb-stuttgart"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Bayern München",
+      "runnerUp": "Werder Bremen",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "werder-bremen"
+    },
+    {
+      "season": "2004/05",
+      "winner": "Bayern München",
+      "runnerUp": "Schalke 04",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Werder Bremen",
+      "runnerUp": "Bayern München",
+      "winnerTeamId": "werder-bremen",
+      "runnerUpTeamId": "bayern-munich"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Bayern München",
+      "runnerUp": "VfB Stuttgart",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "vfb-stuttgart"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Borussia Dortmund",
+      "runnerUp": "Bayer Leverkusen",
+      "winnerTeamId": "borussia-dortmund",
+      "runnerUpTeamId": "bayer-leverkusen"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Bayern München",
+      "runnerUp": "Schalke 04",
+      "detail": "Won in the fourth minute of added time on the final day",
+      "winnerTeamId": "bayern-munich"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Bayern München",
+      "count": 33,
+      "teamId": "bayern-munich"
+    },
+    {
+      "team": "Borussia Dortmund",
+      "count": 5,
+      "teamId": "borussia-dortmund"
+    },
+    {
+      "team": "Borussia Mönchengladbach",
+      "count": 5,
+      "teamId": "borussia-monchengladbach"
+    },
+    {
+      "team": "Werder Bremen",
+      "count": 4,
+      "teamId": "werder-bremen"
+    },
+    {
+      "team": "Hamburger SV",
+      "count": 3,
+      "teamId": "hamburger-sv"
+    },
+    {
+      "team": "VfB Stuttgart",
+      "count": 3,
+      "teamId": "vfb-stuttgart"
+    },
+    {
+      "team": "1. FC Köln",
+      "count": 2,
+      "teamId": "fc-koln"
+    },
+    {
+      "team": "1. FC Kaiserslautern",
+      "count": 2
+    },
+    {
+      "team": "Bayer Leverkusen",
+      "count": 1,
+      "teamId": "bayer-leverkusen"
+    },
+    {
+      "team": "VfL Wolfsburg",
+      "count": 1,
+      "teamId": "vfl-wolfsburg"
+    }
+  ],
+  "note": "Bundesliga era only (since 1963)."
+}

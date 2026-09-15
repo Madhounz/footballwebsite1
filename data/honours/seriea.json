@@ -1,0 +1,244 @@
+{
+  "competitionId": "seriea",
+  "name": "Serie A",
+  "entries": [
+    {
+      "season": "2024/25",
+      "winner": "Napoli",
+      "runnerUp": "Inter",
+      "winnerTeamId": "napoli",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2023/24",
+      "winner": "Inter",
+      "runnerUp": "Milan",
+      "detail": "20th title, second star",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "2022/23",
+      "winner": "Napoli",
+      "runnerUp": "Lazio",
+      "detail": "First title since 1990",
+      "winnerTeamId": "napoli",
+      "runnerUpTeamId": "lazio"
+    },
+    {
+      "season": "2021/22",
+      "winner": "Milan",
+      "runnerUp": "Inter",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2020/21",
+      "winner": "Inter",
+      "runnerUp": "Milan",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "2019/20",
+      "winner": "Juventus",
+      "runnerUp": "Inter",
+      "detail": "Ninth title in a row",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2018/19",
+      "winner": "Juventus",
+      "runnerUp": "Napoli",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "napoli"
+    },
+    {
+      "season": "2017/18",
+      "winner": "Juventus",
+      "runnerUp": "Napoli",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "napoli"
+    },
+    {
+      "season": "2016/17",
+      "winner": "Juventus",
+      "runnerUp": "Roma",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2015/16",
+      "winner": "Juventus",
+      "runnerUp": "Napoli",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "napoli"
+    },
+    {
+      "season": "2014/15",
+      "winner": "Juventus",
+      "runnerUp": "Roma",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2013/14",
+      "winner": "Juventus",
+      "runnerUp": "Roma",
+      "detail": "102 points",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2012/13",
+      "winner": "Juventus",
+      "runnerUp": "Napoli",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "napoli"
+    },
+    {
+      "season": "2011/12",
+      "winner": "Juventus",
+      "runnerUp": "Milan",
+      "detail": "Unbeaten season",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "2010/11",
+      "winner": "Milan",
+      "runnerUp": "Inter",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2009/10",
+      "winner": "Inter",
+      "runnerUp": "Roma",
+      "detail": "Treble season",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2008/09",
+      "winner": "Inter",
+      "runnerUp": "Juventus",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "juventus"
+    },
+    {
+      "season": "2007/08",
+      "winner": "Inter",
+      "runnerUp": "Roma",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2006/07",
+      "winner": "Inter",
+      "runnerUp": "Roma",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2005/06",
+      "winner": "Inter",
+      "runnerUp": "Roma",
+      "detail": "Awarded after Calciopoli",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2004/05",
+      "winner": "Not awarded",
+      "runnerUp": "Milan",
+      "detail": "Juventus stripped of the title after Calciopoli",
+      "runnerUpTeamId": "milan"
+    },
+    {
+      "season": "2003/04",
+      "winner": "Milan",
+      "runnerUp": "Roma",
+      "winnerTeamId": "milan",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2002/03",
+      "winner": "Juventus",
+      "runnerUp": "Inter",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "inter"
+    },
+    {
+      "season": "2001/02",
+      "winner": "Juventus",
+      "runnerUp": "Roma",
+      "winnerTeamId": "juventus",
+      "runnerUpTeamId": "roma"
+    },
+    {
+      "season": "2000/01",
+      "winner": "Roma",
+      "runnerUp": "Juventus",
+      "winnerTeamId": "roma",
+      "runnerUpTeamId": "juventus"
+    }
+  ],
+  "mostTitles": [
+    {
+      "team": "Juventus",
+      "count": 36,
+      "teamId": "juventus"
+    },
+    {
+      "team": "Inter",
+      "count": 20,
+      "teamId": "inter"
+    },
+    {
+      "team": "Milan",
+      "count": 19,
+      "teamId": "milan"
+    },
+    {
+      "team": "Genoa",
+      "count": 9,
+      "teamId": "genoa"
+    },
+    {
+      "team": "Torino",
+      "count": 7,
+      "teamId": "torino"
+    },
+    {
+      "team": "Bologna",
+      "count": 7,
+      "teamId": "bologna"
+    },
+    {
+      "team": "Pro Vercelli",
+      "count": 7
+    },
+    {
+      "team": "Napoli",
+      "count": 4,
+      "teamId": "napoli"
+    },
+    {
+      "team": "Roma",
+      "count": 3,
+      "teamId": "roma"
+    },
+    {
+      "team": "Lazio",
+      "count": 2,
+      "teamId": "lazio"
+    },
+    {
+      "team": "Fiorentina",
+      "count": 2,
+      "teamId": "fiorentina"
+    }
+  ]
+}
