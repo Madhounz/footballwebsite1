@@ -42,10 +42,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Apply database migrations
-        run: pnpm prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Migrations are applied by the Vercel build (scripts/migrate-if-db.mjs).
+      # Two migrators competing for Postgres' advisory lock is what made this
+      # job fail before, so this one only reads and writes rows.
       - name: Sync
         run: |
           ARGS=""

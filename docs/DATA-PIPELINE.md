@@ -94,6 +94,16 @@ Set up:
 2. Create a free job at cron-job.org (or any equivalent) pointing at
    `https://<site>/api/sync`, every minute, with the bearer header.
 
+### Migrations
+
+The Vercel build applies them, through `scripts/migrate-if-db.mjs`, and nothing
+else does. Prisma Migrate takes a session-level Postgres advisory lock, and two
+things competing for it (or one pooled session stranding it) produces a `P1002`
+timeout that fails the deploy. So the script migrates over the direct host
+rather than the pooler, clears a lock stranded by an idle session, and retries
+with backoff. `DIRECT_DATABASE_URL` overrides the host if your provider does
+not follow Neon's `-pooler` naming.
+
 ## Running it
 
 ```bash
