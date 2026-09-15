@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
+import { FACTUAL_FIELDS } from "./reconcile";
 import type { Conflict, Resolution } from "./types";
 
 /**
@@ -45,6 +46,7 @@ const EntityMatch = z.object({
 
 const SYSTEM = `You are the data editor for a football (soccer) results website covering the Premier League, La Liga, Bundesliga, Serie A, UEFA Champions League and UEFA Europa League.
 You receive records where licensed data providers disagree. Choose the value best supported by the evidence and by your knowledge of how football data works (kick-off times shift by broadcaster, provisional scores get corrected, own goals and penalties get re-credited, postponed matches keep their original round).
+You are never asked to decide what happened on the pitch: scores, half-time scores and match status are settled from the sources themselves and quarantined when they disagree. Your remit is the surrounding detail — kick-off times, rounds, venues — and identity questions.
 Rules:
 - Only choose among the provided values. Never invent a value.
 - Prefer the provider whose record was updated most recently for live or just-finished matches.
@@ -73,12 +75,25 @@ export class AIValidator {
     return Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
   }
 
-  /** Resolve a batch of field conflicts. Returns one Resolution per conflict, same order. */
+  /**
+   * Resolves a batch of field conflicts. Returns one Resolution per conflict,
+   * in the same order.
+   *
+   * Factual fields are refused outright, whatever the caller passes: what a
+   * match ended is settled by evidence, not by a model. The pipeline already
+   * filters them out; this is the second lock on the same door.
+   */
   async resolveConflicts(
     conflicts: Conflict[],
     recency: Record<string, string | undefined> = {},
   ): Promise<Resolution[]> {
     if (conflicts.length === 0) return [];
+    const refused = conflicts.filter((c) => FACTUAL_FIELDS.has(c.field));
+    if (refused.length > 0) {
+      throw new Error(
+        `the validator may not decide factual fields (${[...new Set(refused.map((c) => c.field))].join(", ")})`,
+      );
+    }
     const payload = conflicts.map((c, index) => ({
       index,
       entity: c.entityType,

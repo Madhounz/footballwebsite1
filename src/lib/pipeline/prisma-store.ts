@@ -2,6 +2,7 @@ import { getPrisma } from "../db";
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
 import type { SyncStore } from "./store";
+import { matchSlug } from "../match-slug";
 import { slugify } from "../slug";
 import { matchPlayer, type SquadEntry } from "./players";
 import type {
@@ -280,6 +281,7 @@ export class PrismaSyncStore implements SyncStore {
     for (const m of matches) {
       const v = m.value;
       const data = {
+        slug: matchSlug({ homeTeamId: v.homeTeamId, awayTeamId: v.awayTeamId, kickoff: v.kickoff }),
         competitionId: competition.id,
         season: competition.season,
         round: v.round,
@@ -298,6 +300,8 @@ export class PrismaSyncStore implements SyncStore {
         attendance: v.attendance ?? null,
         referee: v.referee ?? null,
         confidence: m.confidence,
+        disputed: m.disputedFields.length > 0,
+        disputedFields: m.disputedFields,
       };
       await this.db.match.upsert({
         where: { id: m.id },

@@ -19,6 +19,7 @@ import type {
   TeamLineup,
 } from "../types";
 import type { DemoDataset, DemoLineup, DemoMatch } from "./demo-format";
+import { matchSlug } from "../match-slug";
 import { honoursFor, allHonours } from "./honours";
 import type { MatchDetail, Repository, TeamHonour } from "./repository";
 import { computeScorers, computeStandings } from "./standings";
@@ -161,6 +162,7 @@ export class DemoRepository implements Repository {
       !m.result && clock.status !== "scheduled" ? "postponed" : clock.status;
     return {
       id: m.id,
+      slug: matchSlug({ homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId, kickoff: m.kickoff }),
       competitionId: m.competitionId,
       season: DATA.season,
       round: m.round,
@@ -261,8 +263,15 @@ export class DemoRepository implements Repository {
     const list = this.shifted().byDate.get(today) ?? [];
     return list.map((m) => this.toView(m, now)).filter((v) => v.match.status === "live");
   }
-  async getMatch(id: string): Promise<MatchDetail | null> {
-    const m = this.shifted().matches.get(id);
+  async getMatch(idOrSlug: string): Promise<MatchDetail | null> {
+    const shifted = this.shifted();
+    const m =
+      shifted.matches.get(idOrSlug) ??
+      [...shifted.matches.values()].find(
+        (x) =>
+          matchSlug({ homeTeamId: x.homeTeamId, awayTeamId: x.awayTeamId, kickoff: x.kickoff }) ===
+          idOrSlug,
+      );
     if (!m) return null;
     const now = this.now();
     const view = this.toView(m, now);

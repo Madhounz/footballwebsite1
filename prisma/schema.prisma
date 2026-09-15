@@ -88,6 +88,8 @@ model Player {
 
 model Match {
   id            String   @id
+  /** Readable URL segment; see src/lib/match-slug.ts. */
+  slug          String   @unique
   competitionId String
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   season        String
@@ -112,6 +114,9 @@ model Match {
   lineups       Lineup[]
   /** 0..1 agreement between providers for the scoreline; see Discrepancy. */
   confidence    Float    @default(1)
+  /** Sources disagreed on a settled result; the primary source's value is shown, flagged for review. */
+  disputed      Boolean  @default(false)
+  disputedFields String[]
   updatedAt     DateTime @updatedAt
 
   @@index([kickoff])

@@ -21,6 +21,7 @@
   --win: #1f9d55;
   --draw: #8a8a84;
   --loss: #d64545;
+  --review: #b45309;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -16px rgb(0 0 0 / 0.12);
 }
 
@@ -40,6 +41,7 @@
   --win: #34d399;
   --draw: #6d6d67;
   --loss: #f87171;
+  --review: #fbbf24;
   --shadow: none;
 }
 
@@ -60,6 +62,7 @@
     --win: #34d399;
     --draw: #6d6d67;
     --loss: #f87171;
+    --review: #fbbf24;
     --shadow: none;
   }
 }
@@ -80,6 +83,7 @@
   --color-win: var(--win);
   --color-draw: var(--draw);
   --color-loss: var(--loss);
+  --color-review: var(--review);
   --font-sans:
     ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, "Noto Sans",
     sans-serif;

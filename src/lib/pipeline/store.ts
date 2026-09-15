@@ -77,8 +77,9 @@ export class DryRunStore implements SyncStore {
     for (const m of matches) {
       const v = m.value;
       const score = v.score ? `${v.score.home}-${v.score.away}` : "v";
+      const flag = m.disputedFields.length ? ` DISPUTED:${m.disputedFields.join("/")}` : "";
       this.log(
-        `[dry-run] ${competition.shortName} ${v.kickoff.slice(0, 16)} ${v.homeTeamId} ${score} ${v.awayTeamId} (${v.status}, confidence ${m.confidence})`,
+        `[dry-run] ${competition.shortName} ${v.kickoff.slice(0, 16)} ${v.homeTeamId} ${score} ${v.awayTeamId} (${v.status}, confidence ${m.confidence})${flag}`,
       );
     }
     return matches.length;

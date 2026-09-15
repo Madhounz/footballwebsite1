@@ -5,6 +5,7 @@ import type { Match, MatchEvent } from "../types";
 function m(id: string, round: number, home: string, away: string, h: number, a: number): Match {
   return {
     id,
+    slug: `${home}-vs-${away}-${id}`,
     competitionId: "x",
     season: "s",
     round,

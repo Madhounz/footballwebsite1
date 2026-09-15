@@ -18,7 +18,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - Every visible string goes through `next-intl` (`messages/en.json` and `messages/ar.json`, both files always updated together). Club and competition names come from `src/lib/i18n/names.ts`. Import `Link`/`redirect`/`usePathname`/`useRouter` from `@/i18n/navigation`. Pin scores, formations and other left-to-right fragments with `dir="ltr"`.
 - No `loading.tsx` in the locale tree: it would turn 404s into 200s by streaming the shell first.
 - Client components only for interaction; browser-only values go through `useSyncExternalStore`.
-- The AI validator (`src/lib/pipeline/ai-validator.ts`) may only choose among provider values or decline; never let it invent data. Keep the model at `claude-opus-5` unless asked.
+- A model never decides a factual result. `FACTUAL_FIELDS` (score, halfTimeScore, status) are settled deterministically — consensus, majority, then the primary source — and a tie on a finished match sets `Match.disputed` for review. The validator may only choose among provider values for non-factual fields, or decline, and throws if handed a factual one. Keep the model at `claude-opus-5` unless asked.
+- Match URLs use `Match.slug` (`arsenal-vs-chelsea-2026-09-19`), never the raw id; `getMatch` accepts either.
 - Match ingestion never creates teams from a bare name. Only the `--seed` step may create a team, from a provider's full team record, and it must log it.
 - Club crests come from the data provider (`Team.crestUrl`); `TeamCrest` falls back to a generated badge from club colours when there is none or it fails to load. No player photos or other third-party logos.
 - Live freshness comes from `/api/sync` (every minute, external cron), not from GitHub's scheduler. Keep that path cheap: one combined provider request, a three-day window, and API-Football only inside the detail window and interval.

@@ -4,6 +4,14 @@ import type { Conflict, ProviderMatch, ProviderRecord, Resolution } from "./type
 export const MATCH_FIELDS = ["kickoff", "status", "score", "halfTimeScore", "round"] as const;
 export type MatchField = (typeof MATCH_FIELDS)[number];
 
+/**
+ * Fields that state what happened on the pitch. These are decided by evidence
+ * only: consensus, then majority, then the primary source. A language model is
+ * never asked to settle one, because a plausible-sounding answer is worse than
+ * an admitted disagreement once people trust the site.
+ */
+export const FACTUAL_FIELDS: ReadonlySet<string> = new Set(["status", "score", "halfTimeScore"]);
+
 const stable = (v: unknown): string => JSON.stringify(v, Object.keys((v as object) ?? {}).sort());
 
 /**
@@ -63,6 +71,12 @@ export interface ReconciledMatch {
   value: ProviderMatch;
   confidence: number;
   conflicts: Conflict[];
+  /**
+   * Factual fields where the sources disagreed outright on a finished match.
+   * The primary source's value is kept and the match is flagged for review
+   * rather than quietly picking a winner.
+   */
+  disputedFields: string[];
 }
 
 /**
@@ -91,6 +105,7 @@ export function reconcileMatches(
       ...full.sort((a, b) => (weights[b.provider] ?? 0) - (weights[a.provider] ?? 0))[0].value,
     };
     const conflicts: Conflict[] = [];
+    const contested: string[] = [];
     let confidence = 1;
     for (const field of MATCH_FIELDS) {
       const values: Record<string, unknown> = {};
@@ -114,7 +129,13 @@ export function reconcileMatches(
           },
         };
         conflicts.push(conflict);
-        if (res.confidence < aiThreshold) needsReview.push(conflict);
+        if (FACTUAL_FIELDS.has(field)) {
+          // A straight disagreement with no majority: the primary source's value
+          // stands and the match is quarantined. Never sent to the validator.
+          if (res.resolvedBy === "weight") contested.push(field);
+        } else if (res.confidence < aiThreshold) {
+          needsReview.push(conflict);
+        }
       }
     }
     // events: union of providers, de-duplicated by (minute, team, type)
@@ -133,7 +154,10 @@ export function reconcileMatches(
     const minute = list.find((r) => r.value.minute != null)?.value.minute ?? base.minute ?? null;
     const value: ProviderMatch = { ...base, id: key, events, lineups, minute };
     delete value.partial;
-    matches.push({ id: key, value, confidence, conflicts });
+    // Before full time the sources are simply at different points in the match,
+    // which is lag rather than disagreement; only a settled result is flagged.
+    const disputedFields = base.status === "finished" ? contested : [];
+    matches.push({ id: key, value, confidence, conflicts, disputedFields });
   }
   return { matches, needsReview };
 }

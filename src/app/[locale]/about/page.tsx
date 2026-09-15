@@ -60,6 +60,7 @@ export default async function AboutPage() {
             </li>
           ))}
         </ol>
+        <p className="leading-relaxed">{t("aiRole")}</p>
         <p className="text-sm leading-relaxed text-muted">{t("demoNote")}</p>
       </section>
 

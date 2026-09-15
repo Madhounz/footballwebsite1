@@ -163,7 +163,8 @@ export interface ApiFootballOptions {
 
 export class ApiFootballProvider implements Provider {
   readonly id = "api-football";
-  readonly weight = 0.8;
+  /** Secondary source: authoritative for detail, a cross-check for results. */
+  readonly weight = 0.75;
   private fetchImpl: typeof fetch;
   private now: () => Date;
   private log: (line: string) => void;

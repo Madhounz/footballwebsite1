@@ -85,14 +85,37 @@ describe("reconcileMatches", () => {
     expect(needsReview).toHaveLength(0);
     expect(matches[0].id).toBe(matchKey(rec("x").value));
   });
-  it("flags a tied scoreline disagreement for review", () => {
+  it("quarantines a disputed scoreline instead of sending it to a model", () => {
     const { matches, needsReview } = reconcileMatches(
       [rec("football-data"), rec("api-football", { score: { home: 2, away: 2 } })],
       W,
     );
-    expect(matches[0].value.score).toEqual({ home: 2, away: 1 }); // heavier provider
+    // the primary source's value stands, deterministically
+    expect(matches[0].value.score).toEqual({ home: 2, away: 1 });
     expect(matches[0].confidence).toBeLessThan(0.75);
-    expect(needsReview.map((c) => c.field)).toEqual(["score"]);
+    // and the disagreement is flagged for review, never handed to the validator
+    expect(matches[0].disputedFields).toEqual(["score"]);
+    expect(needsReview).toEqual([]);
+  });
+
+  it("does not flag a mid-match difference, which is lag rather than disagreement", () => {
+    const { matches } = reconcileMatches(
+      [
+        rec("football-data", { status: "live", phase: "2H" }),
+        rec("api-football", { status: "live", phase: "2H", score: { home: 2, away: 2 } }),
+      ],
+      W,
+    );
+    expect(matches[0].disputedFields).toEqual([]);
+  });
+
+  it("still asks the validator about non-factual disagreements", () => {
+    const { matches, needsReview } = reconcileMatches(
+      [rec("football-data"), rec("api-football", { kickoff: "2026-09-19T14:05:00.000Z" })],
+      W,
+    );
+    expect(needsReview.map((c) => c.field)).toEqual(["kickoff"]);
+    expect(matches[0].disputedFields).toEqual([]);
   });
   it("keeps a kickoff shift of a few minutes as a conflict, not a new match", () => {
     const { matches } = reconcileMatches(
@@ -119,5 +142,24 @@ describe("reconcileMatches", () => {
       W,
     );
     expect(matches[0].value.events).toHaveLength(2);
+  });
+});
+
+describe("AIValidator guardrails", () => {
+  it("refuses to decide a factual field even when handed one directly", async () => {
+    const { AIValidator } = await import("../pipeline/ai-validator");
+    // The client is never reached: the guard runs before any request.
+    const validator = new AIValidator({ client: {} as never });
+    await expect(
+      validator.resolveConflicts([
+        {
+          entityType: "match",
+          entityId: "x",
+          field: "score",
+          values: { a: { home: 2, away: 1 }, b: { home: 2, away: 2 } },
+          context: {},
+        },
+      ]),
+    ).rejects.toThrow(/may not decide factual fields/);
   });
 });

@@ -128,9 +128,10 @@ export class PrismaRepository implements Repository {
     });
     return this.views(rows);
   }
-  async getMatch(id: string): Promise<MatchDetail | null> {
-    const m = await this.db.match.findUnique({
-      where: { id },
+  async getMatch(idOrSlug: string): Promise<MatchDetail | null> {
+    const m = await this.db.match.findFirst({
+      // Accepts either form, so links shared before readable slugs still resolve.
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
       include: {
         ...this.include,
         events: { orderBy: [{ minute: "asc" }, { addedTime: "asc" }] },
@@ -365,6 +366,7 @@ function toPlayer(p: DbPlayer): Player {
 function toMatch(m: DbMatch): Match {
   return {
     id: m.id,
+    slug: m.slug,
     competitionId: m.competitionId,
     season: m.season,
     round: m.round,
@@ -384,6 +386,8 @@ function toMatch(m: DbMatch): Match {
     venue: m.venue ?? undefined,
     attendance: m.attendance ?? undefined,
     referee: m.referee ?? undefined,
+    disputed: m.disputed || undefined,
+    disputedFields: m.disputedFields.length > 0 ? m.disputedFields : undefined,
   };
 }
 

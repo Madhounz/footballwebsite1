@@ -91,6 +91,8 @@ export interface Score {
 
 export interface Match {
   id: string;
+  /** URL segment: "arsenal-vs-chelsea-2026-09-19". Derived, see match-slug.ts. */
+  slug: string;
   competitionId: string;
   season: string;
   round: number; // matchday
@@ -108,6 +110,9 @@ export interface Match {
   venue?: string;
   attendance?: number;
   referee?: string;
+  /** Sources disagreed on this settled result; shown from the primary source, flagged for review. */
+  disputed?: boolean;
+  disputedFields?: string[];
 }
 
 export type EventType =

@@ -98,7 +98,9 @@
     "referee": "Referee: {name}",
     "vs": "vs",
     "at": "at",
-    "startingLineups": "Starting line-ups"
+    "startingLineups": "Starting line-ups",
+    "disputed": "Result under review: our sources do not agree on this scoreline.",
+    "disputedShort": "result under review"
   },
   "league": {
     "topFlight": "Top flight",
@@ -248,15 +250,15 @@
     "feedback": "If something looks wrong or you miss something, tell us.",
     "feedbackLink": "Send feedback →",
     "dataTitle": "How the data is kept right",
-    "data": "ninety is built to never trust a single source. A sync pipeline pulls each fixture and result from a licensed data provider every fifteen minutes, normalises it into one model, and is designed to compare it field by field against a second provider as soon as one is connected.",
+    "data": "ninety never trusts a single source. A primary licensed provider supplies fixtures and results, a second provider supplies scorers, line-ups and an independent cross-check, and today's matches are re-read every minute.",
     "step1": "Fetch.",
     "step1t": "Every configured provider is queried for the same competitions.",
     "step2": "Normalise.",
     "step2t": "Team and player names are mapped to canonical identities, so “Man Utd”, “Manchester United FC” and “Manchester United” are one club.",
-    "step3": "Reconcile.",
-    "step3t": "When providers agree, the value is written with full confidence. When they disagree, the majority wins if there is one, and the disagreement is logged.",
-    "step4": "Resolve with AI.",
-    "step4t": "Remaining conflicts are handed to a Claude model with all the evidence. It returns a decision, a confidence and its reasoning, and anything below the confidence bar is held for a human.",
+    "step3": "Reconcile deterministically.",
+    "step3t": "Where the sources agree, the value is written with full confidence. Where they do not, the majority wins; failing that, the primary source does. The rule is fixed, so the same evidence always produces the same answer.",
+    "step4": "Quarantine rather than guess.",
+    "step4t": "A finished result the sources disagree on is shown from the primary source and marked under review, and the disagreement is recorded for a person to settle. No model is allowed to decide how a match ended.",
     "step5": "Derive, never copy.",
     "step5t": "League tables and scorer charts are computed from the results stored here, so a table can never disagree with the results you can click on.",
     "demoNote": "Deployments that show a Demo data badge run on a synthetic season generated for development: real clubs and competitions, but fictional results, squads and players.",
@@ -267,7 +269,8 @@
     "next2": "Europa League coverage.",
     "next3": "Knockout brackets for the Champions League and Europa League.",
     "next4": "Follow your clubs for a personal home page.",
-    "next5": "Written analysis from invited critics."
+    "next5": "Written analysis from invited critics.",
+    "aiRole": "Where AI does help: matching clubs and players across sources, so “Man Utd”, “Manchester United FC” and “مانشستر يونايتد” are one club, and flagging records that look wrong. It is never the authority on a score."
   },
   "countries": {
     "GB-ENG": "England",

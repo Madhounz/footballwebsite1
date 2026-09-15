@@ -112,6 +112,11 @@ export default async function MatchPage({ params }: { params: Params }) {
               {live && <span className="live-dot" />}
               {status}
             </div>
+            {m.disputed && (
+              <p className="mt-1 max-w-xs text-balance text-center text-xs text-review">
+                {t("disputed")}
+              </p>
+            )}
             {m.halfTimeScore && m.status !== "scheduled" && (
               <div className="text-xs text-faint">
                 {t("ht")}{" "}
@@ -299,7 +304,7 @@ function FormList({
           return (
             <li key={v.match.id}>
               <Link
-                href={`/match/${v.match.id}`}
+                href={`/match/${v.match.slug}`}
                 className="row-hover tnum flex items-center gap-2 px-3 py-1.5"
               >
                 <span

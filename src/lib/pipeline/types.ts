@@ -17,7 +17,8 @@ export interface ProviderRecord<T> {
 }
 
 /** A match as one provider sees it, with team identities already mapped to our ids. */
-export type ProviderMatch = Omit<Match, "season" | "minute" | "phase"> & {
+// `slug` is derived from the teams and date, so providers never supply it.
+export type ProviderMatch = Omit<Match, "season" | "minute" | "phase" | "slug"> & {
   minute?: number | null;
   phase?: Match["phase"];
   events?: MatchEvent[];

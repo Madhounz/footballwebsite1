@@ -1,20 +1,31 @@
 # Data pipeline
 
-Goal: every score, table and squad on ninety is right, and when two sources disagree we can show why we chose what we chose.
+Goal: every score, table and squad on ninety is right, and when two sources
+disagree we say so rather than picking a winner quietly.
+
+**A language model is never the authority on a result.** What a match finished
+is settled from the sources by a fixed rule; a disagreement is quarantined and
+shown as under review. AI is used where it is genuinely better than code —
+matching clubs and players across sources, and flagging records that look
+wrong — and refuses factual fields even if handed one (`FACTUAL_FIELDS` in
+`reconcile.ts`, enforced again in `ai-validator.ts`).
 
 ```
-providers ──▶ normalise ──▶ reconcile ──▶ AI validator ──▶ PostgreSQL ──▶ site
- (N APIs)     (ids, names)  (per field)   (conflicts only)  (+ provenance)
+primary ─┐
+         ├─▶ normalise ─▶ reconcile ─▶ quarantine ─▶ PostgreSQL ─▶ site
+secondary┘   (ids, names)  (fixed rule)  (disputed     (+ provenance)
+                                │          results)
+                                └─▶ AI: entity matching, non-factual conflicts
 ```
 
 ## 1. Providers
 
 A `Provider` (`src/lib/pipeline/types.ts`) fetches matches, teams and squads for one competition and returns them in our own domain vocabulary. Two adapters ship:
 
-| Provider          | Env var                 | Notes                                                                                |
-| ----------------- | ----------------------- | ------------------------------------------------------------------------------------ |
-| football-data.org | `FOOTBALL_DATA_API_KEY` | Free tier covers PL, PD, BL1, SA, CL at 10 req/min. EL needs a paid tier. Weight 0.8 |
-| API-Football      | `API_FOOTBALL_KEY`      | Independent second source for cross-checking. Weight 0.7                             |
+| Provider          | Env var                 | Notes                                                                                                                   |
+| ----------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| football-data.org | `FOOTBALL_DATA_API_KEY` | Primary for fixtures and results. Free tier covers PL, PD, BL1, SA, CL at 10 req/min. EL needs a paid tier. Weight 0.85 |
+| API-Football      | `API_FOOTBALL_KEY`      | Secondary: scorers, line-ups, live minute, and an independent cross-check. Weight 0.75                                  |
 
 Every provider with a key is used. Add a source by implementing `Provider` and registering it in `providers/index.ts`.
 
@@ -28,24 +39,45 @@ Provider names are mapped to canonical team ids by `resolveTeamId`: normalise (s
 
 `reconcileMatches` groups records by canonical key and decides each field (`kickoff`, `status`, `score`, `halfTimeScore`, `round`):
 
-| Situation                       | Result      | Confidence                     |
-| ------------------------------- | ----------- | ------------------------------ |
-| all providers agree             | `consensus` | 1.0                            |
-| strict majority                 | `majority`  | share of agreeing weight       |
-| tie (e.g. two providers differ) | `weight`    | ≤ 0.5, flagged for the AI step |
-| only one provider               | `consensus` | 0.6                            |
+| Situation                  | Result      | Confidence               | Then                                                                            |
+| -------------------------- | ----------- | ------------------------ | ------------------------------------------------------------------------------- |
+| all providers agree        | `consensus` | 1.0                      | written                                                                         |
+| strict majority            | `majority`  | share of agreeing weight | written                                                                         |
+| tie (two providers differ) | `weight`    | ≤ 0.5                    | primary source wins; factual fields quarantined, others may go to the validator |
+| only one provider          | `consensus` | 0.6                      | written                                                                         |
+
+Trust is explicit, not incidental: football-data is primary for fixtures and
+results (weight 0.85), API-Football secondary and the source of detail (0.75).
+A tie therefore always settles the same way rather than on iteration order.
+
+A tie on `score`, `halfTimeScore` or `status` for a **finished** match sets
+`Match.disputed` with the field names. The primary source's value is still
+stored and shown, with a "result under review" marker on the match, and the
+disagreement is recorded in `Discrepancy`. Before full time the sources are
+merely at different points in the match, which is lag rather than disagreement,
+so nothing is flagged.
 
 Events (goals, cards, substitutions) are unioned and de-duplicated across providers.
 
-## 4. AI validator
+## 4. AI validator, on a short leash
 
-`AIValidator` (`src/lib/pipeline/ai-validator.ts`) uses the Anthropic SDK with structured outputs. For each unresolved conflict it receives every provider's value, when each provider last updated, and context (teams, kickoff, status). It answers with a chosen provider, a confidence and one or two sentences of reasoning. Rules baked into the system prompt:
+`AIValidator` (`src/lib/pipeline/ai-validator.ts`) uses the Anthropic SDK with
+structured outputs, and is allowed exactly two jobs:
+
+- **Entity matching.** Unknown club and player names against the ones we hold.
+- **Non-factual conflicts.** Kick-off times, rounds, venues.
+
+It is refused `score`, `halfTimeScore` and `status`, and throws if a caller
+passes one, so the restriction cannot be lost by a later change upstream. For
+what it is allowed, it receives every provider's value, when each provider last
+updated, and context, and answers with a chosen provider, a confidence and a
+sentence of reasoning. Rules in the system prompt:
 
 - choose only among the provided values, never invent one;
 - prefer the most recently updated provider for live or just-finished matches;
 - decline (null, low confidence) rather than guess.
 
-Answers below `minConfidence` (0.8) stay unresolved and the run exits non-zero so someone looks. Every decision, including the reasoning, is stored in `Discrepancy`.
+Answers below `minConfidence` (0.8) stay unresolved and are reported at the end of the run. Every decision, including the reasoning, is stored in `Discrepancy` alongside the disputed results, which is the queue a person reviews.
 
 The model is `claude-opus-5` (override with `NINETY_AI_MODEL`). The system prompt is marked for prompt caching. Server-side refusal fallbacks are not enabled; the validator treats a refusal as "unresolved", which is the safe outcome for this use.
 

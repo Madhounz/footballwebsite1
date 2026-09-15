@@ -8,7 +8,7 @@
 
 ninety is a competitor to the big, cluttered scores sites, in English and Arabic. One page shows today's matches across every tracked competition; yesterday, tomorrow and any date are one tap away; every table, squad, player and match is reachable in two. No ads, no pop-ups. Light and dark. Fast on a phone.
 
-Behind it sits a data pipeline that never trusts a single provider: results are fetched from several sources, reconciled field by field, and disagreements are settled by Claude with an auditable confidence and reasoning. Tables and scorer charts are derived from the stored results, so they can never contradict the matches you click on.
+Behind it sits a data pipeline that never trusts a single provider: results are fetched from several sources and reconciled field by field by a fixed rule. A disagreement about a finished result is never settled by a model — it is shown from the primary source, marked under review, and recorded. AI is used for what it is actually good at: matching clubs and players across sources, and flagging records that look wrong. Tables and scorer charts are derived from the stored results, so they can never contradict the matches you click on.
 
 ## Quick start
 

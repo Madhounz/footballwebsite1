@@ -107,7 +107,8 @@ export interface FootballDataOptions {
 
 export class FootballDataProvider implements Provider {
   readonly id = "football-data";
-  readonly weight = 0.8;
+  /** Primary source for fixtures and results: highest trust, so ties settle here. */
+  readonly weight = 0.85;
   private fetchImpl: typeof fetch;
   private lastRequest = 0;
   private readonly minGap: number;

@@ -48,7 +48,7 @@ export async function MatchRow({
 
   return (
     <Link
-      href={`/match/${m.id}`}
+      href={`/match/${m.slug}`}
       className="row-hover @container grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4"
       aria-label={`${teamName(home, locale)} ${m.score ? `${m.score.home}–${m.score.away}` : t("vs")} ${teamName(away, locale)}`}
     >
@@ -79,6 +79,13 @@ export async function MatchRow({
         >
           {live && <span className="live-dot" aria-hidden="true" />}
           {status}
+          {m.disputed && (
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full bg-review"
+              title={t("disputed")}
+              aria-label={t("disputedShort")}
+            />
+          )}
         </span>
       </span>
 
