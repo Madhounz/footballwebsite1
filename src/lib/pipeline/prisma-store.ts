@@ -15,6 +15,17 @@ export class PrismaSyncStore implements SyncStore {
     return run.id;
   }
 
+  async reset() {
+    // Dependency order; provenance tables are kept.
+    await this.db.matchEvent.deleteMany();
+    await this.db.lineup.deleteMany();
+    await this.db.match.deleteMany();
+    await this.db.player.deleteMany();
+    await this.db.teamCompetition.deleteMany();
+    await this.db.team.deleteMany();
+    await this.db.competition.deleteMany();
+  }
+
   async seed(competition: Competition, teams: ProviderTeam[]) {
     const { zones, ...comp } = competition;
     await this.db.competition.upsert({

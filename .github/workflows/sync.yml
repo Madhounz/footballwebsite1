@@ -20,6 +20,10 @@ on:
         description: "Also fetch teams and squads (tick this on the first run)"
         type: boolean
         default: true
+      reset:
+        description: "Wipe teams, players and matches first (start over; keeps nothing)"
+        type: boolean
+        default: false
 
 concurrency:
   group: sync
@@ -46,6 +50,7 @@ jobs:
         run: |
           ARGS=""
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.seed }}" = "true" ]; then ARGS="--seed"; fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.reset }}" = "true" ]; then ARGS="$ARGS --reset"; fi
           if [ "${{ github.event.schedule }}" = "17 4 * * *" ]; then ARGS="--seed"; fi
           pnpm sync -- $ARGS
         env:

@@ -5,6 +5,8 @@ import type { Conflict, ProviderTeam, Resolution } from "./types";
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
 export interface SyncStore {
   beginRun(trigger: string, providers: string[]): Promise<string>;
+  /** Delete every competition, team, player, match and event. Only for an explicit --reset. */
+  reset(): Promise<void>;
   /** Upsert a competition, the teams taking part this season and their squads. */
   seed(
     competition: Competition,
@@ -33,6 +35,9 @@ export class DryRunStore implements SyncStore {
   async beginRun(trigger: string, providers: string[]) {
     this.log(`[dry-run] run trigger=${trigger} providers=${providers.join(",") || "none"}`);
     return "dry-run";
+  }
+  async reset() {
+    this.log("[dry-run] reset: would delete all competitions, teams, players and matches");
   }
   async seed(competition: Competition, teams: ProviderTeam[]) {
     const players = teams.reduce((n, t) => n + (t.squad?.length ?? 0), 0);

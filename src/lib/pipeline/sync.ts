@@ -30,11 +30,14 @@ export interface SyncResult {
   conflicts: number;
   aiResolved: number;
   unresolved: Conflict[];
+  /** "competition/provider" pairs that were skipped because the provider refused them. */
+  skipped: string[];
 }
 
 /**
  * fetch -> reconcile -> (ai) -> store, per competition. Provider failures are
- * isolated: one provider going down degrades confidence, it never stops the run.
+ * isolated: one provider refusing a competition, or going down, degrades
+ * confidence for that competition; it never stops the run.
  */
 export async function runSync(opts: SyncOptions): Promise<SyncResult> {
   const log = opts.log ?? (() => {});
@@ -50,8 +53,13 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     conflicts: 0,
     aiResolved: 0,
     unresolved: [],
+    skipped: [],
   };
   let error: string | undefined;
+  // Providers that refused a competition (403) are not asked about it again this run.
+  const refused = new Set<string>();
+  // Teams whose squad was already written this run (a club in a league and a cup).
+  const squadDone = new Set<string>();
 
   try {
     for (const competition of opts.competitions) {
@@ -60,41 +68,34 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
         log(`skip ${competition.name}: no provider supports it`);
         continue;
       }
-      if (opts.seed) {
-        // The first provider that knows the competition's teams seeds it; others only cross-check results.
-        for (const p of providers) {
-          const teams = (await p.fetchTeams(competition)).map((r) => r.value);
-          if (teams.length === 0) continue;
-          const seeded = await opts.store.seed(competition, teams);
-          result.seeded.teams += seeded.teams;
-          result.seeded.players += seeded.players;
-          const fresh = teams.filter((t) => t.isNew).map((t) => `${t.id} ("${t.name}")`);
-          log(
-            `${competition.shortName}: seeded ${seeded.teams} teams, ${seeded.players} players from ${p.id}${fresh.length ? `; new: ${fresh.join(", ")}` : ""}`,
-          );
-          break;
-        }
-      }
 
+      if (opts.seed) await seedCompetition(competition, providers);
+
+      const active = providers.filter((p) => !refused.has(`${competition.id}/${p.id}`));
+      if (active.length === 0) {
+        log(`${competition.shortName}: no provider can serve it; skipped`);
+        continue;
+      }
       const settled = await Promise.allSettled(
-        providers.map((p) => p.fetchMatches(competition, opts.window)),
+        active.map((p) => p.fetchMatches(competition, opts.window)),
       );
       const records: ProviderRecord<ProviderMatch>[] = [];
       const recency: Record<string, string | undefined> = {};
       settled.forEach((s, i) => {
         if (s.status === "fulfilled") {
           records.push(...s.value);
-          recency[providers[i].id] = s.value
+          recency[active[i].id] = s.value
             .map((r) => r.updatedAt)
             .filter(Boolean)
             .sort()
             .at(-1);
-          log(`${competition.shortName}: ${providers[i].id} returned ${s.value.length} matches`);
+          log(`${competition.shortName}: ${active[i].id} returned ${s.value.length} matches`);
         } else {
-          log(`${competition.shortName}: ${providers[i].id} failed: ${String(s.reason)}`);
+          noteFailure(competition, active[i], s.reason);
         }
       });
       result.fetched += records.length;
+      if (records.length === 0) continue;
 
       const { matches, needsReview } = reconcileMatches(records, weights);
       const allConflicts = matches.flatMap((m) => m.conflicts);
@@ -109,12 +110,11 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
         needsReview.forEach((c, i) => {
           const r = decided[i];
           const idx = allConflicts.indexOf(c);
+          resolutions[idx] = r;
           if (r.resolvedBy === "ai") {
-            resolutions[idx] = r;
             applyResolution(matches, c, r);
             result.aiResolved++;
           } else {
-            resolutions[idx] = r;
             result.unresolved.push(c);
           }
         });
@@ -122,7 +122,9 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
         result.unresolved.push(...needsReview);
       }
 
-      result.written += await opts.store.upsertMatches(competition, matches);
+      const written = await opts.store.upsertMatches(competition, matches);
+      result.written += written;
+      log(`${competition.shortName}: wrote ${written} matches`);
       await opts.store.recordConflicts(runId, allConflicts, resolutions);
     }
   } catch (e) {
@@ -139,6 +141,65 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     });
   }
   return result;
+
+  function noteFailure(competition: Competition, provider: Provider, reason: unknown) {
+    const msg = String(reason instanceof Error ? reason.message : reason);
+    const key = `${competition.id}/${provider.id}`;
+    if (/\b403\b/.test(msg)) {
+      refused.add(key);
+      result.skipped.push(key);
+      log(
+        `${competition.shortName}: ${provider.id} does not offer this competition on your plan; skipped`,
+      );
+    } else {
+      log(`${competition.shortName}: ${provider.id} failed: ${msg}`);
+    }
+  }
+
+  /** The first provider that knows the competition's teams seeds it; others only cross-check results. */
+  async function seedCompetition(competition: Competition, providers: Provider[]) {
+    for (const p of providers) {
+      let teams;
+      try {
+        teams = (await p.fetchTeams(competition)).map((r) => ({ record: r, team: r.value }));
+      } catch (e) {
+        noteFailure(competition, p, e);
+        continue;
+      }
+      if (teams.length === 0) continue;
+
+      // A cup's team list often carries no squads; fetch them per club, once per run.
+      for (const { record, team } of teams) {
+        if (squadDone.has(team.id)) {
+          team.squad = [];
+          continue;
+        }
+        if (!team.squad?.length) {
+          try {
+            team.squad = (await p.fetchSquad(record.externalId)).map((r) => r.value);
+          } catch (e) {
+            log(
+              `${competition.shortName}: squad for ${team.id} failed: ${String(e instanceof Error ? e.message : e)}`,
+            );
+            team.squad = [];
+          }
+        }
+        if (team.squad.length) squadDone.add(team.id);
+      }
+
+      const seeded = await opts.store.seed(
+        competition,
+        teams.map((t) => t.team),
+      );
+      result.seeded.teams += seeded.teams;
+      result.seeded.players += seeded.players;
+      const fresh = teams.filter((t) => t.team.isNew).map((t) => `${t.team.id} ("${t.team.name}")`);
+      log(
+        `${competition.shortName}: seeded ${seeded.teams} teams, ${seeded.players} players from ${p.id}${fresh.length ? `; new: ${fresh.join(", ")}` : ""}`,
+      );
+      return;
+    }
+  }
 }
 
 function applyResolution(matches: ReconciledMatch[], conflict: Conflict, resolution: Resolution) {

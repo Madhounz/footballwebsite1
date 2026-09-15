@@ -3,6 +3,7 @@
  *
  *   pnpm sync                         # whole current season, every configured provider, write to DB
  *   pnpm sync -- --seed               # also fetch teams + squads first (required on the first run)
+ *   pnpm sync -- --seed --reset       # wipe competitions/teams/players/matches first, then seed
  *   pnpm sync -- --dry-run            # print instead of writing (no DATABASE_URL needed)
  *   pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
  *   pnpm sync -- --no-ai              # deterministic reconciliation only
@@ -40,6 +41,11 @@ async function main() {
   };
   const dryRun = flag("dry-run");
   const seed = flag("seed");
+  const reset = flag("reset");
+  if (reset && !seed) {
+    console.error("--reset only makes sense together with --seed.");
+    process.exit(2);
+  }
   const useAI = !flag("no-ai") && AIValidator.available();
 
   // Competition definitions and the starting alias list come from the same JSON the demo uses.
@@ -79,6 +85,11 @@ async function main() {
     `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} ${dryRun ? "(dry run)" : ""}`,
   );
 
+  if (reset) {
+    console.log("resetting: deleting competitions, teams, players and matches");
+    await store.reset();
+  }
+
   const result = await runSync({
     competitions,
     providers,
@@ -114,7 +125,7 @@ async function main() {
     }
   }
   console.log(
-    `\nseeded ${result.seeded.teams} teams / ${result.seeded.players} players, fetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}`,
+    `\nseeded ${result.seeded.teams} teams / ${result.seeded.players} players, fetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}${result.skipped.length ? `, skipped ${result.skipped.join(" ")}` : ""}`,
   );
   if (result.unresolved.length) process.exitCode = 1;
 }
