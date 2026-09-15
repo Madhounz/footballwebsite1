@@ -3,7 +3,7 @@
  * expressed in our own domain vocabulary. The reconciler compares records for
  * the same entity across providers and produces a single trusted value.
  */
-import type { Competition, Match, MatchEvent, Player, Team } from "../types";
+import type { Competition, Match, MatchEvent, Player, Position, Team, TeamLineup } from "../types";
 
 export type ProviderId = "football-data" | "api-football" | (string & {});
 
@@ -21,7 +21,23 @@ export type ProviderMatch = Omit<Match, "season" | "minute" | "phase"> & {
   minute?: number | null;
   phase?: Match["phase"];
   events?: MatchEvent[];
+  lineups?: { home: TeamLineup; away: TeamLineup };
 };
+
+/** A player as a provider names them inside a match (events, line-ups). */
+export interface ProviderPlayerRef {
+  externalId: string;
+  name: string;
+  shirtNumber?: number | null;
+  position?: Position | null;
+}
+
+/**
+ * Maps a provider's player onto one of ours for a given team, creating a
+ * player when nothing matches. Supplied by the store so the pipeline can run
+ * against a database or in dry-run mode.
+ */
+export type PlayerResolver = (teamId: string, player: ProviderPlayerRef) => Promise<string>;
 
 export interface ProviderTeam extends Omit<
   Team,

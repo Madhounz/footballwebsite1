@@ -7,6 +7,7 @@
  *   pnpm sync -- --dry-run            # print instead of writing (no DATABASE_URL needed)
  *   pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
  *   pnpm sync -- --no-ai              # deterministic reconciliation only
+ *   pnpm sync -- --details            # force API-Football match details even with no match near kick-off
  *
  * Reads FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, ANTHROPIC_API_KEY, DATABASE_URL.
  */
@@ -65,24 +66,29 @@ async function main() {
     shortName: t[2],
   }));
 
+  const store = dryRun
+    ? new DryRunStore()
+    : new (await import("../src/lib/pipeline/prisma-store")).PrismaSyncStore();
+  // Match details cost API-Football requests; only spend them when a match is near kick-off, live, or just finished.
+  const detailsEnabled =
+    seed || flag("details") || (await store.hasMatchesAround(new Date(), 70, 240));
+
   const unknown = new Map<string, { provider: string; externalId: string }>();
-  const providers = providersFromEnv(
-    process.env,
+  const providers = providersFromEnv(process.env, {
     knownTeams,
-    seasonStart,
-    (provider, name, externalId) => unknown.set(name, { provider, externalId }),
-  );
+    seasonStartYear: seasonStart,
+    resolvePlayer: store.playerResolver(),
+    detailsEnabled,
+    onUnknownTeam: (provider, name, externalId) => unknown.set(name, { provider, externalId }),
+    log: console.log,
+  });
   if (providers.length === 0) {
     console.error("No providers configured. Set FOOTBALL_DATA_API_KEY and/or API_FOOTBALL_KEY.");
     process.exit(2);
   }
-
-  const store = dryRun
-    ? new DryRunStore()
-    : new (await import("../src/lib/pipeline/prisma-store")).PrismaSyncStore();
   const ai = useAI ? new AIValidator() : null;
   console.log(
-    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} ${dryRun ? "(dry run)" : ""}`,
+    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} details=${detailsEnabled} ${dryRun ? "(dry run)" : ""}`,
   );
 
   if (reset) {
@@ -124,6 +130,12 @@ async function main() {
         );
     }
   }
+  const af = providers.find((p) => p.id === "api-football") as
+    { requestsMade?: number; remaining?: number | null } | undefined;
+  if (af)
+    console.log(
+      `api-football: ${af.requestsMade ?? 0} requests this run, ${af.remaining ?? "?"} left today`,
+    );
   console.log(
     `\nseeded ${result.seeded.teams} teams / ${result.seeded.players} players, fetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}${result.skipped.length ? `, skipped ${result.skipped.join(" ")}` : ""}`,
   );

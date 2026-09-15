@@ -265,6 +265,19 @@ export const TEAM_ALIASES: Record<string, string> = {
   "sl bratislava": "slovan-bratislava",
   "sabah fk": "sabah",
   sabah: "sabah",
+  // API-Football spellings
+  leeds: "leeds-united",
+  "psv eindhoven": "psv",
+  "union st gilloise": "union-sg",
+  "olympiakos piraeus": "olympiacos",
+  olympiakos: "olympiacos",
+  "basel 1893": "basel",
+  "as roma": "roma",
+  "fc porto": "porto",
+  "fc copenhagen": "copenhagen",
+  "fc midtjylland": "midtjylland",
+  "bodo/glimt": "bodo-glimt",
+  "aek athens fc": "aek-athens",
 };
 
 // Alias keys are normalised the same way provider names are, so "FC Internazionale Milano"

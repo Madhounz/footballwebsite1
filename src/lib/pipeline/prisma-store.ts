@@ -3,7 +3,8 @@ import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
 import type { SyncStore } from "./store";
 import { slugify } from "../slug";
-import type { Conflict, ProviderTeam, Resolution } from "./types";
+import { matchPlayer, type SquadEntry } from "./players";
+import type { Conflict, PlayerResolver, ProviderTeam, Resolution } from "./types";
 
 export class PrismaSyncStore implements SyncStore {
   private get db() {
@@ -13,6 +14,114 @@ export class PrismaSyncStore implements SyncStore {
   async beginRun(trigger: string, providers: string[]) {
     const run = await this.db.syncRun.create({ data: { trigger, providers } });
     return run.id;
+  }
+
+  async hasMatchesAround(now: Date, beforeMin: number, afterMin: number) {
+    const n = await this.db.match.count({
+      where: {
+        kickoff: {
+          gte: new Date(now.getTime() - afterMin * 60_000),
+          lte: new Date(now.getTime() + beforeMin * 60_000),
+        },
+        status: { notIn: ["postponed", "cancelled"] },
+      },
+    });
+    return n > 0;
+  }
+
+  /**
+   * Resolves provider players against the team's squad in the database. A
+   * player nobody recognises is created (id "af-<externalId>") so events and
+   * line-ups can reference them; the alias is remembered for next time.
+   */
+  playerResolver(): PlayerResolver {
+    const squads = new Map<string, SquadEntry[]>();
+    const aliases = new Map<string, string>();
+    const loadSquad = async (teamId: string) => {
+      let s = squads.get(teamId);
+      if (!s) {
+        s = (
+          await this.db.player.findMany({
+            where: { teamId },
+            select: { id: true, name: true, shirtNumber: true },
+          })
+        ).map((p) => ({
+          id: p.id,
+          name: p.name,
+          shirtNumber: p.shirtNumber,
+        }));
+        squads.set(teamId, s);
+      }
+      return s;
+    };
+    return async (teamId, ref) => {
+      const key = `${ref.externalId}`;
+      const cached = aliases.get(key);
+      if (cached) return cached;
+      const stored = await this.db.entityAlias.findUnique({
+        where: {
+          provider_entityType_externalId: {
+            provider: "api-football",
+            entityType: "player",
+            externalId: ref.externalId,
+          },
+        },
+      });
+      if (stored) {
+        aliases.set(key, stored.entityId);
+        return stored.entityId;
+      }
+      const squad = await loadSquad(teamId);
+      let id = matchPlayer(ref, squad);
+      if (!id) {
+        id = `af-${ref.externalId}`;
+        const parts = ref.name.trim().split(/\s+/);
+        const base = slugify(ref.name) || id;
+        const clash = await this.db.player.findUnique({
+          where: { slug: base },
+          select: { id: true },
+        });
+        const slug = clash && clash.id !== id ? `${base}-${ref.externalId}` : base;
+        await this.db.player.upsert({
+          where: { id },
+          create: {
+            id,
+            slug,
+            name: ref.name,
+            firstName: parts[0],
+            lastName: parts.slice(1).join(" ") || parts[0],
+            teamId,
+            position: ref.position ?? "MF",
+            shirtNumber: ref.shirtNumber ?? 0,
+            nationality: "",
+            nationalityCode: "",
+            dateOfBirth: new Date("1900-01-01"),
+          },
+          update: { teamId, ...(ref.shirtNumber ? { shirtNumber: ref.shirtNumber } : {}) },
+        });
+        squad.push({ id, name: ref.name, shirtNumber: ref.shirtNumber ?? undefined });
+      }
+      await this.db.entityAlias.upsert({
+        where: {
+          provider_entityType_externalId: {
+            provider: "api-football",
+            entityType: "player",
+            externalId: ref.externalId,
+          },
+        },
+        create: {
+          provider: "api-football",
+          entityType: "player",
+          externalId: ref.externalId,
+          externalName: ref.name,
+          entityId: id,
+          source: id.startsWith("af-") ? "created" : "matched",
+        },
+        update: { entityId: id, externalName: ref.name },
+      });
+      aliases.set(key, id);
+      return id;
+    };
   }
 
   async reset() {
@@ -139,6 +248,21 @@ export class PrismaSyncStore implements SyncStore {
             detail: e.detail ?? null,
           })),
         });
+      }
+      if (v.lineups) {
+        for (const side of [v.lineups.home, v.lineups.away]) {
+          const data = {
+            formation: side.formation,
+            starting: side.starting as unknown as object[],
+            bench: side.bench as unknown as object[],
+            coach: side.coach ?? null,
+          };
+          await this.db.lineup.upsert({
+            where: { matchId_teamId: { matchId: m.id, teamId: side.teamId } },
+            create: { matchId: m.id, teamId: side.teamId, ...data },
+            update: data,
+          });
+        }
       }
       n++;
     }

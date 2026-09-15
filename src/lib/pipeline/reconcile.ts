@@ -125,7 +125,9 @@ export function reconcileMatches(
         return true;
       })
       .sort((a, b) => a.minute - b.minute || (a.addedTime ?? 0) - (b.addedTime ?? 0));
-    matches.push({ id: key, value: { ...base, id: key, events }, confidence, conflicts });
+    // line-ups: first provider that has them
+    const lineups = list.find((r) => r.value.lineups)?.value.lineups;
+    matches.push({ id: key, value: { ...base, id: key, events, lineups }, confidence, conflicts });
   }
   return { matches, needsReview };
 }

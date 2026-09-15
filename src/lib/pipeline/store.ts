@@ -1,12 +1,16 @@
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
-import type { Conflict, ProviderTeam, Resolution } from "./types";
+import type { Conflict, PlayerResolver, ProviderTeam, Resolution } from "./types";
 
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
 export interface SyncStore {
   beginRun(trigger: string, providers: string[]): Promise<string>;
   /** Delete every competition, team, player, match and event. Only for an explicit --reset. */
   reset(): Promise<void>;
+  /** Whether any known match kicks off within [now - afterMin, now + beforeMin]. Gates paid detail fetches. */
+  hasMatchesAround(now: Date, beforeMin: number, afterMin: number): Promise<boolean>;
+  /** Player identity for providers that name players inside matches. */
+  playerResolver(): PlayerResolver;
   /** Upsert a competition, the teams taking part this season and their squads. */
   seed(
     competition: Competition,
@@ -38,6 +42,12 @@ export class DryRunStore implements SyncStore {
   }
   async reset() {
     this.log("[dry-run] reset: would delete all competitions, teams, players and matches");
+  }
+  async hasMatchesAround() {
+    return true;
+  }
+  playerResolver(): PlayerResolver {
+    return async (teamId, p) => `${teamId}:${p.externalId}`;
   }
   async seed(competition: Competition, teams: ProviderTeam[]) {
     const players = teams.reduce((n, t) => n + (t.squad?.length ?? 0), 0);

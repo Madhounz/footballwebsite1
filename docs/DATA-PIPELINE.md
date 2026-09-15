@@ -81,7 +81,9 @@ pnpm sync -- --no-ai
 
 The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
 
-### Known limits of the free football-data tier
+### How the two free tiers are combined
 
-- No Europa League (needs a paid tier); the UEL pages stay empty until a second provider covers it.
-- No match events, line-ups or live minute. Scores, statuses and tables are live; the match page shows "Live" without a minute, and scorer charts stay empty until an events source is added.
+- **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
+- **API-Football** is spent only where it adds something: one request for each day around today (all leagues at once) and one request per 20 matches for events and line-ups, and only when a match is within 70 minutes before or 4 hours after kick-off (`store.hasMatchesAround`). It is the sole source for the Europa League, so it fetches that whole season on seed runs. It reads the `x-ratelimit-requests-remaining` header and stops with a reserve of 5 left. A plan or token error disables it for the rest of the run.
+- Players named in events and line-ups are matched to the squad already in the database by normalised surname, initial and shirt number (`src/lib/pipeline/players.ts`). No match → the player is created with id `af-<id>`, and either way the mapping is remembered in `EntityAlias`.
+- When both providers report the same match, every field is reconciled; disagreements land in `Discrepancy` and, with an Anthropic key, go to the validator.
