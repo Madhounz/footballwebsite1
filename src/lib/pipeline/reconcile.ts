@@ -17,7 +17,12 @@ export function decide(
   weights: Record<string, number>,
 ): Resolution {
   const entries = Object.entries(values).filter(([, v]) => v !== undefined && v !== null);
-  if (entries.length === 0) return { value: undefined, resolvedBy: "unresolved", confidence: 0 };
+  // Every provider says "nothing here" (no score for a future match): that is agreement.
+  if (entries.length === 0) {
+    return Object.keys(values).length > 0
+      ? { value: null, resolvedBy: "consensus", confidence: 1 }
+      : { value: undefined, resolvedBy: "unresolved", confidence: 0 };
+  }
   if (entries.length === 1)
     return { value: entries[0][1], resolvedBy: "consensus", confidence: 0.6 };
 

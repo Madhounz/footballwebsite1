@@ -47,6 +47,23 @@ describe("decide", () => {
     expect(r).toMatchObject({ value: 2, resolvedBy: "weight" });
     expect(r.confidence).toBeLessThanOrEqual(0.5);
   });
+  it("treats an empty value from every provider as agreement, not a conflict", () => {
+    expect(decide({ a: null, b: null }, W)).toMatchObject({
+      value: null,
+      resolvedBy: "consensus",
+      confidence: 1,
+    });
+    expect(decide({ a: null }, W)).toMatchObject({ value: null, resolvedBy: "consensus" });
+    expect(decide({}, W).resolvedBy).toBe("unresolved");
+  });
+  it("does not flag unplayed matches from a single provider", () => {
+    const { matches, needsReview } = reconcileMatches(
+      [rec("football-data", { status: "scheduled", score: null, halfTimeScore: null })],
+      W,
+    );
+    expect(matches[0].conflicts).toHaveLength(0);
+    expect(needsReview).toHaveLength(0);
+  });
   it("treats a single provider as weak consensus", () => {
     expect(decide({ a: 1 }, W)).toMatchObject({
       value: 1,
