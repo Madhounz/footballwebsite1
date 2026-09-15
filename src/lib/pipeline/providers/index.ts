@@ -16,6 +16,7 @@ export function providersFromEnv(
     list.push(
       new FootballDataProvider({
         apiKey: env.FOOTBALL_DATA_API_KEY,
+        season: seasonStartYear,
         knownTeams,
         onUnknownTeam: (n, id) => onUnknownTeam?.("football-data", n, id),
       }),

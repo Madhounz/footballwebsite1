@@ -1,17 +1,18 @@
 /**
  * Runs the data pipeline once.
  *
- *   pnpm sync                      # today ±1 day, every configured provider, write to DB
- *   pnpm sync -- --dry-run         # print instead of writing (no DATABASE_URL needed)
+ *   pnpm sync                         # whole current season, every configured provider, write to DB
+ *   pnpm sync -- --seed               # also fetch teams + squads first (required on the first run)
+ *   pnpm sync -- --dry-run            # print instead of writing (no DATABASE_URL needed)
  *   pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
- *   pnpm sync -- --no-ai           # deterministic reconciliation only
+ *   pnpm sync -- --no-ai              # deterministic reconciliation only
  *
  * Reads FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, ANTHROPIC_API_KEY, DATABASE_URL.
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { addDays, todayISO } from "../src/lib/dates";
+import { todayISO } from "../src/lib/dates";
 import type { Competition, Team } from "../src/lib/types";
 import { AIValidator } from "../src/lib/pipeline/ai-validator";
 import { providersFromEnv } from "../src/lib/pipeline/providers";
@@ -29,20 +30,22 @@ const flag = (name: string) => process.argv.includes(`--${name}`);
 
 async function main() {
   const today = todayISO();
-  const window = {
-    fromDate: arg("from") ?? addDays(today, -1),
-    toDate: arg("to") ?? addDays(today, 1),
-  };
-  const dryRun = flag("dry-run");
-  const useAI = !flag("no-ai") && AIValidator.available();
-
-  // Competition and team definitions are seeded from the same JSON the demo uses.
-  const competitionsSrc = JSON.parse(
-    fs.readFileSync(path.join(root, "data/demo/competitions.json"), "utf8"),
-  ) as Omit<Competition, "season">[];
+  // European seasons run July -> June.
   const seasonStart =
     today.slice(5) >= "07-01" ? Number(today.slice(0, 4)) : Number(today.slice(0, 4)) - 1;
   const season = `${seasonStart}/${String(seasonStart + 1).slice(2)}`;
+  const window = {
+    fromDate: arg("from") ?? `${seasonStart}-07-01`,
+    toDate: arg("to") ?? `${seasonStart + 1}-06-30`,
+  };
+  const dryRun = flag("dry-run");
+  const seed = flag("seed");
+  const useAI = !flag("no-ai") && AIValidator.available();
+
+  // Competition definitions and the starting alias list come from the same JSON the demo uses.
+  const competitionsSrc = JSON.parse(
+    fs.readFileSync(path.join(root, "data/demo/competitions.json"), "utf8"),
+  ) as Omit<Competition, "season">[];
   const wanted = arg("competitions")?.split(",");
   const competitions: Competition[] = competitionsSrc
     .map((c) => ({ ...c, season }))
@@ -73,7 +76,7 @@ async function main() {
     : new (await import("../src/lib/pipeline/prisma-store")).PrismaSyncStore();
   const ai = useAI ? new AIValidator() : null;
   console.log(
-    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} ${dryRun ? "(dry run)" : ""}`,
+    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} ${dryRun ? "(dry run)" : ""}`,
   );
 
   const result = await runSync({
@@ -82,14 +85,22 @@ async function main() {
     window,
     store,
     ai,
+    seed,
     trigger: process.env.GITHUB_ACTIONS ? "cron" : "manual",
     log: console.log,
   });
 
   if (unknown.size) {
-    console.log(`\n${unknown.size} provider team names matched nothing:`);
+    console.log(
+      `\n${unknown.size} provider team names matched nothing (their matches were skipped):`,
+    );
     for (const [name, meta] of unknown)
       console.log(`  ${meta.provider} #${meta.externalId} "${name}"`);
+    console.log(
+      seed
+        ? "Add them to TEAM_ALIASES in src/lib/pipeline/normalize.ts if they are existing clubs."
+        : "Run with --seed so the provider's team list creates them.",
+    );
     if (ai) {
       const matches = await ai.matchEntities(
         "team",
@@ -100,11 +111,10 @@ async function main() {
         console.log(
           `  → "${m.providerName}" = ${m.canonicalId ?? "unresolved"} (${m.confidence}) ${m.reasoning}`,
         );
-      console.log("Add confirmed matches to TEAM_ALIASES in src/lib/pipeline/normalize.ts.");
     }
   }
   console.log(
-    `\nfetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}`,
+    `\nseeded ${result.seeded.teams} teams / ${result.seeded.players} players, fetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}`,
   );
   if (result.unresolved.length) process.exitCode = 1;
 }

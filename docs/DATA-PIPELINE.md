@@ -60,14 +60,28 @@ The model is `claude-opus-5` (override with `NINETY_AI_MODEL`). The system promp
 ## Running it
 
 ```bash
+pnpm sync -- --seed                           # first run: teams + squads, then the whole season
+pnpm sync                                     # every later run: whole season's matches (one request per competition)
 pnpm sync -- --dry-run                        # print, no DB
-pnpm sync                                     # today ±1 day
-pnpm sync -- --from 2026-08-01 --to 2026-09-30 --competitions epl,ucl
+pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
 pnpm sync -- --no-ai
 ```
 
+`--seed` asks the provider for the competition's team list this season. Known clubs are matched through the alias table; a club the alias table has never seen (a newly promoted side, a first-time UEFA qualifier) is created from the provider's team record, logged as `new:` in the output, and appended to the in-memory alias list so its matches resolve in the same run. Matches alone never create teams.
+
 `.github/workflows/sync.yml` runs it every 15 minutes with repository secrets. Point `DATABASE_URL` at a reachable database (Neon, Supabase, RDS…) and set `DATA_SOURCE=db` on the deployed site.
 
-## Seeding competitions, teams and squads
+## Going live, step by step
 
-`scripts/sync.ts` seeds competition and team definitions from `data/demo/*.json`. Squad ingestion through `fetchSquad` is implemented in the football-data adapter and is the next piece to wire into the store (see roadmap).
+1. Get a football-data.org key (free): https://www.football-data.org/client/register
+2. Create a PostgreSQL database (free tiers: Neon, Supabase, or Vercel Storage → Neon).
+3. In GitHub → Settings → Secrets and variables → Actions add secrets `DATABASE_URL` and `FOOTBALL_DATA_API_KEY`, and the variable `SYNC_ENABLED=true`.
+4. Actions → **Sync data** → Run workflow with _seed_ ticked. It applies migrations, seeds teams and squads, and loads the season.
+5. On the host set `DATABASE_URL` and `DATA_SOURCE=db`, redeploy.
+
+The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
+
+### Known limits of the free football-data tier
+
+- No Europa League (needs a paid tier); the UEL pages stay empty until a second provider covers it.
+- No match events, line-ups or live minute. Scores, statuses and tables are live; the match page shows "Live" without a minute, and scorer charts stay empty until an events source is added.

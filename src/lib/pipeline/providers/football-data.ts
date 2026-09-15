@@ -1,4 +1,4 @@
-import type { Competition, MatchStatus } from "../../types";
+import type { Competition, MatchStatus, Position } from "../../types";
 import { COMPETITION_CODES, resolveTeamId } from "../normalize";
 import type {
   FetchWindow,
@@ -13,8 +13,13 @@ import { slugify } from "../../slug";
 /**
  * football-data.org v4 — https://www.football-data.org/documentation/quickstart
  * Free tier: PL, PD, BL1, SA, CL (and more) at 10 requests/minute. EL needs a paid tier.
+ *
+ * Matches are fetched for the whole season in one request per competition and
+ * filtered locally, which keeps every run inside the rate limit and lets the
+ * table be rebuilt from scratch each time.
  */
 const BASE = "https://api.football-data.org/v4";
+const MIN_GAP_MS = 6_500; // 10 requests / minute with headroom
 
 interface FDMatch {
   id: number;
@@ -47,20 +52,20 @@ interface FDMatch {
 interface FDTeam {
   id: number;
   name: string;
-  shortName: string;
-  tla: string;
-  address: string;
-  founded: number;
-  clubColors: string;
-  venue: string;
+  shortName: string | null;
+  tla: string | null;
+  address: string | null;
+  founded: number | null;
+  clubColors: string | null;
+  venue: string | null;
   area: { name: string; code: string };
-  coach?: { name: string | null };
+  coach?: { name: string | null } | null;
   squad?: {
     id: number;
     name: string;
     position: string | null;
-    dateOfBirth: string;
-    nationality: string;
+    dateOfBirth: string | null;
+    nationality: string | null;
     shirtNumber?: number | null;
   }[];
 }
@@ -79,16 +84,22 @@ const STATUS: Record<FDMatch["status"], MatchStatus> = {
 
 export interface FootballDataOptions {
   apiKey: string;
+  /** Season start year, e.g. 2026 for 2026/27. */
+  season: number;
+  /** Mutable: teams discovered by fetchTeams are appended so later calls resolve them. */
   knownTeams: { id: string; name: string; shortName: string }[];
   fetchImpl?: typeof fetch;
   /** Called for provider team names that map to no known team. */
   onUnknownTeam?: (name: string, externalId: string) => void;
+  /** Disable the rate-limit pacing (tests). */
+  noThrottle?: boolean;
 }
 
 export class FootballDataProvider implements Provider {
   readonly id = "football-data";
   readonly weight = 0.8;
   private fetchImpl: typeof fetch;
+  private lastRequest = 0;
 
   constructor(private readonly opts: FootballDataOptions) {
     this.fetchImpl = opts.fetchImpl ?? fetch;
@@ -99,21 +110,34 @@ export class FootballDataProvider implements Provider {
   }
 
   private async get<T>(path: string): Promise<T> {
+    if (!this.opts.noThrottle) {
+      const wait = this.lastRequest + MIN_GAP_MS - Date.now();
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      this.lastRequest = Date.now();
+    }
     const res = await this.fetchImpl(`${BASE}${path}`, {
       headers: { "X-Auth-Token": this.opts.apiKey },
     });
-    if (res.status === 429)
+    if (res.status === 429) {
       throw new Error(
-        `football-data rate limited (${res.headers.get("X-RequestCounter-Reset") ?? "?"}s)`,
+        `football-data rate limited; retry in ${res.headers.get("X-RequestCounter-Reset") ?? "?"}s`,
       );
+    }
+    if (res.status === 403)
+      throw new Error(`football-data 403 for ${path}: competition not in your plan or bad key`);
     if (!res.ok) throw new Error(`football-data ${res.status} for ${path}`);
     return (await res.json()) as T;
   }
 
-  private teamId(t: { name: string; shortName: string; tla: string; id: number }): string | null {
+  private teamId(t: {
+    name: string;
+    shortName: string | null;
+    tla: string | null;
+    id: number;
+  }): string | null {
     const id =
       resolveTeamId(t.name, this.opts.knownTeams) ??
-      resolveTeamId(t.shortName, this.opts.knownTeams);
+      (t.shortName ? resolveTeamId(t.shortName, this.opts.knownTeams) : null);
     if (!id) this.opts.onUnknownTeam?.(t.name, String(t.id));
     return id;
   }
@@ -125,10 +149,12 @@ export class FootballDataProvider implements Provider {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     if (!code) return [];
     const data = await this.get<{ matches: FDMatch[] }>(
-      `/competitions/${code}/matches?dateFrom=${window.fromDate}&dateTo=${window.toDate}`,
+      `/competitions/${code}/matches?season=${this.opts.season}`,
     );
     const out: ProviderRecord<ProviderMatch>[] = [];
     for (const m of data.matches) {
+      const day = m.utcDate.slice(0, 10);
+      if (day < window.fromDate || day > window.toDate) continue;
       const home = this.teamId(m.homeTeam);
       const away = this.teamId(m.awayTeam);
       if (!home || !away) continue;
@@ -172,27 +198,42 @@ export class FootballDataProvider implements Provider {
     return out;
   }
 
+  /**
+   * Teams taking part in the competition this season, with squads. Names that
+   * match nothing known get an id minted from the name and are flagged `isNew`;
+   * they are appended to `knownTeams` so their matches resolve in the same run.
+   */
   async fetchTeams(competition: Competition): Promise<ProviderRecord<ProviderTeam>[]> {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     if (!code) return [];
-    const data = await this.get<{ teams: FDTeam[] }>(`/competitions/${code}/teams`);
+    const data = await this.get<{ teams: FDTeam[] }>(
+      `/competitions/${code}/teams?season=${this.opts.season}`,
+    );
     return data.teams.map((t) => {
+      const known =
+        resolveTeamId(t.name, this.opts.knownTeams) ??
+        (t.shortName ? resolveTeamId(t.shortName, this.opts.knownTeams) : null);
+      const id = known ?? slugify(t.shortName ?? t.name);
+      const shortName = t.shortName ?? t.name;
+      if (!known) this.opts.knownTeams.push({ id, name: t.name, shortName });
       const [c1, c2] = parseColors(t.clubColors);
       return {
         provider: this.id,
         externalId: String(t.id),
         value: {
-          id: resolveTeamId(t.name, this.opts.knownTeams) ?? slugify(t.name),
+          id,
+          isNew: !known,
           name: t.name,
-          shortName: t.shortName,
-          code: t.tla,
+          shortName,
+          code: (t.tla ?? shortName.slice(0, 3)).toUpperCase(),
           country: t.area.name,
-          countryCode: t.area.code,
-          city: (t.address ?? "").split(" ").slice(-2, -1)[0] ?? "",
-          stadium: t.venue,
-          founded: t.founded,
+          countryCode: areaCode(t.area.code),
+          city: cityFromAddress(t.address),
+          stadium: t.venue ?? "",
+          founded: t.founded ?? 0,
           colors: c1 && c2 ? [c1, c2] : undefined,
           manager: t.coach?.name ?? undefined,
+          squad: (t.squad ?? []).map((p) => squadPlayer(p)),
         },
       };
     });
@@ -200,25 +241,28 @@ export class FootballDataProvider implements Provider {
 
   async fetchSquad(teamExternalId: string): Promise<ProviderRecord<ProviderSquadPlayer>[]> {
     const t = await this.get<FDTeam>(`/teams/${teamExternalId}`);
-    return (t.squad ?? []).map((p) => {
-      const parts = p.name.split(" ");
-      return {
-        provider: this.id,
-        externalId: String(p.id),
-        value: {
-          externalId: String(p.id),
-          name: p.name,
-          firstName: parts[0],
-          lastName: parts.slice(1).join(" ") || parts[0],
-          position: mapPosition(p.position),
-          shirtNumber: p.shirtNumber ?? 0,
-          nationality: p.nationality,
-          nationalityCode: "",
-          dateOfBirth: p.dateOfBirth,
-        },
-      };
-    });
+    return (t.squad ?? []).map((p) => ({
+      provider: this.id,
+      externalId: String(p.id),
+      value: squadPlayer(p),
+    }));
   }
+}
+
+function squadPlayer(p: NonNullable<FDTeam["squad"]>[number]): ProviderSquadPlayer {
+  const parts = p.name.trim().split(/\s+/);
+  const nationality = p.nationality ?? "Unknown";
+  return {
+    externalId: String(p.id),
+    name: p.name,
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" ") || parts[0],
+    position: mapPosition(p.position),
+    shirtNumber: p.shirtNumber ?? 0,
+    nationality,
+    nationalityCode: NATIONALITY_CODES[nationality] ?? nationality.slice(0, 3).toUpperCase(),
+    dateOfBirth: p.dateOfBirth ?? "1900-01-01",
+  };
 }
 
 function humanStage(stage: string): string {
@@ -228,12 +272,45 @@ function humanStage(stage: string): string {
     .replace(/^\w/, (c) => c.toUpperCase());
 }
 
-function mapPosition(p: string | null): "GK" | "DF" | "MF" | "FW" {
+export function mapPosition(p: string | null): Position {
   const s = (p ?? "").toLowerCase();
   if (s.includes("keeper")) return "GK";
-  if (s.includes("back") || s.includes("defen")) return "DF";
   if (s.includes("mid")) return "MF";
-  return "FW";
+  if (s.includes("back") || s.includes("defen")) return "DF";
+  if (
+    s.includes("wing") ||
+    s.includes("forward") ||
+    s.includes("striker") ||
+    s.includes("offence") ||
+    s.includes("attack")
+  )
+    return "FW";
+  return "MF";
+}
+
+function areaCode(code: string): string {
+  return (
+    {
+      ENG: "GB-ENG",
+      SCO: "GB-SCT",
+      WAL: "GB-WLS",
+      ESP: "ES",
+      DEU: "DE",
+      ITA: "IT",
+      FRA: "FR",
+      NLD: "NL",
+      PRT: "PT",
+      BEL: "BE",
+      EUR: "EU",
+    }[code] ?? code
+  );
+}
+
+function cityFromAddress(address: string | null): string {
+  if (!address) return "";
+  // football-data addresses look like "Highbury House 75 Drayton Park London N5 1BU"
+  const words = address.replace(/\s+[A-Z0-9]{2,4}\s?[A-Z0-9]{3}$/, "").split(/\s+/);
+  return words.slice(-1)[0] ?? "";
 }
 
 const COLOR_WORDS: Record<string, string> = {
@@ -242,6 +319,7 @@ const COLOR_WORDS: Record<string, string> = {
   blue: "#1d4ed8",
   "sky blue": "#6cabdd",
   "navy blue": "#1c2c5b",
+  "royal blue": "#1d4ed8",
   black: "#111111",
   yellow: "#f5c518",
   claret: "#670e36",
@@ -251,12 +329,96 @@ const COLOR_WORDS: Record<string, string> = {
   maroon: "#7a263a",
   grey: "#8a8a84",
   gold: "#c9a227",
+  amber: "#f5c518",
+  garnet: "#a50044",
 };
 
 function parseColors(s: string | null): [string | undefined, string | undefined] {
   const words = (s ?? "")
     .toLowerCase()
     .split("/")
-    .map((w) => w.trim());
-  return [COLOR_WORDS[words[0]], COLOR_WORDS[words[1]] ?? (words[0] ? "#ffffff" : undefined)];
+    .map((w) => w.trim())
+    .filter(Boolean);
+  const first = COLOR_WORDS[words[0]] ?? (words[0] ? "#555555" : undefined);
+  const second = COLOR_WORDS[words[1]] ?? (words[0] ? "#ffffff" : undefined);
+  return [first, second];
 }
+
+const NATIONALITY_CODES: Record<string, string> = {
+  England: "GB-ENG",
+  Scotland: "GB-SCT",
+  Wales: "GB-WLS",
+  "Northern Ireland": "GB-NIR",
+  Ireland: "IE",
+  Spain: "ES",
+  Germany: "DE",
+  Italy: "IT",
+  France: "FR",
+  Netherlands: "NL",
+  Portugal: "PT",
+  Belgium: "BE",
+  Brazil: "BR",
+  Argentina: "AR",
+  Uruguay: "UY",
+  Colombia: "CO",
+  Morocco: "MA",
+  Senegal: "SN",
+  Nigeria: "NG",
+  Egypt: "EG",
+  Algeria: "DZ",
+  Japan: "JP",
+  "South Korea": "KR",
+  "Korea Republic": "KR",
+  USA: "US",
+  "United States": "US",
+  Poland: "PL",
+  Ukraine: "UA",
+  Croatia: "HR",
+  Serbia: "RS",
+  Denmark: "DK",
+  Norway: "NO",
+  Sweden: "SE",
+  Switzerland: "CH",
+  Austria: "AT",
+  Turkey: "TR",
+  Türkiye: "TR",
+  Greece: "GR",
+  Czechia: "CZ",
+  "Czech Republic": "CZ",
+  Hungary: "HU",
+  Mexico: "MX",
+  Canada: "CA",
+  Australia: "AU",
+  Ghana: "GH",
+  "Ivory Coast": "CI",
+  "Côte d'Ivoire": "CI",
+  Cameroon: "CM",
+  Mali: "ML",
+  Ecuador: "EC",
+  Chile: "CL",
+  Slovakia: "SK",
+  Slovenia: "SI",
+  Romania: "RO",
+  Bulgaria: "BG",
+  Finland: "FI",
+  Iceland: "IS",
+  Georgia: "GE",
+  Albania: "AL",
+  Kosovo: "XK",
+  "Bosnia and Herzegovina": "BA",
+  "North Macedonia": "MK",
+  Montenegro: "ME",
+  Israel: "IL",
+  Iran: "IR",
+  Paraguay: "PY",
+  Peru: "PE",
+  Venezuela: "VE",
+  Jamaica: "JM",
+  "DR Congo": "CD",
+  "Congo DR": "CD",
+  Guinea: "GN",
+  Tunisia: "TN",
+  "Burkina Faso": "BF",
+  Gabon: "GA",
+  "Cape Verde": "CV",
+};

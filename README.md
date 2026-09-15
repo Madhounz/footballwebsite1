@@ -24,6 +24,7 @@ Other commands:
 | `pnpm check`             | lint + typecheck + unit tests (what CI runs)                     |
 | `pnpm build`             | production build                                                 |
 | `pnpm demo:generate`     | regenerate `data/demo/dataset.json` (deterministic, seeded)      |
+| `pnpm sync -- --seed`    | first real-data run: teams, squads, then the whole season        |
 | `pnpm sync -- --dry-run` | run the data pipeline against real providers, print, don't write |
 | `pnpm db:migrate`        | create / migrate the PostgreSQL schema (needs `DATABASE_URL`)    |
 

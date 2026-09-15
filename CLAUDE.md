@@ -17,6 +17,7 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - Use design tokens from `src/app/globals.css` and logical CSS properties. One accent colour. Tabular numerals for numbers.
 - Client components only for interaction; browser-only values go through `useSyncExternalStore`.
 - The AI validator (`src/lib/pipeline/ai-validator.ts`) may only choose among provider values or decline; never let it invent data. Keep the model at `claude-opus-5` unless asked.
+- Match ingestion never creates teams from a bare name. Only the `--seed` step may create a team, from a provider's full team record, and it must log it.
 - Real crests, player photos and third-party logos are not used; `TeamCrest` generates one from club colours.
 - Demo players and results are synthetic; do not present them as real anywhere.
 

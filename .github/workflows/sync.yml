@@ -1,19 +1,25 @@
 name: Sync data
 
 # Runs the reconciliation pipeline against the configured providers and writes
-# to the production database. Needs repository secrets:
-#   DATABASE_URL, FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY (optional), ANTHROPIC_API_KEY (optional)
+# to the production database.
+#
+# Repository secrets (Settings -> Secrets and variables -> Actions -> Secrets):
+#   DATABASE_URL            required
+#   FOOTBALL_DATA_API_KEY   required
+#   API_FOOTBALL_KEY        optional second source
+#   ANTHROPIC_API_KEY       optional, enables the AI validator
+# Repository variable (same page -> Variables):
+#   SYNC_ENABLED = true
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/15 * * * *" # results and live scores
+    - cron: "17 4 * * *" # daily: teams and squads too
   workflow_dispatch:
     inputs:
-      from:
-        description: "From date (YYYY-MM-DD)"
-        required: false
-      to:
-        description: "To date (YYYY-MM-DD)"
-        required: false
+      seed:
+        description: "Also fetch teams and squads (tick this on the first run)"
+        type: boolean
+        default: true
 
 concurrency:
   group: sync
@@ -23,7 +29,7 @@ jobs:
   sync:
     if: ${{ vars.SYNC_ENABLED == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -34,17 +40,15 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm prisma generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm prisma migrate deploy
+      - name: Apply database migrations
+        run: pnpm prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Sync
         run: |
           ARGS=""
-          if [ -n "${{ github.event.inputs.from }}" ]; then ARGS="$ARGS --from ${{ github.event.inputs.from }}"; fi
-          if [ -n "${{ github.event.inputs.to }}" ]; then ARGS="$ARGS --to ${{ github.event.inputs.to }}"; fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.seed }}" = "true" ]; then ARGS="--seed"; fi
+          if [ "${{ github.event.schedule }}" = "17 4 * * *" ]; then ARGS="--seed"; fi
           pnpm sync -- $ARGS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

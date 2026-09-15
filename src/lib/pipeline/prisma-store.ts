@@ -2,7 +2,8 @@ import { getPrisma } from "../db";
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
 import type { SyncStore } from "./store";
-import type { Conflict, Resolution } from "./types";
+import { slugify } from "../slug";
+import type { Conflict, ProviderTeam, Resolution } from "./types";
 
 export class PrismaSyncStore implements SyncStore {
   private get db() {
@@ -12,6 +13,74 @@ export class PrismaSyncStore implements SyncStore {
   async beginRun(trigger: string, providers: string[]) {
     const run = await this.db.syncRun.create({ data: { trigger, providers } });
     return run.id;
+  }
+
+  async seed(competition: Competition, teams: ProviderTeam[]) {
+    const { zones, ...comp } = competition;
+    await this.db.competition.upsert({
+      where: { id: competition.id },
+      create: { ...comp, zones: zones as object[] },
+      update: { ...comp, zones: zones as object[] },
+    });
+    let players = 0;
+    for (const t of teams) {
+      const data = {
+        slug: t.id,
+        name: t.name,
+        shortName: t.shortName,
+        code: t.code,
+        country: t.country,
+        countryCode: t.countryCode,
+        city: t.city,
+        stadium: t.stadium,
+        founded: t.founded,
+        colors: t.colors ? [...t.colors] : ["#555555", "#ffffff"],
+        manager: t.manager ?? null,
+        ...(competition.kind === "league" ? { leagueId: competition.id } : {}),
+      };
+      await this.db.team.upsert({
+        where: { id: t.id },
+        create: { id: t.id, ...data },
+        update: data,
+      });
+      await this.db.teamCompetition.upsert({
+        where: {
+          teamId_competitionId_season: {
+            teamId: t.id,
+            competitionId: competition.id,
+            season: competition.season,
+          },
+        },
+        create: { teamId: t.id, competitionId: competition.id, season: competition.season },
+        update: {},
+      });
+      for (const p of t.squad ?? []) {
+        const id = `fd-${p.externalId}`;
+        const base = slugify(p.name) || id;
+        const clash = await this.db.player.findUnique({
+          where: { slug: base },
+          select: { id: true },
+        });
+        const slug = clash && clash.id !== id ? `${base}-${p.externalId}` : base;
+        const pdata = {
+          slug,
+          name: p.name,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          teamId: t.id,
+          position: p.position,
+          shirtNumber: p.shirtNumber,
+          nationality: p.nationality,
+          nationalityCode: p.nationalityCode,
+          dateOfBirth: new Date(p.dateOfBirth),
+          heightCm: p.heightCm ?? null,
+          preferredFoot: p.preferredFoot ?? null,
+        };
+        await this.db.player.upsert({ where: { id }, create: { id, ...pdata }, update: pdata });
+        players++;
+      }
+    }
+    return { teams: teams.length, players };
   }
 
   async upsertMatches(competition: Competition, matches: ReconciledMatch[]) {

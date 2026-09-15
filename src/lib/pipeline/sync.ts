@@ -18,10 +18,13 @@ export interface SyncOptions {
   store: SyncStore;
   ai?: AIValidator | null;
   trigger?: string;
+  /** Also fetch teams and squads and write them before matches. Needed on the first run. */
+  seed?: boolean;
   log?: (line: string) => void;
 }
 
 export interface SyncResult {
+  seeded: { teams: number; players: number };
   fetched: number;
   written: number;
   conflicts: number;
@@ -41,6 +44,7 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     opts.providers.map((p) => p.id),
   );
   const result: SyncResult = {
+    seeded: { teams: 0, players: 0 },
     fetched: 0,
     written: 0,
     conflicts: 0,
@@ -56,6 +60,22 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
         log(`skip ${competition.name}: no provider supports it`);
         continue;
       }
+      if (opts.seed) {
+        // The first provider that knows the competition's teams seeds it; others only cross-check results.
+        for (const p of providers) {
+          const teams = (await p.fetchTeams(competition)).map((r) => r.value);
+          if (teams.length === 0) continue;
+          const seeded = await opts.store.seed(competition, teams);
+          result.seeded.teams += seeded.teams;
+          result.seeded.players += seeded.players;
+          const fresh = teams.filter((t) => t.isNew).map((t) => `${t.id} ("${t.name}")`);
+          log(
+            `${competition.shortName}: seeded ${seeded.teams} teams, ${seeded.players} players from ${p.id}${fresh.length ? `; new: ${fresh.join(", ")}` : ""}`,
+          );
+          break;
+        }
+      }
+
       const settled = await Promise.allSettled(
         providers.map((p) => p.fetchMatches(competition, opts.window)),
       );

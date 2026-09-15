@@ -28,6 +28,9 @@ export interface ProviderTeam extends Omit<
   "competitionIds" | "slug" | "colors" | "leagueId"
 > {
   colors?: [string, string];
+  /** True when the name matched nothing we know and the id was minted from the name. */
+  isNew?: boolean;
+  squad?: ProviderSquadPlayer[];
 }
 
 export interface ProviderSquadPlayer extends Omit<Player, "slug" | "teamId" | "id"> {

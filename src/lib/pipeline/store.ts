@@ -1,10 +1,15 @@
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
-import type { Conflict, Resolution } from "./types";
+import type { Conflict, ProviderTeam, Resolution } from "./types";
 
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
 export interface SyncStore {
   beginRun(trigger: string, providers: string[]): Promise<string>;
+  /** Upsert a competition, the teams taking part this season and their squads. */
+  seed(
+    competition: Competition,
+    teams: ProviderTeam[],
+  ): Promise<{ teams: number; players: number }>;
   upsertMatches(competition: Competition, matches: ReconciledMatch[]): Promise<number>;
   recordConflicts(
     runId: string,
@@ -28,6 +33,13 @@ export class DryRunStore implements SyncStore {
   async beginRun(trigger: string, providers: string[]) {
     this.log(`[dry-run] run trigger=${trigger} providers=${providers.join(",") || "none"}`);
     return "dry-run";
+  }
+  async seed(competition: Competition, teams: ProviderTeam[]) {
+    const players = teams.reduce((n, t) => n + (t.squad?.length ?? 0), 0);
+    this.log(`[dry-run] seed ${competition.shortName}: ${teams.length} teams, ${players} players`);
+    for (const t of teams)
+      if (t.isNew) this.log(`[dry-run]   new team ${t.id} "${t.name}" (${t.country})`);
+    return { teams: teams.length, players };
   }
   async upsertMatches(competition: Competition, matches: ReconciledMatch[]) {
     for (const m of matches) {
