@@ -1,19 +1,24 @@
-import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Competition, MatchView } from "@/lib/types";
+import { competitionName } from "@/lib/i18n/names";
 import { MatchRow } from "./MatchRow";
+import { StageLabel } from "./StageLabel";
 
 /** Matches grouped by competition, in competition order. */
-export function MatchList({
+export async function MatchList({
   views,
   competitions,
   showRound = false,
-  emptyText = "No matches.",
+  emptyText,
 }: {
   views: MatchView[];
   competitions: Competition[];
   showRound?: boolean;
-  emptyText?: string;
+  emptyText: string;
 }) {
+  const t = await getTranslations("match");
+  const locale = await getLocale();
   if (views.length === 0) {
     return <div className="card px-6 py-12 text-center text-sm text-muted">{emptyText}</div>;
   }
@@ -43,21 +48,25 @@ export function MatchList({
                   style={{ backgroundColor: competition.color }}
                   aria-hidden="true"
                 />
-                {competition.name}
+                {competitionName(competition, locale)}
                 <span className="hidden font-normal text-faint sm:inline">
-                  {competition.kind === "cup"
-                    ? `· ${views[0].match.stage ?? ""} · MD ${round}`
-                    : `· Matchday ${round}`}
+                  {competition.kind === "cup" ? (
+                    <>
+                      · <StageLabel stage={views[0].match.stage} /> · {t("md", { n: round })}
+                    </>
+                  ) : (
+                    <>· {t("matchday", { n: round })}</>
+                  )}
                 </span>
               </Link>
               <span className="flex items-center gap-3 text-xs text-muted">
                 {liveCount > 0 && (
                   <span className="flex items-center gap-1.5 font-medium text-live">
-                    <span className="live-dot" /> {liveCount} live
+                    <span className="live-dot" /> {t("live", { count: liveCount })}
                   </span>
                 )}
                 <Link href={`/leagues/${competition.slug}`} className="hover:text-ink">
-                  Table →
+                  {t("table")}
                 </Link>
               </span>
             </header>

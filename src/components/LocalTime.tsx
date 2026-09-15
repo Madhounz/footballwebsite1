@@ -1,6 +1,8 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
+import { intlLocale } from "@/lib/dates";
 
 const noop = () => () => {};
 
@@ -18,9 +20,10 @@ export function LocalTime({
   withDate?: boolean;
   className?: string;
 }) {
+  const locale = useLocale();
   const text = useSyncExternalStore(
     noop,
-    () => local(iso, withDate),
+    () => local(iso, withDate, locale),
     () => utc(iso, withDate),
   );
   return (
@@ -30,15 +33,12 @@ export function LocalTime({
   );
 }
 
-function local(iso: string, withDate: boolean): string {
+function local(iso: string, withDate: boolean, locale: string): string {
   const d = new Date(iso);
-  const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  const tag = intlLocale(locale);
+  const time = d.toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit" });
   if (!withDate) return time;
-  const date = d.toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  const date = d.toLocaleDateString(tag, { weekday: "short", day: "numeric", month: "short" });
   return `${date} · ${time}`;
 }
 

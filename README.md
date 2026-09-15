@@ -6,7 +6,7 @@
 
 ---
 
-ninety is a competitor to the big, cluttered scores sites. One page shows today's matches across every tracked competition; yesterday, tomorrow and any date are one tap away; every table, squad, player and match is reachable in two. No ads, no pop-ups. Light and dark. Fast on a phone.
+ninety is a competitor to the big, cluttered scores sites, in English and Arabic. One page shows today's matches across every tracked competition; yesterday, tomorrow and any date are one tap away; every table, squad, player and match is reachable in two. No ads, no pop-ups. Light and dark. Fast on a phone.
 
 Behind it sits a data pipeline that never trusts a single provider: results are fetched from several sources, reconciled field by field, and disagreements are settled by Claude with an auditable confidence and reasoning. Tables and scorer charts are derived from the stored results, so they can never contradict the matches you click on.
 
@@ -37,12 +37,13 @@ Copy `.env.example` to `.env.local` (Next.js) and `.env` (Prisma and scripts) to
 - **Teams** — position, form, goals, next match, recent results, upcoming fixtures, the table around the club, the full squad by position, honours, every match this season.
 - **Players** — season goals, assists, appearances, profile facts and position-mates.
 - **Matches** — score with live minute, goal list, line-ups on a pitch by formation, bench, two-sided event timeline, both teams' form and head-to-head.
-- **Search** — `⌘K` or `/` jumps to any league or club.
+- **Search** — `⌘K` or `/` jumps to any league or club, in either script.
+- **Arabic** — full right-to-left interface at `/ar` with Arabic club and competition names; the language is detected from the browser and switchable in the header.
 - **API** — `/api/matches?date=YYYY-MM-DD`, `/api/live`, `/api/health`.
 
 ## Stack
 
-Next.js 16 (App Router, React 19) · TypeScript · Tailwind CSS 4 · Prisma 7 on PostgreSQL · Anthropic SDK · Vitest · pnpm.
+Next.js 16 (App Router, React 19) · TypeScript · Tailwind CSS 4 · next-intl · Prisma 7 on PostgreSQL · Anthropic SDK · Vitest · pnpm.
 
 ## Data sources
 
@@ -63,13 +64,16 @@ Historical winners live in `data/honours/*.json` and are curated, not fetched.
 ## Repository layout
 
 ```
+data/i18n/          Arabic names for clubs and competitions
 data/demo/          competitions.json, teams.json (source of truth), dataset.json (generated)
 data/honours/       curated past winners per competition
 docs/               architecture, pipeline, design, roadmap
 prisma/             schema.prisma (Prisma 7, driver adapter)
 public/brand/       logo mark, wordmark, social card
 scripts/            generate-demo.ts, sync.ts
-src/app/            routes (App Router)
+messages/           UI strings per language (en.json, ar.json)
+src/app/[locale]/   routes (App Router); English at /, Arabic at /ar
+src/i18n/           routing, navigation helpers, request config
 src/components/     UI components
 src/lib/data/       Repository interface, demo + Prisma implementations, standings maths
 src/lib/pipeline/   providers, normalise, reconcile, ai-validator, sync

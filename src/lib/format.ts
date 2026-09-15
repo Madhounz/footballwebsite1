@@ -1,20 +1,4 @@
-import type { Match, MatchPhase } from "./types";
-
-/** Status text for a match row: "FT", "45+2'", "HT", "20:00", "Postponed". */
-export function matchStatusLabel(m: Match, kickoffLabel: string): string {
-  switch (m.status) {
-    case "finished":
-      return m.phase === "PEN" ? "Pens" : m.phase === "ET" ? "AET" : "FT";
-    case "live":
-      return livePhaseLabel(m.phase, m.minute);
-    case "postponed":
-      return "Postponed";
-    case "cancelled":
-      return "Cancelled";
-    default:
-      return kickoffLabel;
-  }
-}
+import type { MatchPhase } from "./types";
 
 export function livePhaseLabel(phase: MatchPhase, minute: number | null): string {
   if (phase === "HT") return "HT";
@@ -33,10 +17,6 @@ export function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
-}
-
-export function positionLabel(p: "GK" | "DF" | "MF" | "FW"): string {
-  return { GK: "Goalkeeper", DF: "Defender", MF: "Midfielder", FW: "Forward" }[p];
 }
 
 export function initials(name: string): string {

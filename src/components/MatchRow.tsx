@@ -1,41 +1,69 @@
-import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { MatchView } from "@/lib/types";
 import { livePhaseLabel } from "@/lib/format";
+import { teamName, teamShortName } from "@/lib/i18n/names";
 import { LocalTime } from "./LocalTime";
 import { TeamCrest } from "./TeamCrest";
 
 /**
- * One fixture. Reads left-to-right: home · score/time · away, with status on the
- * end. Live matches get the pulsing dot; finished ones bold the winner.
+ * One fixture. Reads start-to-end: home · score/time · away, with status under
+ * the score. Live matches get the pulsing dot; finished ones bold the winner.
  */
-export function MatchRow({ view, showRound = false }: { view: MatchView; showRound?: boolean }) {
+export async function MatchRow({
+  view,
+  showRound = false,
+}: {
+  view: MatchView;
+  showRound?: boolean;
+}) {
+  const t = await getTranslations("match");
+  const locale = await getLocale();
   const { match: m, home, away } = view;
   const live = m.status === "live";
   const finished = m.status === "finished";
   const homeWin = finished && m.score && m.score.home > m.score.away;
   const awayWin = finished && m.score && m.score.away > m.score.home;
 
+  const status = live
+    ? m.phase === "HT"
+      ? t("ht")
+      : m.minute == null
+        ? t("liveWord")
+        : livePhaseLabel(m.phase, m.minute)
+    : finished
+      ? m.phase === "PEN"
+        ? t("pens")
+        : m.phase === "ET"
+          ? t("aet")
+          : t("ft")
+      : m.status === "postponed"
+        ? t("postponed")
+        : m.status === "cancelled"
+          ? t("cancelled")
+          : showRound
+            ? t("md", { n: m.round })
+            : "";
+
   return (
     <Link
       href={`/match/${m.id}`}
       className="row-hover @container grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4"
-      aria-label={`${home.name} ${m.score ? `${m.score.home}–${m.score.away}` : "v"} ${away.name}`}
+      aria-label={`${teamName(home, locale)} ${m.score ? `${m.score.home}–${m.score.away}` : t("vs")} ${teamName(away, locale)}`}
     >
       <span
-        className={`flex min-w-0 items-center justify-end gap-2 text-right text-[15px] ${homeWin ? "font-semibold" : ""} ${awayWin ? "text-muted" : ""}`}
+        className={`flex min-w-0 items-center justify-end gap-2 text-end text-[15px] ${homeWin ? "font-semibold" : ""} ${awayWin ? "text-muted" : ""}`}
       >
         <span className="truncate">
-          <span className="hidden @[520px]:inline">{home.name}</span>
-          <span className="@[520px]:hidden">{home.shortName}</span>
+          <span className="hidden @[520px]:inline">{teamName(home, locale)}</span>
+          <span className="@[520px]:hidden">{teamShortName(home, locale)}</span>
         </span>
         <TeamCrest team={home} size={24} />
       </span>
 
       <span className="flex w-[72px] shrink-0 flex-col items-center justify-center sm:w-[96px]">
         {m.score ? (
-          <span
-            className={`tnum text-lg font-semibold leading-none tracking-tight ${live ? "text-ink" : ""}`}
-          >
+          <span className="tnum text-lg font-semibold leading-none tracking-tight" dir="ltr">
             {m.score.home}
             <span className="mx-1 text-faint">–</span>
             {m.score.away}
@@ -49,21 +77,7 @@ export function MatchRow({ view, showRound = false }: { view: MatchView; showRou
           className={`mt-1 flex items-center gap-1.5 text-[11px] leading-none ${live ? "font-medium text-live" : "text-faint"}`}
         >
           {live && <span className="live-dot" aria-hidden="true" />}
-          {live
-            ? livePhaseLabel(m.phase, m.minute)
-            : finished
-              ? m.phase === "PEN"
-                ? "Pens"
-                : m.phase === "ET"
-                  ? "AET"
-                  : "FT"
-              : m.status === "postponed"
-                ? "Postponed"
-                : m.status === "cancelled"
-                  ? "Cancelled"
-                  : showRound
-                    ? `MD ${m.round}`
-                    : ""}
+          {status}
         </span>
       </span>
 
@@ -72,8 +86,8 @@ export function MatchRow({ view, showRound = false }: { view: MatchView; showRou
       >
         <TeamCrest team={away} size={24} />
         <span className="truncate">
-          <span className="hidden @[520px]:inline">{away.name}</span>
-          <span className="@[520px]:hidden">{away.shortName}</span>
+          <span className="hidden @[520px]:inline">{teamName(away, locale)}</span>
+          <span className="@[520px]:hidden">{teamShortName(away, locale)}</span>
         </span>
       </span>
     </Link>

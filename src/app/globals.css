@@ -119,6 +119,24 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Arabic: system Arabic faces, no tight tracking (it breaks letter joining), slightly larger line height. */
+html[dir="rtl"] {
+  --font-sans:
+    ui-sans-serif, -apple-system, "Segoe UI", "Noto Naskh Arabic UI", "Noto Sans Arabic",
+    "Helvetica Neue", Arial, Tahoma, sans-serif;
+}
+html[dir="rtl"] body {
+  line-height: 1.6;
+}
+html[dir="rtl"] .tracking-tight,
+html[dir="rtl"] .tracking-\[-0\.03em\],
+html[dir="rtl"] .tracking-wide {
+  letter-spacing: 0;
+}
+html[dir="rtl"] .uppercase {
+  text-transform: none;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);

@@ -1,11 +1,13 @@
-import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Player, TeamLineup, Team } from "@/lib/types";
+import { teamShortName } from "@/lib/i18n/names";
 
 /**
  * SVG pitch with the starting XI placed by formation. Home attacks upward from
  * the bottom half, away downward from the top half — the familiar broadcast view.
  */
-export function LineupPitch({
+export async function LineupPitch({
   home,
   away,
   homeTeam,
@@ -18,6 +20,8 @@ export function LineupPitch({
   awayTeam: Team;
   players: Record<string, Player>;
 }) {
+  const t = await getTranslations("match");
+  const locale = await getLocale();
   const W = 100;
   const H = 150;
   const place = (lineup: TeamLineup, side: "home" | "away") => {
@@ -29,9 +33,8 @@ export function LineupPitch({
       const col = Number(colStr) - 1;
       const n = lines[row] ?? 1;
       const x = ((col + 1) / (n + 1)) * W;
-      // rows run from own goal (row 0) towards halfway
-      const depth = total <= 1 ? 0.5 : row / (total - 1); // 0 .. 1
-      const yHalf = 8 + depth * (H / 2 - 18); // within a half, 8 -> 65
+      const depth = total <= 1 ? 0.5 : row / (total - 1);
+      const yHalf = 8 + depth * (H / 2 - 18);
       const y = side === "home" ? H - yHalf : yHalf;
       return { ...lp, x, y };
     });
@@ -44,10 +47,16 @@ export function LineupPitch({
       <div className="grid grid-cols-2 border-b border-line text-sm">
         <div className="flex items-center gap-2 px-4 py-2.5 font-medium">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: homeTeam.colors[0] }} />
-          {homeTeam.shortName} <span className="text-faint">{home.formation}</span>
+          {teamShortName(homeTeam, locale)}{" "}
+          <span className="text-faint" dir="ltr">
+            {home.formation}
+          </span>
         </div>
         <div className="flex items-center justify-end gap-2 px-4 py-2.5 font-medium">
-          <span className="text-faint">{away.formation}</span> {awayTeam.shortName}
+          <span className="text-faint" dir="ltr">
+            {away.formation}
+          </span>{" "}
+          {teamShortName(awayTeam, locale)}
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: awayTeam.colors[0] }} />
         </div>
       </div>
@@ -55,7 +64,7 @@ export function LineupPitch({
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label="Starting line-ups"
+        aria-label={t("startingLineups")}
       >
         <defs>
           <linearGradient id="grass" x1="0" x2="0" y1="0" y2="1">
@@ -129,8 +138,19 @@ export function LineupPitch({
         })}
       </svg>
       <div className="grid grid-cols-2 divide-x divide-line border-t border-line text-sm">
-        <Bench lineup={home} players={players} />
-        <Bench lineup={away} players={players} align="end" />
+        <Bench
+          lineup={home}
+          players={players}
+          benchLabel={t("bench")}
+          coachLabel={(n) => t("coach", { name: n })}
+        />
+        <Bench
+          lineup={away}
+          players={players}
+          align="end"
+          benchLabel={t("bench")}
+          coachLabel={(n) => t("coach", { name: n })}
+        />
       </div>
     </div>
   );
@@ -140,14 +160,18 @@ function Bench({
   lineup,
   players,
   align = "start",
+  benchLabel,
+  coachLabel,
 }: {
   lineup: TeamLineup;
   players: Record<string, Player>;
   align?: "start" | "end";
+  benchLabel: string;
+  coachLabel: (n: string) => string;
 }) {
   return (
     <div className={`px-4 py-3 ${align === "end" ? "text-end" : ""}`}>
-      <div className="mb-1.5 text-[11px] uppercase tracking-wide text-faint">Bench</div>
+      <div className="mb-1.5 text-[11px] uppercase tracking-wide text-faint">{benchLabel}</div>
       <ul className="space-y-1">
         {lineup.bench.map((b) => {
           const p = players[b.playerId];
@@ -166,7 +190,7 @@ function Bench({
           );
         })}
       </ul>
-      {lineup.coach && <div className="mt-2 text-xs text-muted">Coach: {lineup.coach}</div>}
+      {lineup.coach && <div className="mt-2 text-xs text-muted">{coachLabel(lineup.coach)}</div>}
     </div>
   );
 }

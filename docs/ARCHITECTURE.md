@@ -13,6 +13,10 @@ Everything the UI renders comes through `Repository` (`src/lib/data/repository.t
 
 League tables (`computeStandings`) and scorer charts (`computeScorers`) are computed from matches and events at read time in both repositories. A provider's own "standings" endpoint is never used, so a table cannot disagree with the results on the site. The cost is a few milliseconds per request; caching can be added at the repository level if it ever matters.
 
+## Languages
+
+Routes live under `src/app/[locale]/`. `next-intl` handles detection (cookie, then `Accept-Language`) in `src/proxy.ts`, prefixes Arabic URLs with `/ar`, and leaves English unprefixed. UI strings are in `messages/{en,ar}.json`; club and competition names are curated in `data/i18n/` and resolved by `src/lib/i18n/names.ts` (falling back to English). Dates go through `Intl` with Western digits in both languages. Layout is right-to-left in Arabic via `dir="rtl"` on `<html>`; components use logical CSS properties, and anything that must stay left-to-right (scores, formations, form badges) is pinned with `dir="ltr"`. Always import `Link`, `redirect`, `usePathname` and `useRouter` from `@/i18n/navigation`, never from Next directly.
+
 ## Rendering
 
 All routes are server components rendered on demand (`dynamic = "force-dynamic"` in the root layout) because match status depends on the current time. Client components are limited to: search palette, theme toggle, date picker, tab highlighting, local-time formatting and the live auto-refresh (`router.refresh()` every 20–30 s while something is in play).

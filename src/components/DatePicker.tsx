@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { todayISO, type ISODate } from "@/lib/dates";
 
 export function DatePicker({ value }: { value: ISODate }) {
   const router = useRouter();
+  const t = useTranslations("dates");
   return (
     <label className="inline-flex h-9 items-center gap-2 rounded-full border border-line bg-surface px-3 text-sm text-muted hover:text-ink">
       <svg
@@ -20,7 +22,7 @@ export function DatePicker({ value }: { value: ISODate }) {
         <rect x="3" y="5" width="18" height="16" rx="2" />
         <path d="M16 3v4M8 3v4M3 11h18" />
       </svg>
-      <span className="sr-only">Pick a date</span>
+      <span className="sr-only">{t("pick")}</span>
       <input
         type="date"
         value={value}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark" | "system";
@@ -35,14 +36,16 @@ function subscribe(cb: () => void) {
 }
 
 export function ThemeToggle() {
+  const t = useTranslations("nav");
   const theme = useSyncExternalStore(subscribe, read, () => "system" as Theme);
 
   function cycle() {
     write(theme === "system" ? "dark" : theme === "dark" ? "light" : "system");
   }
 
-  const label =
-    theme === "system" ? "Theme: system" : theme === "dark" ? "Theme: dark" : "Theme: light";
+  const label = t("theme", {
+    mode: t(theme === "system" ? "themeSystem" : theme === "dark" ? "themeDark" : "themeLight"),
+  });
   return (
     <button
       type="button"

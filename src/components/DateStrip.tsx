@@ -1,22 +1,37 @@
-import Link from "next/link";
-import { addDays, formatLongDate, relativeDayLabel, type ISODate } from "@/lib/dates";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import {
+  addDays,
+  formatLongDate,
+  formatShortDate,
+  relativeDayKey,
+  type ISODate,
+} from "@/lib/dates";
 import { DatePicker } from "./DatePicker";
 
 /** Yesterday / Today / Tomorrow front and centre, with a real date picker beside them. */
-export function DateStrip({ date, today }: { date: ISODate; today: ISODate }) {
+export async function DateStrip({ date, today }: { date: ISODate; today: ISODate }) {
+  const t = await getTranslations("dates");
+  const locale = await getLocale();
+  const label = (d: ISODate) => {
+    const key = relativeDayKey(d, today);
+    return key ? t(key) : formatShortDate(d, locale);
+  };
   const days = [-3, -2, -1, 0, 1, 2, 3].map((d) => addDays(today, d));
   const inStrip = days.includes(date);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{formatLongDate(date)}</h1>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          {formatLongDate(date, locale)}
+        </h1>
         <DatePicker value={date} />
       </div>
       <div className="scrollbar-none -mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {!inStrip && (
           <>
             <Chip href={`/matches/${date}`} active>
-              {relativeDayLabel(date, today)}
+              {label(date)}
             </Chip>
             <span className="mx-1 h-4 w-px shrink-0 bg-line" />
           </>
@@ -30,7 +45,7 @@ export function DateStrip({ date, today }: { date: ISODate; today: ISODate }) {
               active={d === date}
               emphasis={isToday}
             >
-              {relativeDayLabel(d, today)}
+              {label(d)}
             </Chip>
           );
         })}

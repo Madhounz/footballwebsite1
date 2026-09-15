@@ -1,6 +1,8 @@
-import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { getRepository } from "@/lib/data";
 import { todayISO, type ISODate } from "@/lib/dates";
+import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { AutoRefresh } from "./AutoRefresh";
 import { DateStrip } from "./DateStrip";
 import { MatchList } from "./MatchList";
@@ -8,6 +10,8 @@ import { TeamCrest } from "./TeamCrest";
 
 /** Shared body for `/` and `/matches/[date]`. */
 export async function DayPage({ date }: { date: ISODate }) {
+  const t = await getTranslations("home");
+  const locale = await getLocale();
   const repo = await getRepository();
   const today = todayISO();
   const [views, competitions] = await Promise.all([
@@ -17,12 +21,11 @@ export async function DayPage({ date }: { date: ISODate }) {
   const live = views.filter((v) => v.match.status === "live").length;
   const isToday = date === today;
 
-  // Sidebar: leaders of each league + who plays next
   const snapshots = await Promise.all(
     competitions.map(async (c) => {
       const s = await repo.getStandings(c.id);
       const top = s.rows.slice(0, 3);
-      const teams = new Map((await repo.listTeams(c.id)).map((t) => [t.id, t]));
+      const teams = new Map((await repo.listTeams(c.id)).map((team) => [team.id, team]));
       return { competition: c, top, teams };
     }),
   );
@@ -34,22 +37,19 @@ export async function DayPage({ date }: { date: ISODate }) {
         <DateStrip date={date} today={today} />
         {live > 0 && (
           <p className="flex items-center gap-2 text-sm text-live">
-            <span className="live-dot" /> {live} {live === 1 ? "match" : "matches"} in play — scores
-            refresh automatically.
+            <span className="live-dot" /> {t("inPlay", { count: live })}
           </p>
         )}
         <MatchList
           views={views}
           competitions={competitions}
-          emptyText={
-            isToday
-              ? "No matches in the tracked competitions today. Try tomorrow or pick a date."
-              : "No matches in the tracked competitions on this day."
-          }
+          emptyText={isToday ? t("emptyToday") : t("emptyDay")}
         />
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">At the top</h2>
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
+          {t("atTheTop")}
+        </h2>
         {snapshots.map(({ competition, top, teams }) => (
           <div key={competition.id} className="card overflow-hidden">
             <Link
@@ -62,22 +62,22 @@ export async function DayPage({ date }: { date: ISODate }) {
                   style={{ backgroundColor: competition.color }}
                   aria-hidden="true"
                 />
-                {competition.name}
+                {competitionName(competition, locale)}
               </span>
-              <span className="text-faint">→</span>
+              <span className="text-faint">{locale === "ar" ? "←" : "→"}</span>
             </Link>
             <ol className="tnum divide-y divide-line border-t border-line text-sm">
               {top.map((r) => {
-                const t = teams.get(r.teamId)!;
+                const team = teams.get(r.teamId)!;
                 return (
                   <li key={r.teamId}>
                     <Link
-                      href={`/teams/${t.slug}`}
+                      href={`/teams/${team.slug}`}
                       className="row-hover flex items-center gap-2 px-4 py-1.5"
                     >
                       <span className="w-4 text-faint">{r.position}</span>
-                      <TeamCrest team={t} size={18} />
-                      <span className="flex-1 truncate">{t.shortName}</span>
+                      <TeamCrest team={team} size={18} />
+                      <span className="flex-1 truncate">{teamShortName(team, locale)}</span>
                       <span className="font-semibold">{r.points}</span>
                     </Link>
                   </li>

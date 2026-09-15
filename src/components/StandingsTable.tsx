@@ -1,6 +1,8 @@
-import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Competition, Standings, TableZone, Team } from "@/lib/types";
 import { signed } from "@/lib/format";
+import { teamName, teamShortName } from "@/lib/i18n/names";
 import { FormBadges } from "./Form";
 import { TeamCrest } from "./TeamCrest";
 
@@ -15,7 +17,7 @@ function zoneFor(pos: number, zones: TableZone[]): TableZone | undefined {
   return zones.find((z) => pos >= z.from && pos <= z.to);
 }
 
-export function StandingsTable({
+export async function StandingsTable({
   standings,
   competition,
   teams,
@@ -28,32 +30,45 @@ export function StandingsTable({
   highlightTeamId?: string;
   compact?: boolean;
 }) {
+  const t = await getTranslations("league");
+  const locale = await getLocale();
   const zonesUsed = competition.zones.filter((z) =>
     standings.rows.some((r) => r.position >= z.from && r.position <= z.to),
   );
+  const zoneLabel = (label: string) => (t.has(`zones.${label}`) ? t(`zones.${label}`) : label);
   return (
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="tnum w-full text-sm">
           <thead>
-            <tr className="border-b border-line text-left text-[11px] uppercase tracking-wide text-faint">
-              <th className="w-10 py-2.5 ps-3 font-medium sm:ps-4">#</th>
-              <th className="py-2.5 font-medium">Club</th>
-              <th className="w-9 py-2.5 text-center font-medium">P</th>
+            <tr className="border-b border-line text-start text-[11px] uppercase tracking-wide text-faint">
+              <th className="w-10 py-2.5 ps-3 text-start font-medium sm:ps-4">{t("th.pos")}</th>
+              <th className="py-2.5 text-start font-medium">{t("th.club")}</th>
+              <th className="w-9 py-2.5 text-center font-medium">{t("th.p")}</th>
               {!compact && (
                 <>
-                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">W</th>
-                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">D</th>
-                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">L</th>
+                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">
+                    {t("th.w")}
+                  </th>
+                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">
+                    {t("th.d")}
+                  </th>
+                  <th className="hidden w-9 py-2.5 text-center font-medium sm:table-cell">
+                    {t("th.l")}
+                  </th>
                   <th className="hidden w-16 py-2.5 text-center font-medium md:table-cell">
-                    GF:GA
+                    {t("th.gfga")}
                   </th>
                 </>
               )}
-              <th className="w-10 py-2.5 text-center font-medium">GD</th>
-              <th className="w-12 py-2.5 pe-3 text-center font-semibold text-ink sm:pe-4">Pts</th>
+              <th className="w-10 py-2.5 text-center font-medium">{t("th.gd")}</th>
+              <th className="w-12 py-2.5 pe-3 text-center font-semibold text-ink sm:pe-4">
+                {t("th.pts")}
+              </th>
               {!compact && (
-                <th className="hidden w-28 py-2.5 pe-4 text-end font-medium lg:table-cell">Form</th>
+                <th className="hidden w-28 py-2.5 pe-4 text-end font-medium lg:table-cell">
+                  {t("th.form")}
+                </th>
               )}
             </tr>
           </thead>
@@ -94,8 +109,8 @@ export function StandingsTable({
                     >
                       <TeamCrest team={team} size={22} />
                       <span className="truncate font-medium">
-                        <span className="hidden sm:inline">{team.name}</span>
-                        <span className="sm:hidden">{team.shortName}</span>
+                        <span className="hidden sm:inline">{teamName(team, locale)}</span>
+                        <span className="sm:hidden">{teamShortName(team, locale)}</span>
                       </span>
                     </Link>
                   </td>
@@ -107,12 +122,14 @@ export function StandingsTable({
                         {r.drawn}
                       </td>
                       <td className="hidden py-2 text-center text-muted sm:table-cell">{r.lost}</td>
-                      <td className="hidden py-2 text-center text-muted md:table-cell">
+                      <td className="hidden py-2 text-center text-muted md:table-cell" dir="ltr">
                         {r.goalsFor}:{r.goalsAgainst}
                       </td>
                     </>
                   )}
-                  <td className="py-2 text-center text-muted">{signed(r.goalDifference)}</td>
+                  <td className="py-2 text-center text-muted" dir="ltr">
+                    {signed(r.goalDifference)}
+                  </td>
                   <td className="py-2 pe-3 text-center font-semibold sm:pe-4">{r.points}</td>
                   {!compact && (
                     <td className="hidden py-2 pe-4 text-end lg:table-cell">
@@ -129,7 +146,8 @@ export function StandingsTable({
         <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-muted">
           {zonesUsed.map((z) => (
             <span key={z.label} className="inline-flex items-center gap-1.5">
-              <span className={`inline-block h-2 w-2 rounded-sm ${TONE[z.tone]}`} /> {z.label}
+              <span className={`inline-block h-2 w-2 rounded-sm ${TONE[z.tone]}`} />{" "}
+              {zoneLabel(z.label)}
             </span>
           ))}
         </div>

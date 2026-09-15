@@ -2,6 +2,9 @@
  * Date helpers. The site works in calendar days (YYYY-MM-DD) for the match
  * list and in UTC instants for kickoffs. Rendering uses the visitor's timezone
  * on the client; the server formats in UTC to keep markup deterministic.
+ *
+ * Formatting goes through Intl so Arabic and English share one code path.
+ * Digits stay Western in every locale: scores and tables read faster that way.
  */
 
 export const DAY_MS = 86_400_000;
@@ -38,57 +41,55 @@ export function dateOf(iso: string): ISODate {
   return iso.slice(0, 10) as ISODate;
 }
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const WEEKDAYS_LONG = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTHS_LONG = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+/** BCP-47 tag for Intl: Egyptian Arabic conventions with Western digits, British English otherwise. */
+export function intlLocale(locale: string): string {
+  return locale === "ar" ? "ar-EG-u-nu-latn" : "en-GB";
+}
 
-/** "Sat 12 Sep" */
-export function formatShortDate(date: ISODate): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+const cache = new Map<string, Intl.DateTimeFormat>();
+function fmt(locale: string, opts: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}|${JSON.stringify(opts)}`;
+  let f = cache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(intlLocale(locale), { timeZone: "UTC", ...opts });
+    cache.set(key, f);
+  }
+  return f;
+}
+
+const midnight = (date: ISODate) => new Date(`${date}T00:00:00Z`);
+
+/** "Sat 12 Sep" / "السبت 12 سبتمبر" */
+export function formatShortDate(date: ISODate, locale = "en"): string {
+  return fmt(locale, { weekday: "short", day: "numeric", month: "short" })
+    .format(midnight(date))
+    .replace("Sept", "Sep");
 }
 
 /** "Saturday, 12 September 2026" */
-export function formatLongDate(date: ISODate): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  return `${WEEKDAYS_LONG[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+export function formatLongDate(date: ISODate, locale = "en"): string {
+  return fmt(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(
+    midnight(date),
+  );
 }
 
 /** "12 Sep 2026" */
-export function formatMediumDate(date: ISODate): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+export function formatMediumDate(date: ISODate, locale = "en"): string {
+  return fmt(locale, { day: "numeric", month: "short", year: "numeric" })
+    .format(midnight(date))
+    .replace("Sept", "Sep");
 }
 
-/** Relative label for the date strip: Today / Yesterday / Tomorrow, else short date. */
-export function relativeDayLabel(date: ISODate, today: ISODate): string {
+/** Which relative label a day gets on the date strip, if any. */
+export function relativeDayKey(
+  date: ISODate,
+  today: ISODate,
+): "today" | "yesterday" | "tomorrow" | null {
   const diff = daysBetween(today, date);
-  if (diff === 0) return "Today";
-  if (diff === -1) return "Yesterday";
-  if (diff === 1) return "Tomorrow";
-  return formatShortDate(date);
+  if (diff === 0) return "today";
+  if (diff === -1) return "yesterday";
+  if (diff === 1) return "tomorrow";
+  return null;
 }
 
 /** "20:00" in UTC. Client components re-render this in local time. */

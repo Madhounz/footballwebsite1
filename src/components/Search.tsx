@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "@/i18n/navigation";
 import type { SearchItem } from "@/lib/types";
 
 /**
@@ -9,6 +10,7 @@ import type { SearchItem } from "@/lib/types";
  * render time, so it is instant and works offline. Cmd/Ctrl+K to open.
  */
 export function Search({ items }: { items: SearchItem[] }) {
+  const t = useTranslations("search");
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
@@ -66,7 +68,7 @@ export function Search({ items }: { items: SearchItem[] }) {
         type="button"
         onClick={openPalette}
         className="inline-flex h-9 items-center gap-2 rounded-full border border-line bg-surface px-3 text-sm text-muted hover:text-ink"
-        aria-label="Search leagues and teams"
+        aria-label={t("aria")}
       >
         <svg
           width="15"
@@ -80,7 +82,7 @@ export function Search({ items }: { items: SearchItem[] }) {
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" />
         </svg>
-        <span className="hidden sm:inline">Search</span>
+        <span className="hidden sm:inline">{t("button")}</span>
         <kbd className="hidden rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-faint md:inline">
           ⌘K
         </kbd>
@@ -92,7 +94,7 @@ export function Search({ items }: { items: SearchItem[] }) {
           onClick={() => setOpen(false)}
           role="dialog"
           aria-modal="true"
-          aria-label="Search"
+          aria-label={t("button")}
         >
           <div
             className="card w-full max-w-lg overflow-hidden"
@@ -116,12 +118,14 @@ export function Search({ items }: { items: SearchItem[] }) {
                   go(results[cursor]);
                 }
               }}
-              placeholder="League, club or city…"
+              placeholder={t("placeholder")}
               className="w-full border-b border-line bg-transparent px-4 py-3.5 text-base outline-none placeholder:text-faint"
             />
             <ul className="max-h-[50vh] overflow-y-auto py-1">
               {results.length === 0 && (
-                <li className="px-4 py-6 text-center text-sm text-muted">Nothing matches “{q}”.</li>
+                <li className="px-4 py-6 text-center text-sm text-muted">
+                  {t("noMatch", { query: q })}
+                </li>
               )}
               {results.map((item, i) => (
                 <li key={`${item.type}-${item.id}`}>
@@ -129,24 +133,22 @@ export function Search({ items }: { items: SearchItem[] }) {
                     type="button"
                     onMouseEnter={() => setCursor(i)}
                     onClick={() => go(item)}
-                    className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm ${
-                      i === cursor ? "bg-surface-2" : ""
-                    }`}
+                    className={`flex w-full items-center justify-between px-4 py-2.5 text-start text-sm ${i === cursor ? "bg-surface-2" : ""}`}
                   >
                     <span className="flex flex-col">
                       <span className="font-medium">{item.label}</span>
                       <span className="text-xs text-muted">{item.sublabel}</span>
                     </span>
                     <span className="text-[10px] uppercase tracking-wide text-faint">
-                      {item.type}
+                      {t(item.type)}
                     </span>
                   </button>
                 </li>
               ))}
             </ul>
             <div className="flex items-center justify-between border-t border-line px-4 py-2 text-[11px] text-faint">
-              <span>↑↓ to move · ↵ to open</span>
-              <span>esc to close</span>
+              <span>{t("hintMove")}</span>
+              <span>{t("hintClose")}</span>
             </div>
           </div>
         </div>

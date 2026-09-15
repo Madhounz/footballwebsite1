@@ -20,7 +20,7 @@ export function Mark({ size = 28, className = "" }: { size?: number; className?:
 
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    <span className={`inline-flex items-center gap-2 ${className}`} dir="ltr">
       <Mark size={26} />
       <span className="text-[22px] font-semibold tracking-[-0.03em] leading-none">
         ninety<span className="text-accent">′</span>

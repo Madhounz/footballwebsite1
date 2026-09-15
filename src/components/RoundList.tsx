@@ -1,10 +1,12 @@
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Competition, MatchView } from "@/lib/types";
 import { dateOf, formatShortDate, type ISODate } from "@/lib/dates";
 import { MatchRow } from "./MatchRow";
 import { Empty } from "./Section";
+import { StageLabel } from "./StageLabel";
 
 /** Fixtures or results grouped by matchday, then by day inside the matchday. */
-export function RoundList({
+export async function RoundList({
   views,
   competition,
   mode,
@@ -13,10 +15,11 @@ export function RoundList({
   competition: Competition;
   mode: "fixtures" | "results";
 }) {
+  const t = await getTranslations("league");
+  const tm = await getTranslations("match");
+  const locale = await getLocale();
   if (views.length === 0)
-    return (
-      <Empty>{mode === "fixtures" ? "No fixtures left this season." : "No results yet."}</Empty>
-    );
+    return <Empty>{mode === "fixtures" ? t("noFixturesLeft") : t("noResultsYet")}</Empty>;
   const rounds = new Map<number, MatchView[]>();
   for (const v of views) {
     const list = rounds.get(v.match.round) ?? [];
@@ -41,16 +44,18 @@ export function RoundList({
         return (
           <section key={round} className="space-y-2" id={`md-${round}`}>
             <h2 className="text-sm font-semibold">
-              Matchday {round}
+              {tm("matchday", { n: round })}
               {competition.kind === "cup" && (
-                <span className="ms-2 font-normal text-faint">{list[0].match.stage}</span>
+                <span className="ms-2 font-normal text-faint">
+                  <StageLabel stage={list[0].match.stage} />
+                </span>
               )}
             </h2>
             <div className="card overflow-hidden">
               {[...days.entries()].map(([d, arr]) => (
                 <div key={d}>
                   <div className="border-b border-line bg-surface-2/60 px-4 py-1.5 text-[11px] font-medium uppercase tracking-wide text-faint">
-                    {formatShortDate(d)}
+                    {formatShortDate(d, locale)}
                   </div>
                   <div className="divide-y divide-line">
                     {arr.map((v) => (

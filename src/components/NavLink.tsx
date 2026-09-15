@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import type { ReactNode } from "react";
 
 export function NavLink({
@@ -17,7 +16,7 @@ export function NavLink({
 }) {
   const pathname = usePathname();
   const active = exact
-    ? pathname === href || (pathname.startsWith("/matches") && href === "/")
+    ? pathname === href || (href === "/" && pathname.startsWith("/matches"))
     : pathname === href || pathname.startsWith(`${href}/`);
   const base = small
     ? "whitespace-nowrap rounded-full px-2.5 py-1 text-[12.5px] font-medium"
