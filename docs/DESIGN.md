@@ -25,7 +25,7 @@ One accent. Warm neutrals. Colour carries meaning, not decoration.
 | live          | `#16a34a`      | `#4ade80` | live dot and clock only    |
 | win/draw/loss | green/grey/red | —         | form badges                |
 
-Competition colours appear only as small dots and 3 px table markers.
+Competition colours appear only as small dots and 3 px table markers. Club crests are the provider's official images; a generated two-colour badge with the club code stands in when there is none.
 
 ## Type
 

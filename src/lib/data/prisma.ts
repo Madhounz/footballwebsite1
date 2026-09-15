@@ -340,6 +340,7 @@ function toTeam(t: DbTeam, competitionIds: string[]): Team {
     competitionIds,
     leagueId: t.leagueId ?? undefined,
     manager: t.manager ?? undefined,
+    crestUrl: t.crestUrl ?? undefined,
   };
 }
 

@@ -1,8 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import type { Team } from "@/lib/types";
 
 /**
- * Generated crest: two club colours and the three-letter code. Real crests are
- * trademarked, so the product identity never depends on them.
+ * A club crest. Uses the provider's official image when the team has one and
+ * it loads; otherwise a generated badge from the club colours and code, which
+ * is also what the demo dataset shows.
  */
 export function TeamCrest({
   team,
@@ -11,6 +15,40 @@ export function TeamCrest({
 }: {
   team: Team;
   size?: number;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (team.crestUrl && !failed) {
+    return (
+      <span
+        className={`inline-flex shrink-0 items-center justify-center ${className}`}
+        style={{ width: size, height: size }}
+        aria-hidden="true"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote SVG/PNG of unknown size; next/image adds nothing here */}
+        <img
+          src={team.crestUrl}
+          alt=""
+          width={size}
+          height={size}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+          style={{ width: size, height: size, objectFit: "contain" }}
+        />
+      </span>
+    );
+  }
+  return <GeneratedCrest team={team} size={size} className={className} />;
+}
+
+export function GeneratedCrest({
+  team,
+  size,
+  className = "",
+}: {
+  team: Team;
+  size: number;
   className?: string;
 }) {
   const [a, b] = team.colors;

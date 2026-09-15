@@ -44,6 +44,7 @@ model Team {
   colors    String[] // [primary, secondary]
   manager   String?
   leagueId  String?
+  crestUrl  String?
   competitions TeamCompetition[]
   players   Player[]
   homeMatches Match[] @relation("home")

@@ -54,6 +54,7 @@ interface FDTeam {
   name: string;
   shortName: string | null;
   tla: string | null;
+  crest?: string | null;
   address: string | null;
   founded: number | null;
   clubColors: string | null;
@@ -233,6 +234,7 @@ export class FootballDataProvider implements Provider {
           founded: t.founded ?? 0,
           colors: c1 && c2 ? [c1, c2] : undefined,
           manager: t.coach?.name ?? undefined,
+          crestUrl: t.crest ?? undefined,
           squad: (t.squad ?? []).map((p) => squadPlayer(p)),
         },
       };

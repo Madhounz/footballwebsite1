@@ -47,6 +47,7 @@ export class PrismaSyncStore implements SyncStore {
         founded: t.founded,
         colors: t.colors ? [...t.colors] : ["#555555", "#ffffff"],
         manager: t.manager ?? null,
+        crestUrl: t.crestUrl ?? null,
         ...(competition.kind === "league" ? { leagueId: competition.id } : {}),
       };
       await this.db.team.upsert({

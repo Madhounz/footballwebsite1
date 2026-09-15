@@ -18,7 +18,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - Client components only for interaction; browser-only values go through `useSyncExternalStore`.
 - The AI validator (`src/lib/pipeline/ai-validator.ts`) may only choose among provider values or decline; never let it invent data. Keep the model at `claude-opus-5` unless asked.
 - Match ingestion never creates teams from a bare name. Only the `--seed` step may create a team, from a provider's full team record, and it must log it.
-- Real crests, player photos and third-party logos are not used; `TeamCrest` generates one from club colours.
+- Club crests come from the data provider (`Team.crestUrl`); `TeamCrest` falls back to a generated badge from club colours when there is none or it fails to load. No player photos or other third-party logos.
+- Schema changes need a migration folder under `prisma/migrations/`; Vercel applies pending migrations at build time through `scripts/migrate-if-db.mjs`.
 - Demo players and results are synthetic; do not present them as real anywhere.
 
 ## Where things are

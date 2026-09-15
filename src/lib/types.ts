@@ -53,6 +53,8 @@ export interface Team {
   /** Domestic league competition id, when the team's league is tracked. */
   leagueId?: string;
   manager?: string;
+  /** Official crest image from the data provider; the generated crest is used when absent. */
+  crestUrl?: string;
 }
 
 export type Position = "GK" | "DF" | "MF" | "FW";
