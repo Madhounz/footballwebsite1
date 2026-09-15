@@ -4,7 +4,13 @@ import type { ReconciledMatch } from "./reconcile";
 import type { SyncStore } from "./store";
 import { slugify } from "../slug";
 import { matchPlayer, type SquadEntry } from "./players";
-import type { Conflict, PlayerResolver, ProviderTeam, Resolution } from "./types";
+import type {
+  Conflict,
+  MatchNeedingDetail,
+  PlayerResolver,
+  ProviderTeam,
+  Resolution,
+} from "./types";
 
 export class PrismaSyncStore implements SyncStore {
   private get db() {
@@ -27,6 +33,55 @@ export class PrismaSyncStore implements SyncStore {
       },
     });
     return n > 0;
+  }
+
+  async matchesNeedingDetail(
+    provider: string,
+    now: Date,
+    beforeMin: number,
+    afterMin: number,
+  ): Promise<MatchNeedingDetail[]> {
+    const rows = await this.db.match.findMany({
+      where: {
+        kickoff: {
+          gte: new Date(now.getTime() - afterMin * 60_000),
+          lte: new Date(now.getTime() + beforeMin * 60_000),
+        },
+        status: { notIn: ["postponed", "cancelled"] },
+      },
+      include: { _count: { select: { events: true, lineups: true } } },
+    });
+    if (rows.length === 0) return [];
+    const aliases = await this.db.entityAlias.findMany({
+      where: { provider, entityType: "match", entityId: { in: rows.map((r) => r.id) } },
+    });
+    const byMatch = new Map(aliases.map((a) => [a.entityId, a.externalId]));
+    return rows.map((r) => ({
+      id: r.id,
+      competitionId: r.competitionId,
+      kickoff: r.kickoff.toISOString(),
+      homeTeamId: r.homeTeamId,
+      awayTeamId: r.awayTeamId,
+      status: r.status as MatchNeedingDetail["status"],
+      hasLineups: r._count.lineups >= 2,
+      hasEvents: r._count.events > 0,
+      externalId: byMatch.get(r.id) ?? null,
+    }));
+  }
+
+  async saveMatchAlias(provider: string, matchId: string, externalId: string) {
+    await this.db.entityAlias.upsert({
+      where: { provider_entityType_externalId: { provider, entityType: "match", externalId } },
+      create: {
+        provider,
+        entityType: "match",
+        externalId,
+        externalName: matchId,
+        entityId: matchId,
+        source: "matched",
+      },
+      update: { entityId: matchId },
+    });
   }
 
   /**

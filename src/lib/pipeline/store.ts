@@ -1,9 +1,9 @@
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
-import type { Conflict, PlayerResolver, ProviderTeam, Resolution } from "./types";
+import type { Conflict, DetailStore, PlayerResolver, ProviderTeam, Resolution } from "./types";
 
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
-export interface SyncStore {
+export interface SyncStore extends DetailStore {
   beginRun(trigger: string, providers: string[]): Promise<string>;
   /** Delete every competition, team, player, match and event. Only for an explicit --reset. */
   reset(): Promise<void>;
@@ -46,6 +46,10 @@ export class DryRunStore implements SyncStore {
   async hasMatchesAround() {
     return true;
   }
+  async matchesNeedingDetail() {
+    return [];
+  }
+  async saveMatchAlias() {}
   playerResolver(): PlayerResolver {
     return async (teamId, p) => `${teamId}:${p.externalId}`;
   }

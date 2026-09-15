@@ -171,7 +171,7 @@ export class FootballDataProvider implements Provider {
           competitionId: competition.id,
           round: m.matchday ?? 0,
           stage: competition.kind === "cup" ? humanStage(m.stage) : undefined,
-          kickoff: m.utcDate,
+          kickoff: new Date(m.utcDate).toISOString(),
           homeTeamId: home,
           awayTeamId: away,
           status,

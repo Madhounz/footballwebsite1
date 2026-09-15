@@ -1,4 +1,4 @@
-import type { PlayerResolver, Provider } from "../types";
+import type { DetailStore, PlayerResolver, Provider } from "../types";
 import { FootballDataProvider } from "./football-data";
 import { ApiFootballProvider } from "./api-football";
 
@@ -9,6 +9,7 @@ export interface ProviderSetup {
   knownTeams: { id: string; name: string; shortName: string }[];
   seasonStartYear: number;
   resolvePlayer: PlayerResolver;
+  detailStore: DetailStore;
   /** Spend API-Football requests on match details this run. */
   detailsEnabled: boolean;
   onUnknownTeam?: (provider: string, name: string, externalId: string) => void;
@@ -36,6 +37,7 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
         season: seasonStartYear,
         knownTeams,
         resolvePlayer: setup.resolvePlayer,
+        detailStore: setup.detailStore,
         // Competitions football-data's free tier refuses; API-Football carries the whole season for them.
         primaryFor: env.FOOTBALL_DATA_API_KEY
           ? ["uel"]

@@ -84,14 +84,17 @@ export function reconcileMatches(
   const matches: ReconciledMatch[] = [];
   const needsReview: Conflict[] = [];
   for (const [key, list] of byKey) {
+    // Partial records only contribute detail; a match nobody describes in full is dropped.
+    const full = list.filter((r) => !r.value.partial);
+    if (full.length === 0) continue;
     const base = {
-      ...list.sort((a, b) => (weights[b.provider] ?? 0) - (weights[a.provider] ?? 0))[0].value,
+      ...full.sort((a, b) => (weights[b.provider] ?? 0) - (weights[a.provider] ?? 0))[0].value,
     };
     const conflicts: Conflict[] = [];
     let confidence = 1;
     for (const field of MATCH_FIELDS) {
       const values: Record<string, unknown> = {};
-      for (const r of list) values[r.provider] = r.value[field];
+      for (const r of full) values[r.provider] = r.value[field];
       const res = decide(values, weights);
       (base as Record<string, unknown>)[field] = res.value;
       if (res.resolvedBy !== "consensus") {
@@ -125,9 +128,12 @@ export function reconcileMatches(
         return true;
       })
       .sort((a, b) => a.minute - b.minute || (a.addedTime ?? 0) - (b.addedTime ?? 0));
-    // line-ups: first provider that has them
+    // line-ups: first provider that has them; live minute: any provider that reports one
     const lineups = list.find((r) => r.value.lineups)?.value.lineups;
-    matches.push({ id: key, value: { ...base, id: key, events, lineups }, confidence, conflicts });
+    const minute = list.find((r) => r.value.minute != null)?.value.minute ?? base.minute ?? null;
+    const value: ProviderMatch = { ...base, id: key, events, lineups, minute };
+    delete value.partial;
+    matches.push({ id: key, value, confidence, conflicts });
   }
   return { matches, needsReview };
 }

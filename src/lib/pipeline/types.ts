@@ -22,7 +22,40 @@ export type ProviderMatch = Omit<Match, "season" | "minute" | "phase"> & {
   phase?: Match["phase"];
   events?: MatchEvent[];
   lineups?: { home: TeamLineup; away: TeamLineup };
+  /**
+   * A partial record carries only detail (events, line-ups, minute) for a match
+   * another provider already describes; its other fields must not take part in
+   * reconciliation.
+   */
+  partial?: boolean;
 };
+
+/** A match the store knows about that may need detail from a provider. */
+export interface MatchNeedingDetail {
+  id: string;
+  competitionId: string;
+  kickoff: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  status: Match["status"];
+  hasLineups: boolean;
+  hasEvents: boolean;
+  /** The provider's own id for this match, when already learned. */
+  externalId: string | null;
+}
+
+/** What a detail provider needs from the store. */
+export interface DetailStore {
+  /** Matches kicking off within [now - afterMin, now + beforeMin] for a provider, with what is already stored. */
+  matchesNeedingDetail(
+    provider: string,
+    now: Date,
+    beforeMin: number,
+    afterMin: number,
+  ): Promise<MatchNeedingDetail[]>;
+  /** Remember a provider's id for one of our matches. */
+  saveMatchAlias(provider: string, matchId: string, externalId: string): Promise<void>;
+}
 
 /** A player as a provider names them inside a match (events, line-ups). */
 export interface ProviderPlayerRef {

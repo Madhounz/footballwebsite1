@@ -78,6 +78,7 @@ async function main() {
     knownTeams,
     seasonStartYear: seasonStart,
     resolvePlayer: store.playerResolver(),
+    detailStore: store,
     detailsEnabled,
     onUnknownTeam: (provider, name, externalId) => unknown.set(name, { provider, externalId }),
     log: console.log,
@@ -139,7 +140,11 @@ async function main() {
   console.log(
     `\nseeded ${result.seeded.teams} teams / ${result.seeded.players} players, fetched ${result.fetched}, written ${result.written}, conflicts ${result.conflicts}, ai-resolved ${result.aiResolved}, unresolved ${result.unresolved.length}${result.skipped.length ? `, skipped ${result.skipped.join(" ")}` : ""}`,
   );
-  if (result.unresolved.length) process.exitCode = 1;
+  if (result.unresolved.length) {
+    console.log(
+      `${result.unresolved.length} conflicts were left to the heavier provider; set ANTHROPIC_API_KEY to have them reviewed.`,
+    );
+  }
 }
 
 main().catch((e) => {
