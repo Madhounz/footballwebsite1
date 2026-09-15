@@ -50,12 +50,12 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
   const log = opts.log ?? (() => {});
   const today = todayISO();
   const window = { fromDate: addDays(today, -1), toDate: addDays(today, 1) };
-  const idle = (skipped: string): LiveRefreshOutcome => ({
+  const idle = (skipped: string, competitions = 0): LiveRefreshOutcome => ({
     ran: false,
     skipped,
     window,
     detailsEnabled: false,
-    competitions: 0,
+    competitions,
     fetched: 0,
     written: 0,
     conflicts: 0,
@@ -96,7 +96,12 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     mode: "live",
     log,
   });
-  if (providers.length === 0) return idle("no data providers configured");
+  if (providers.length === 0) {
+    return idle(
+      "no data providers configured: set FOOTBALL_DATA_API_KEY (and optionally API_FOOTBALL_KEY) where this runs",
+      competitions.length,
+    );
+  }
 
   const result = await runSync({
     competitions,
