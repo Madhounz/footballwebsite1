@@ -1,0 +1,59 @@
+name: Update honours
+
+# Adds the season that just finished to data/honours/*.json, from football-data,
+# and commits the change. Historical winners stay curated JSON: this only ever
+# appends seasons the files do not have, never rewrites one.
+#
+# Repository secret: FOOTBALL_DATA_API_KEY
+on:
+  schedule:
+    - cron: "23 5 1 * *" # monthly: a title won in May lands within weeks
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only print what would change"
+        type: boolean
+        default: false
+      backfill:
+        description: "Also add seasons older than the files already cover"
+        type: boolean
+        default: false
+
+concurrency:
+  group: honours
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  honours:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Pull winners
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="--dry-run"; fi
+          if [ "${{ github.event.inputs.backfill }}" = "true" ]; then ARGS="$ARGS --all"; fi
+          pnpm honours -- $ARGS
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+      - name: Commit any new seasons
+        run: |
+          if [ -z "$(git status --porcelain data/honours)" ]; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/honours
+          git commit -m "Add newly finished seasons to the honours lists"
+          git push

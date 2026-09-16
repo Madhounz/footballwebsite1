@@ -27,6 +27,7 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - Live freshness comes from `/api/sync` (every minute, external cron), not from GitHub's scheduler. Keep that path cheap: one combined provider request, a three-day window, and API-Football only inside the detail window and interval.
 - A finished match's timeline is only trustworthy once the full event list has been fetched (`Match.eventsFinalAt`); the live feed alone leaves it truncated. The catch-up pass fills old ones in, bounded by the daily detail budget — never widen it without checking the 100-request plan.
 - Substitution direction is proved from the starting XI, never assumed from a provider's field order.
+- Past winners are curated in `data/honours/*.json`; `pnpm honours` (and the Update honours workflow) only appends seasons from football-data and never rewrites a curated entry. `mostTitles` is all-time — increment it, never recompute it from `entries`.
 - Schema changes need a migration folder under `prisma/migrations/`; Vercel applies pending migrations at build time through `scripts/migrate-if-db.mjs`.
 - Demo players and results are synthetic; do not present them as real anywhere.
 

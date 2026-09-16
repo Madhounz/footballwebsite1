@@ -2,7 +2,7 @@
   "name": "ninety",
   "version": "0.1.0",
   "private": true,
-  "description": "ninety — a calm, fast football scores site for the top European leagues and UEFA competitions.",
+  "description": "ninety \u2014 a calm, fast football scores site for the top European leagues and UEFA competitions.",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22"
@@ -21,6 +21,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "demo:generate": "tsx scripts/generate-demo.ts",
     "sync": "tsx scripts/sync.ts",
+    "honours": "tsx scripts/honours.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

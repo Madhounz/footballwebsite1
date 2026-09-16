@@ -174,6 +174,14 @@ The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
 ### How the two free tiers are combined
 
 - **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
+- **Past winners** live in `data/honours/*.json` — curated, so a reviewer can
+  read the diff when a season is added — but the season that just finished is
+  pulled rather than typed: `pnpm honours` reads each competition's winner from
+  football-data, adds only seasons the file lacks, never rewrites an entry, and
+  reports it when the provider disagrees with one. `mostTitles` is an all-time
+  tally, wider than these files, so a new entry increments it. The **Update
+  honours** workflow runs it monthly and commits what it finds. The Europa
+  League is not on the free plan, so its file stays entirely hand-curated.
 - **Substitutions** are read from the line-ups, not from the order of the
   provider's fields: whoever was in the starting XI cannot be the player coming
   on. Where the line-ups are unknown the provider's own convention is used
