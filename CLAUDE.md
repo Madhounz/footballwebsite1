@@ -12,7 +12,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 ## Rules of the codebase
 
 - Pages get data only through `getRepository()`; both `DemoRepository` and `PrismaRepository` must keep implementing the full `Repository` interface.
-- Standings are computed from matches (`src/lib/data/standings.ts`), never stored or trusted from a provider.
+- Standings are computed from matches (`src/lib/data/standings.ts`), never stored or trusted from a provider. `computeStandings(..., side)` gives the home-only or away-only table; those carry no movement arrows and no qualification zones, because neither means anything in half a season.
+- Season facts on the stats tab (`src/lib/data/season-facts.ts`) come from scorelines, which we hold for every match — so unlike the scorer chart they need no caveat.
 - Scorer charts are the exception, and the page says so: a free plan cannot give us every match's goals, so counting them ourselves publishes a chart that is quietly short. `SeasonScorer` holds the primary source's own chart (one request per competition, rotated every 30 minutes by the live refresh) and `getTopScorers` returns it with `source: "provider"`, falling back to our count with `source: "matches"`.
 - Match status in demo mode is derived from the wall clock (`clockFor`); do not store statuses in the demo dataset.
 - Use design tokens from `src/app/globals.css` and logical CSS properties. One accent colour. Tabular numerals for numbers.

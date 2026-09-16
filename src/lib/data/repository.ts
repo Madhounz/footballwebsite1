@@ -10,6 +10,7 @@ import type {
   Player,
   ScorerChart,
   ScorerRow,
+  TableSide,
   SearchItem,
   Standings,
   Team,
@@ -71,7 +72,8 @@ export interface Repository {
   getCompetitionMatches(competitionId: string): Promise<MatchView[]>;
   getTeamMatches(teamId: string): Promise<MatchView[]>;
 
-  getStandings(competitionId: string): Promise<Standings>;
+  /** The full table, or only each team's home or away half of it. */
+  getStandings(competitionId: string, side?: TableSide): Promise<Standings>;
   getTopScorers(competitionId: string, limit?: number): Promise<ScorerChart>;
   getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null>;
   /** Every match the player appeared in this season, most recent first. */

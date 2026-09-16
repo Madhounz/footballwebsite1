@@ -1,8 +1,10 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ScorersTable } from "@/components/ScorersTable";
+import { SeasonFacts } from "@/components/SeasonFacts";
 import { Section } from "@/components/Section";
 import { getRepository } from "@/lib/data";
+import { seasonFacts } from "@/lib/data/season-facts";
 import { dateOf, formatMediumDate } from "@/lib/dates";
 import type { Player } from "@/lib/types";
 
@@ -12,7 +14,13 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
   const repo = await getRepository();
   const c = await repo.getCompetitionBySlug((await params).slug);
   if (!c) notFound();
-  const [chart, teams] = await Promise.all([repo.getTopScorers(c.id, 25), repo.listTeams(c.id)]);
+  const [chart, teams, matches, standings] = await Promise.all([
+    repo.getTopScorers(c.id, 25),
+    repo.listTeams(c.id),
+    repo.getCompetitionMatches(c.id),
+    repo.getStandings(c.id),
+  ]);
+  const facts = seasonFacts(matches, standings.rows);
   const rows = chart.rows;
   const teamMap = new Map(teams.map((team) => [team.id, team]));
   const players = new Map<string, Player>();
@@ -45,9 +53,14 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
           )
         )}
       </Section>
-      <Section title={t("mostAssists")}>
-        <ScorersTable rows={assists} players={players} teams={teamMap} compact />
-      </Section>
+      <div className="min-w-0 space-y-8">
+        <Section title={t("seasonSoFar")}>
+          <SeasonFacts facts={facts} teams={teamMap} />
+        </Section>
+        <Section title={t("mostAssists")}>
+          <ScorersTable rows={assists} players={players} teams={teamMap} compact />
+        </Section>
+      </div>
     </div>
   );
 }

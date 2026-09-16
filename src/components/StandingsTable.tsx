@@ -23,18 +23,26 @@ export async function StandingsTable({
   teams,
   highlightTeamId,
   compact = false,
+  zones = true,
 }: {
   standings: Standings;
   competition: Competition;
   teams: Map<string, Team>;
   highlightTeamId?: string;
   compact?: boolean;
+  /**
+   * Qualification and relegation markers. Off for a home or away table: the
+   * places in those are not places anyone qualifies from.
+   */
+  zones?: boolean;
 }) {
   const t = await getTranslations("league");
   const locale = await getLocale();
-  const zonesUsed = competition.zones.filter((z) =>
-    standings.rows.some((r) => r.position >= z.from && r.position <= z.to),
-  );
+  const zonesUsed = zones
+    ? competition.zones.filter((z) =>
+        standings.rows.some((r) => r.position >= z.from && r.position <= z.to),
+      )
+    : [];
   const zoneLabel = (label: string) => (t.has(`zones.${label}`) ? t(`zones.${label}`) : label);
   return (
     <div className="card overflow-hidden">
@@ -76,7 +84,7 @@ export async function StandingsTable({
             {standings.rows.map((r) => {
               const team = teams.get(r.teamId);
               if (!team) return null;
-              const zone = zoneFor(r.position, competition.zones);
+              const zone = zones ? zoneFor(r.position, competition.zones) : undefined;
               const highlighted = r.teamId === highlightTeamId;
               return (
                 <tr

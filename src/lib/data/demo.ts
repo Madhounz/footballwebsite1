@@ -14,6 +14,7 @@ import type {
   Position,
   ScorerChart,
   ScorerRow,
+  TableSide,
   SearchItem,
   Standings,
   Team,
@@ -318,7 +319,7 @@ export class DemoRepository implements Repository {
   }
 
   // ---- derived -----------------------------------------------------------
-  async getStandings(competitionId: string): Promise<Standings> {
+  async getStandings(competitionId: string, side: TableSide = "all"): Promise<Standings> {
     const teams = await this.listTeams(competitionId);
     const matches = (await this.getCompetitionMatches(competitionId)).map((v) => v.match);
     return computeStandings(
@@ -327,6 +328,7 @@ export class DemoRepository implements Repository {
       teams.map((t) => t.id),
       matches,
       this.now().toISOString(),
+      side,
     );
   }
   /** The demo season is complete in itself, so counting its goals is the whole truth. */

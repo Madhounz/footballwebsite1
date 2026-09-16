@@ -12,6 +12,7 @@ import type {
   Position,
   ScorerChart,
   ScorerRow,
+  TableSide,
   SearchItem,
   Standings,
   TableZone,
@@ -208,7 +209,7 @@ export class PrismaRepository implements Repository {
     return this.views(rows);
   }
 
-  async getStandings(competitionId: string): Promise<Standings> {
+  async getStandings(competitionId: string, side: TableSide = "all"): Promise<Standings> {
     const comp = await this.db.competition.findUnique({ where: { id: competitionId } });
     if (!comp) throw new Error(`unknown competition ${competitionId}`);
     const teams = await this.listTeams(competitionId);
@@ -218,6 +219,8 @@ export class PrismaRepository implements Repository {
       comp.season,
       teams.map((t) => t.id),
       matches.map(toMatch),
+      undefined,
+      side,
     );
   }
   /**

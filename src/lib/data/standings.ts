@@ -1,4 +1,12 @@
-import type { FormResult, Match, MatchEvent, ScorerRow, StandingRow, Standings } from "../types";
+import type {
+  FormResult,
+  Match,
+  MatchEvent,
+  ScorerRow,
+  StandingRow,
+  Standings,
+  TableSide,
+} from "../types";
 
 interface Acc {
   teamId: string;
@@ -17,6 +25,10 @@ interface Acc {
  * difference, goals scored, then name order supplied by `teamOrder` (stable).
  * Used identically by the demo and database repositories, so a table is always
  * derived from results rather than trusted from a single provider.
+ *
+ * `side` narrows it to the home or away half of the season — the same matches,
+ * counted only for the team playing that side. Movement is left at zero there:
+ * a home table has no previous round to have climbed from.
  */
 export function computeStandings(
   competitionId: string,
@@ -24,16 +36,19 @@ export function computeStandings(
   teamIds: string[],
   matches: Match[],
   updatedAt: string = new Date().toISOString(),
+  side: TableSide = "all",
 ): Standings {
-  const rows = tableFor(teamIds, matches);
-  const previous = tableFor(
-    teamIds,
-    matches.filter((m) => m.round < currentRound(matches)),
-  );
-  const prevPos = new Map(previous.map((r) => [r.teamId, r.position]));
-  for (const r of rows) {
-    const before = prevPos.get(r.teamId) ?? r.position;
-    r.movement = before - r.position;
+  const rows = tableFor(teamIds, matches, side);
+  if (side === "all") {
+    const previous = tableFor(
+      teamIds,
+      matches.filter((m) => m.round < currentRound(matches)),
+    );
+    const prevPos = new Map(previous.map((r) => [r.teamId, r.position]));
+    for (const r of rows) {
+      const before = prevPos.get(r.teamId) ?? r.position;
+      r.movement = before - r.position;
+    }
   }
   return { competitionId, season, updatedAt, rows };
 }
@@ -44,7 +59,7 @@ function currentRound(matches: Match[]): number {
   return max;
 }
 
-function tableFor(teamIds: string[], matches: Match[]): StandingRow[] {
+function tableFor(teamIds: string[], matches: Match[], side: TableSide = "all"): StandingRow[] {
   const acc = new Map<string, Acc>(
     teamIds.map((id) => [
       id,
@@ -66,8 +81,8 @@ function tableFor(teamIds: string[], matches: Match[]): StandingRow[] {
     const h = acc.get(m.homeTeamId);
     const a = acc.get(m.awayTeamId);
     if (!h || !a) continue;
-    apply(h, m.score.home, m.score.away, m);
-    apply(a, m.score.away, m.score.home, m);
+    if (side !== "away") apply(h, m.score.home, m.score.away, m);
+    if (side !== "home") apply(a, m.score.away, m.score.home, m);
   }
   const order = new Map(teamIds.map((id, i) => [id, i]));
   const rows = [...acc.values()].sort((x, y) => {

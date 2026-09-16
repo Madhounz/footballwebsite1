@@ -187,6 +187,9 @@ export interface StandingRow {
 
 export type FormResult = "W" | "D" | "L";
 
+/** The whole season, or only the half each team plays at home or away. */
+export type TableSide = "all" | "home" | "away";
+
 export interface Standings {
   competitionId: string;
   season: string;
