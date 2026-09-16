@@ -37,6 +37,8 @@ export default async function LeagueLayout({
   const c = await repo.getCompetitionBySlug(slug);
   if (!c) notFound();
   const base = `/leagues/${c.slug}`;
+  // `getLiveMatches` is already bounded by kick-off, so a stale record cannot
+  // put a pulsing badge on a competition that finished playing hours ago.
   const live = (await repo.getLiveMatches()).filter((v) => v.competition.id === c.id).length;
   const name = competitionName(c, locale);
   return (

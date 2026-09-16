@@ -33,6 +33,10 @@ export function playerMatchFrom(
   const offEvent = sub(false);
   if (!started && !onEvent) return null;
 
+  // Deliberately the raw status rather than `isLive`. This decides where a
+  // player's minutes stop, and for a match abandoned mid-play the last minute
+  // we were told is the honest answer: treating it as not-live would run him to
+  // ninety and claim he played a match that never finished.
   const live = view.match.status === "live";
   const end = offEvent?.minute ?? (live ? (view.match.minute ?? 0) : FULL_TIME);
   const from = started ? 0 : (onEvent?.minute ?? 0);

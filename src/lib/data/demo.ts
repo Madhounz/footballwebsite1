@@ -27,6 +27,7 @@ import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
 import { computeScorers, computeStandings } from "./standings";
 import dataset from "../../../data/demo/dataset.json";
+import { isLive } from "../live-status";
 
 const DATA = dataset as unknown as DemoDataset;
 
@@ -268,7 +269,7 @@ export class DemoRepository implements Repository {
     const now = this.now();
     const today = todayISO(now);
     const list = this.shifted().byDate.get(today) ?? [];
-    return list.map((m) => this.toView(m, now)).filter((v) => v.match.status === "live");
+    return list.map((m) => this.toView(m, now)).filter((v) => isLive(v.match, now));
   }
   async getMatch(idOrSlug: string): Promise<MatchDetail | null> {
     const shifted = this.shifted();

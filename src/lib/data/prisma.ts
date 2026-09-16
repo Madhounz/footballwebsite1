@@ -30,6 +30,7 @@ import { honoursFor, allHonours } from "./honours";
 import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
 import { computeScorers, computeStandings } from "./standings";
+import { LIVE_LIMIT_MIN } from "../live-status";
 
 /** PostgreSQL-backed repository. Filled by the sync pipeline (scripts/sync.ts). */
 export class PrismaRepository implements Repository {
@@ -134,8 +135,15 @@ export class PrismaRepository implements Repository {
     return this.views(rows);
   }
   async getLiveMatches(): Promise<MatchView[]> {
+    // Bounded by kick-off, not just by status. A match abandoned or postponed
+    // after the clock started leaves a record saying "live" until a provider
+    // corrects it, and this is what `/api/live`, the health check and every
+    // "N live" badge are built on — one stale row and all of them lie.
     const rows = await this.db.match.findMany({
-      where: { status: "live" },
+      where: {
+        status: "live",
+        kickoff: { gte: new Date(Date.now() - LIVE_LIMIT_MIN * 60_000) },
+      },
       include: this.include,
       orderBy: { kickoff: "asc" },
     });
