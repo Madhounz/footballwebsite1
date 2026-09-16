@@ -90,11 +90,36 @@ export async function loadCrest(url: string | undefined): Promise<string | null>
 }
 
 /**
+ * A word split where its direction changes: "الـ90" is Arabic and then a
+ * number, and each of those is laid out by itself.
+ *
+ * Digits are the reason. Satori keeps a number's own digits in order, but it
+ * does not know a number sits to the *left* of the Arabic that introduces it,
+ * so "الـ90" comes out as "الـ" followed by "90" — the right glyphs in the
+ * wrong halves of the word. Arabic-Indic digits are here too: left inside the
+ * Arabic run they would be shaped with it and reversed into "٠٩".
+ */
+const LTR_RUN = /[0-9\u0660-\u0669A-Za-z]+(?:[.,:'\u2019/-][0-9\u0660-\u0669A-Za-z]+)*/g;
+
+export function runs(word: string): string[] {
+  const parts: string[] = [];
+  let last = 0;
+  for (const m of word.matchAll(LTR_RUN)) {
+    if (m.index > last) parts.push(word.slice(last, m.index));
+    parts.push(m[0]);
+    last = m.index + m[0].length;
+  }
+  if (last < word.length) parts.push(word.slice(last));
+  return parts;
+}
+
+/**
  * Satori shapes each Arabic word correctly but has no bidi algorithm: it lays
  * words out in logical order, so an Arabic line reads backwards and the spaces
  * land against the wrong word. Laying each word out as its own box in a
- * reversed row sidesteps both. Latin text — a stadium name, a player's name —
- * is left exactly as it is, in either language.
+ * reversed row sidesteps both — and a word that changes direction part-way
+ * through is a reversed row of its own. Latin text — a stadium name, a
+ * player's name — is left exactly as it is, in either language.
  */
 export function Words({ children, dir }: { children: string; dir: "ltr" | "rtl" }) {
   if (dir !== "rtl" || !/[\u0600-\u06FF]/.test(children)) return <>{children}</>;
@@ -112,11 +137,26 @@ export function Words({ children, dir }: { children: string; dir: "ltr" | "rtl" 
         alignItems: "baseline",
       }}
     >
-      {words.map((w, i) => (
-        <div key={i} style={{ display: "flex", marginRight: i > 0 ? 10 : 0 }}>
-          {w}
-        </div>
-      ))}
+      {words.map((w, i) => {
+        const parts = runs(w);
+        return (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              flexDirection: "row-reverse",
+              alignItems: "baseline",
+              marginRight: i > 0 ? 10 : 0,
+            }}
+          >
+            {parts.map((part, j) => (
+              <div key={j} style={{ display: "flex" }}>
+                {part}
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }

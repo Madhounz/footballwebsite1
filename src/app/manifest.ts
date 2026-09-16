@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "ninety",
     short_name: "ninety",
-    description: "Scores, tables and squads without the noise.",
+    description: "The full 90, all in one place: live scores, tables, fixtures and squads.",
     start_url: "/",
     display: "standalone",
     background_color: "#0f0f0e",

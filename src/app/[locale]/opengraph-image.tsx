@@ -15,7 +15,7 @@ export default async function SiteCard({ params }: { params: Promise<{ locale: s
   const repo = await getRepository();
   const competitions = await repo.listCompetitions();
   const dir = isRtl(locale) ? "rtl" : "ltr";
-  // The title carries the promise after the dash: "ninety — scores without the noise".
+  // The title carries the promise after the dash: "ninety — the full 90, all in one place".
   const [name, tagline] = t("title").split("—");
 
   return new ImageResponse(

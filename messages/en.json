@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "ninety — scores, tables and squads without the noise",
-    "description": "Live scores, standings, fixtures, squads and history for the Premier League, La Liga, Bundesliga, Serie A, Champions League and Europa League.",
+    "title": "ninety — the full 90, all in one place",
+    "description": "Live scores, tables, fixtures, squads and history for the Premier League, La Liga, Bundesliga, Serie A and the Champions League.",
     "matchesOn": "Matches on {date}",
     "leagues": "Leagues & competitions",
     "teams": "Teams",
@@ -36,7 +36,7 @@
     "player": "player"
   },
   "footer": {
-    "tagline": "Ninety minutes. Nothing else. Scores, tables, squads and history for the competitions that matter, without the noise.",
+    "tagline": "The full 90, all in one place. Scores, tables, squads and history for the competitions you actually follow.",
     "data": "Data",
     "howRight": "How we keep it right →",
     "shortcuts": "Shortcuts",
