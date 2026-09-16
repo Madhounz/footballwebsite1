@@ -9,6 +9,14 @@
  * Reads FOOTBALL_DATA_API_KEY. One request per competition, paced for the free
  * plan's ten a minute. A competition the plan refuses is reported and skipped —
  * the Europa League is not on the free tier, so its file stays hand-curated.
+ *
+ * What the free plan will not do, as of September 2026: name the winner of a
+ * recent season. It gives Blackburn for 1994/95 and nothing at all for 2024/25,
+ * 2025/26 or the season in play, across every competition we cover. So this
+ * script cannot bring a list up to date on that plan, this month or next year,
+ * and the champions of a season just ended are added by hand from a source the
+ * site's owner supplies. It is still worth running: it reports what the plan
+ * offers, so the day that changes we will see it rather than assume it.
  */
 import fs from "node:fs";
 import path from "node:path";

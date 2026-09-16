@@ -3,6 +3,11 @@
   "name": "Premier League",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Arsenal",
+      "winnerTeamId": "arsenal"
+    },
+    {
       "season": "2024/25",
       "winner": "Liverpool",
       "runnerUp": "Arsenal",
@@ -243,18 +248,18 @@
   ],
   "mostTitles": [
     {
-      "team": "Manchester United",
-      "count": 20,
-      "teamId": "manchester-united"
-    },
-    {
       "team": "Liverpool",
       "count": 20,
       "teamId": "liverpool"
     },
     {
+      "team": "Manchester United",
+      "count": 20,
+      "teamId": "manchester-united"
+    },
+    {
       "team": "Arsenal",
-      "count": 13,
+      "count": 14,
       "teamId": "arsenal"
     },
     {
@@ -273,14 +278,14 @@
       "teamId": "aston-villa"
     },
     {
-      "team": "Sunderland",
-      "count": 6,
-      "teamId": "sunderland"
-    },
-    {
       "team": "Chelsea",
       "count": 6,
       "teamId": "chelsea"
+    },
+    {
+      "team": "Sunderland",
+      "count": 6,
+      "teamId": "sunderland"
     },
     {
       "team": "Newcastle United",
