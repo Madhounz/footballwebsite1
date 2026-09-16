@@ -22,6 +22,23 @@ export interface MatchDetail {
   players: Record<string, Player>;
 }
 
+/** One appearance, with what the player did in it. Derived from line-ups and events. */
+export interface PlayerMatch {
+  view: MatchView;
+  started: boolean;
+  /** Minute they came on, when they came on. */
+  onMinute: number | null;
+  /** Minute they were replaced, when they were. */
+  offMinute: number | null;
+  /** Nominal minutes played; stoppage time is not counted. */
+  minutes: number;
+  goals: number;
+  ownGoals: number;
+  assists: number;
+  yellow: number;
+  red: boolean;
+}
+
 export interface TeamHonour {
   competition: Competition | { id: string; name: string; slug?: string };
   seasons: string[];
@@ -56,6 +73,8 @@ export interface Repository {
   getStandings(competitionId: string): Promise<Standings>;
   getTopScorers(competitionId: string, limit?: number): Promise<ScorerRow[]>;
   getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null>;
+  /** Every match the player appeared in this season, most recent first. */
+  getPlayerMatches(playerId: string): Promise<PlayerMatch[]>;
 
   getHonours(competitionId: string): Promise<Honours | null>;
   getTeamHonours(teamId: string): Promise<TeamHonour[]>;

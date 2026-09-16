@@ -19,6 +19,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - No `loading.tsx` in the locale tree: it would turn 404s into 200s by streaming the shell first.
 - Client components only for interaction; browser-only values go through `useSyncExternalStore`.
 - A model never decides a factual result. `FACTUAL_FIELDS` (score, halfTimeScore, status) are settled deterministically — consensus, majority, then the primary source — and a tie on a finished match sets `Match.disputed` for review. The validator may only choose among provider values for non-factual fields, or decline, and throws if handed a factual one. Keep the model at `claude-opus-5` unless asked.
+- Player pages are built from appearances (`getPlayerMatches`), derived from line-ups and events like the tables — never stored totals.
+- Share cards are `opengraph-image.tsx` routes built on `src/app/og/card.tsx`. Satori is not a browser: flexbox only, margins not `gap`, no SVG crest, and Arabic text goes through `Words` because satori has no bidi.
 - Match URLs use `Match.slug` (`arsenal-vs-chelsea-2026-09-19`), never the raw id; `getMatch` accepts either.
 - Match ingestion never creates teams from a bare name. Only the `--seed` step may create a team, from a provider's full team record, and it must log it.
 - Club crests come from the data provider (`Team.crestUrl`); `TeamCrest` falls back to a generated badge from club colours when there is none or it fails to load. No player photos or other third-party logos.

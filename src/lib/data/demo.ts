@@ -21,7 +21,8 @@ import type {
 import type { DemoDataset, DemoLineup, DemoMatch } from "./demo-format";
 import { matchSlug } from "../match-slug";
 import { honoursFor, allHonours } from "./honours";
-import type { MatchDetail, Repository, TeamHonour } from "./repository";
+import { byMostRecent, playerMatchFrom } from "./player-matches";
+import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
 import { computeScorers, computeStandings } from "./standings";
 import dataset from "../../../data/demo/dataset.json";
 
@@ -375,6 +376,26 @@ export class DemoRepository implements Repository {
       if (side.starting.includes(playerId) || cameOn) total.appearances++;
     }
     return total;
+  }
+
+  async getPlayerMatches(playerId: string): Promise<PlayerMatch[]> {
+    const p = this.playersById.get(playerId);
+    if (!p) return [];
+    const now = this.now();
+    const out: PlayerMatch[] = [];
+    for (const m of this.shifted().byTeam.get(p.teamId) ?? []) {
+      const clock = clockFor(m.kickoff, now);
+      if (clock.status === "scheduled" || clock.status === "postponed") continue;
+      const side = m.homeTeamId === p.teamId ? m.lineups?.home : m.lineups?.away;
+      const entry = playerMatchFrom(
+        playerId,
+        this.toView(m, now),
+        side?.starting ?? [],
+        this.toEvents(m, clock.revealMinute),
+      );
+      if (entry) out.push(entry);
+    }
+    return out.sort(byMostRecent);
   }
 
   async getHonours(competitionId: string): Promise<Honours | null> {

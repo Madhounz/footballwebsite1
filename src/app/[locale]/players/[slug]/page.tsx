@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { Stat } from "@/components/Section";
+import { Empty, Stat } from "@/components/Section";
+import { PlayerMatches } from "@/components/PlayerMatches";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
 import { pageMeta } from "@/lib/seo";
@@ -40,14 +41,23 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const repo = await getRepository();
   const player = await repo.getPlayerBySlug((await params).slug);
   if (!player) notFound();
-  const [team, stats] = await Promise.all([
+  const [team, stats, appearances] = await Promise.all([
     repo.getTeamById(player.teamId),
     repo.getPlayerSeasonStats(player.id),
+    repo.getPlayerMatches(player.id),
   ]);
   if (!team) notFound();
   const squad = await repo.getSquad(team.id);
   const teammates = squad.filter((p) => p.position === player.position && p.id !== player.id);
   const positionLabel = tp(player.position);
+  // Season totals come from the appearances themselves: one source, no drift.
+  const minutes = appearances.reduce((n, a) => n + a.minutes, 0);
+  const starts = appearances.filter((a) => a.started).length;
+  const yellow = appearances.reduce((n, a) => n + a.yellow, 0);
+  const red = appearances.filter((a) => a.red).length;
+  const goals = stats?.goals ?? 0;
+  // Goals per 90, once there is enough football behind it to mean anything.
+  const per90 = minutes >= 180 ? Math.round((goals / minutes) * 90 * 100) / 100 : null;
 
   return (
     <div className="space-y-8">
@@ -79,25 +89,45 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           label={t("goals")}
-          value={stats?.goals ?? 0}
-          hint={stats?.penalties ? t("fromPens", { n: stats.penalties }) : t("thisSeason")}
+          value={goals}
+          hint={
+            stats?.penalties
+              ? t("fromPens", { n: stats.penalties })
+              : per90 != null
+                ? t("perNinety", { n: per90 })
+                : t("thisSeason")
+          }
         />
         <Stat label={t("assists")} value={stats?.assists ?? 0} hint={t("thisSeason")} />
-        <Stat label={t("appearances")} value={stats?.appearances ?? 0} hint={t("allComps")} />
         <Stat
-          label={t("age")}
-          value={ageFromDOB(player.dateOfBirth)}
-          hint={t("born", { date: formatMediumDate(player.dateOfBirth as ISODate, locale) })}
+          label={t("appearances")}
+          value={appearances.length}
+          hint={appearances.length ? t("starts", { n: starts }) : t("allComps")}
         />
+        <Stat label={t("minutes")} value={minutes} hint={t("thisSeason")} />
       </div>
+
+      <section className="space-y-2">
+        <h2 className="text-base font-semibold">{t("matches")}</h2>
+        {appearances.length ? (
+          <PlayerMatches entries={appearances} teamId={team.id} />
+        ) : (
+          <Empty>{t("noMatches")}</Empty>
+        )}
+      </section>
 
       <section className="card divide-y divide-line text-sm">
         <Row k={t("position")} v={positionLabel} />
+        <Row
+          k={t("age")}
+          v={`${ageFromDOB(player.dateOfBirth)} · ${t("born", { date: formatMediumDate(player.dateOfBirth as ISODate, locale) })}`}
+        />
         <Row k={t("shirt")} v={player.shirtNumber ? String(player.shirtNumber) : "—"} />
         <Row k={t("nationality")} v={player.nationality} />
         {player.heightCm && <Row k={t("height")} v={t("cm", { n: player.heightCm })} />}
         {player.preferredFoot && <Row k={t("foot")} v={t(player.preferredFoot)} />}
         <Row k={t("club")} v={teamName(team, locale)} />
+        {(yellow > 0 || red > 0) && <Row k={t("cards")} v={t("cardsCount", { yellow, red })} />}
       </section>
 
       {teammates.length > 0 && (

@@ -104,7 +104,8 @@
     "timelinePending": "Still being completed. The full timeline follows shortly after the whistle.",
     "subOn": "On",
     "subOff": "Off",
-    "metaDescription": "{home} v {away} in the {competition} on {date}: score, line-ups, goals and the full timeline."
+    "metaDescription": "{home} v {away} in the {competition} on {date}: score, line-ups, goals and the full timeline.",
+    "goal": "Goal"
   },
   "league": {
     "topFlight": "Top flight",
@@ -222,7 +223,19 @@
     "both": "Both",
     "club": "Club",
     "others": "Other {position}s at {team}",
-    "metaDescription": "{name}, {position} for {team}: goals, assists, appearances and form this season."
+    "metaDescription": "{name}, {position} for {team}: goals, assists, appearances and form this season.",
+    "minutes": "Minutes",
+    "matches": "Matches this season",
+    "noMatches": "No appearances yet this season.",
+    "assistShort": "A",
+    "started": "Started",
+    "onAt": "Came on in the {n}′",
+    "offAt": "Replaced in the {n}′",
+    "min": "{n}′",
+    "cards": "Cards",
+    "cardsCount": "{yellow} yellow, {red} red",
+    "perNinety": "{n} per 90",
+    "starts": "{n} starts"
   },
   "positions": {
     "GK": "Goalkeeper",

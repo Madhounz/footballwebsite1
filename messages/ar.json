@@ -104,7 +104,8 @@
     "timelinePending": "قيد الاكتمال. تصل الأحداث الكاملة بعد صافرة النهاية بقليل.",
     "subOn": "دخل",
     "subOff": "خرج",
-    "metaDescription": "{home} ضد {away} في {competition} يوم {date}: النتيجة والتشكيلتان والأهداف وأحداث المباراة كاملة."
+    "metaDescription": "{home} ضد {away} في {competition} يوم {date}: النتيجة والتشكيلتان والأهداف وأحداث المباراة كاملة.",
+    "goal": "هدف"
   },
   "league": {
     "topFlight": "الدرجة الأولى",
@@ -222,7 +223,19 @@
     "both": "كلتاهما",
     "club": "النادي",
     "others": "{position} آخرون في {team}",
-    "metaDescription": "{name}، {position} في {team}: الأهداف والصناعات والمباريات ومستواه هذا الموسم."
+    "metaDescription": "{name}، {position} في {team}: الأهداف والصناعات والمباريات ومستواه هذا الموسم.",
+    "minutes": "الدقائق",
+    "matches": "مباريات هذا الموسم",
+    "noMatches": "لا مشاركات بعد هذا الموسم.",
+    "assistShort": "ص",
+    "started": "أساسي",
+    "onAt": "دخل في الدقيقة {n}",
+    "offAt": "خرج في الدقيقة {n}",
+    "min": "{n}′",
+    "cards": "البطاقات",
+    "cardsCount": "{yellow} صفراء، {red} حمراء",
+    "perNinety": "{n} لكل 90 دقيقة",
+    "starts": "{n} أساسية"
   },
   "positions": {
     "GK": "حارس مرمى",

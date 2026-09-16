@@ -25,7 +25,8 @@ import type {
   Team as DbTeam,
 } from "@/generated/prisma/client";
 import { honoursFor, allHonours } from "./honours";
-import type { MatchDetail, Repository, TeamHonour } from "./repository";
+import { byMostRecent, playerMatchFrom } from "./player-matches";
+import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
 import { computeScorers, computeStandings } from "./standings";
 
 /** PostgreSQL-backed repository. Filled by the sync pipeline (scripts/sync.ts). */
@@ -268,6 +269,50 @@ export class PrismaRepository implements Repository {
         on.has(l.matchId),
     ).length;
     return r;
+  }
+
+  /**
+   * Every appearance with what the player did in it. One pass over the team's
+   * line-ups tells us which matches they were in; one over their own events
+   * tells us what happened in them.
+   */
+  async getPlayerMatches(playerId: string): Promise<PlayerMatch[]> {
+    const p = await this.db.player.findUnique({ where: { id: playerId } });
+    if (!p) return [];
+    const lineups = await this.db.lineup.findMany({
+      where: { teamId: p.teamId, match: { status: { in: ["live", "finished"] } } },
+      select: { matchId: true, starting: true, bench: true },
+    });
+    const events = await this.db.matchEvent.findMany({
+      where: { OR: [{ playerId }, { relatedPlayerId: playerId }] },
+    });
+    const byMatch = new Map<string, MatchEvent[]>();
+    for (const e of events) byMatch.set(e.matchId, [...(byMatch.get(e.matchId) ?? []), toEvent(e)]);
+    // A match with no line-up on file can still be an appearance: a goal or a
+    // card names the player even when nobody published the eleven.
+    const ids = new Set([...lineups.map((l) => l.matchId), ...byMatch.keys()]);
+    if (ids.size === 0) return [];
+    const rows = await this.db.match.findMany({
+      where: { id: { in: [...ids] }, status: { in: ["live", "finished"] } },
+      include: this.include,
+    });
+    const starting = new Map(
+      lineups.map((l) => [
+        l.matchId,
+        (l.starting as unknown as LineupPlayer[]).map((x) => x.playerId),
+      ]),
+    );
+    const out: PlayerMatch[] = [];
+    for (const view of await this.views(rows)) {
+      const m = playerMatchFrom(
+        playerId,
+        view,
+        starting.get(view.match.id) ?? [],
+        byMatch.get(view.match.id) ?? [],
+      );
+      if (m) out.push(m);
+    }
+    return out.sort(byMostRecent);
   }
 
   async getHonours(competitionId: string): Promise<Honours | null> {
