@@ -12,8 +12,10 @@ name: Sync data
 #   SYNC_ENABLED = true
 on:
   schedule:
-    - cron: "*/15 * * * *" # results and live scores
-    - cron: "17 4 * * *" # daily: teams and squads too
+    # A backstop for the external cron, not a second pipeline: this one hands
+    # straight to /api/sync's own code path. See the Sync step.
+    - cron: "*/15 * * * *"
+    - cron: "17 4 * * *" # daily: the whole season, and teams and squads too
   workflow_dispatch:
     inputs:
       seed:
@@ -51,6 +53,15 @@ jobs:
       # job fail before, so this one only reads and writes rows.
       - name: Sync
         run: |
+          # The 15-minute schedule exists for the hour the external cron is
+          # down, so it runs exactly what that cron runs: the same three-day
+          # window, the same overlap lock, the same metered detail budget. A
+          # full-season pass every quarter of an hour would spend API-Football
+          # requests that a match in play needs for its line-up.
+          if [ "${{ github.event.schedule }}" = "*/15 * * * *" ]; then
+            pnpm sync -- --refresh
+            exit 0
+          fi
           ARGS=""
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.seed }}" = "true" ]; then ARGS="--seed"; fi
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.reset }}" = "true" ]; then ARGS="$ARGS --reset"; fi
@@ -59,6 +70,9 @@ jobs:
           if [ -n "$CATCH_UP" ] && [ "$CATCH_UP" != "0" ]; then ARGS="$ARGS --catch-up $CATCH_UP"; fi
           pnpm sync -- $ARGS
         env:
+          # The refresh reads the competitions and clubs it is about to update
+          # from the database, the way the deployed site does.
+          DATA_SOURCE: db
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}

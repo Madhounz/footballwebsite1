@@ -95,10 +95,18 @@ GitHub Actions' scheduler is best-effort: short-interval cron entries are
 routinely delayed or skipped, which for a scores site means a finished match
 can still read "not started" an hour later. So the work is split in two.
 
-| Job                          | Runs                                          | Does                                                                                                  |
-| ---------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `GET/POST /api/sync`         | every minute, from an external cron service   | today's matches only: one combined request per provider, plus metered detail when a match is in range |
-| `.github/workflows/sync.yml` | daily (plus a best-effort 15-minute backstop) | the whole season, and on the daily run teams and squads too                                           |
+| Job                          | Runs                                        | Does                                                                                                  |
+| ---------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `GET/POST /api/sync`         | every minute, from an external cron service | today's matches only: one combined request per provider, plus metered detail when a match is in range |
+| `.github/workflows/sync.yml` | daily, plus a 15-minute backstop            | daily: the whole season, and teams and squads. The backstop runs `--refresh`, which is the row above  |
+
+The backstop is the same code, not a second pipeline. API-Football's free
+plan allows a hundred requests a day and the endpoint meters them carefully;
+a full-season pass running alongside it every quarter of an hour meters
+nothing, and spends on matches it has already seen the requests a match in
+play needs for its line-up. `pnpm sync -- --refresh` hands straight to
+`runLiveRefresh`, so the two share one budget, one overlap lock and one
+window, and a backstop run costs almost nothing while the cron is healthy.
 
 The endpoint (`src/app/api/sync/route.ts` → `src/lib/pipeline/live.ts`) is
 deliberately narrow so it finishes well inside a serverless timeout:
@@ -159,7 +167,7 @@ pnpm sync -- --no-ai
 
 `--seed` asks the provider for the competition's team list this season. Known clubs are matched through the alias table; a club the alias table has never seen (a newly promoted side, a first-time UEFA qualifier) is created from the provider's team record, logged as `new:` in the output, and appended to the in-memory alias list so its matches resolve in the same run. Matches alone never create teams.
 
-`.github/workflows/sync.yml` runs it every 15 minutes with repository secrets. Point `DATABASE_URL` at a reachable database (Neon, Supabase, RDS…) and set `DATA_SOURCE=db` on the deployed site.
+`.github/workflows/sync.yml` runs the daily pass with repository secrets. Point `DATABASE_URL` at a reachable database (Neon, Supabase, RDS…) and set `DATA_SOURCE=db` on the deployed site.
 
 ## Going live, step by step
 
@@ -169,7 +177,9 @@ pnpm sync -- --no-ai
 4. Actions → **Sync data** → Run workflow with _seed_ ticked. It applies migrations, seeds teams and squads, and loads the season.
 5. On the host set `DATABASE_URL` and `DATA_SOURCE=db`, redeploy.
 
-The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
+The external cron keeps results fresh minute by minute; the 15-minute workflow
+is there for the hours it is down, and the 04:17 UTC daily run re-seeds squads
+and sweeps the whole season.
 
 ### How the two free tiers are combined
 

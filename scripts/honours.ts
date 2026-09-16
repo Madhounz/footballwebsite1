@@ -18,6 +18,7 @@ import { COMPETITION_CODES, resolveTeamId } from "../src/lib/pipeline/normalize"
 import {
   entriesFromSeasons,
   mergeHonours,
+  seasonLabel,
   type ProviderSeason,
 } from "../src/lib/pipeline/honours-update";
 
@@ -101,6 +102,20 @@ async function main() {
       continue;
     }
 
+    // "The file already has everything" and "the plan showed us nothing usable"
+    // read identically from the outside, and they call for opposite responses:
+    // one means the job is done, the other means a season has to be added by
+    // hand. So the run says which of the two it was.
+    const dated = body.seasons.filter((s) => s.startDate && s.endDate);
+    const newest = [...dated].sort((a, b) => b.endDate.localeCompare(a.endDate))[0];
+    if (newest) {
+      const label = seasonLabel(newest.startDate, newest.endDate);
+      const who = newest.winner
+        ? `won by ${newest.winner.name}`
+        : "no winner named — either still being played, or not on this plan";
+      console.log(`${competitionId}: ${dated.length} season(s) offered, newest ${label}, ${who}`);
+    }
+
     const honours = JSON.parse(fs.readFileSync(file, "utf8")) as Honours;
     const rows = entriesFromSeasons(body.seasons, resolve);
     const result = mergeHonours(honours, rows, { includeOlder });
@@ -116,7 +131,11 @@ async function main() {
       );
     }
     if (!result.added.length) {
-      console.log(`${competitionId}: already up to date`);
+      console.log(
+        rows.length === 0
+          ? `${competitionId}: no finished season with a named winner was offered, so there was nothing to add`
+          : `${competitionId}: already up to date`,
+      );
       continue;
     }
     const named = result.added

@@ -10,6 +10,7 @@
  *   pnpm sync -- --details            # force API-Football match details even with no match near kick-off
  *   pnpm sync -- --catch-up 20        # also complete the timelines of up to 20 older matches
  *   pnpm sync -- --live               # today only, one combined request per provider (what /api/sync runs)
+ *   pnpm sync -- --refresh            # hand straight to /api/sync's own code path (the backstop)
  *
  * Reads FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, ANTHROPIC_API_KEY, DATABASE_URL.
  */
@@ -32,7 +33,34 @@ function arg(name: string): string | undefined {
 }
 const flag = (name: string) => process.argv.includes(`--${name}`);
 
+/**
+ * The backstop behind the scheduled job, when the external cron is the thing
+ * that keeps scores fresh.
+ *
+ * It runs `/api/sync`'s own code path rather than a second, heavier one: the
+ * same three-day window, the same overlap lock, and — the point of it — the
+ * same metered detail budget. Two schedulers spending API-Football's hundred
+ * requests a day without knowing about each other is how a match in play loses
+ * its line-up to a full-season pass that had nothing new to find.
+ */
+async function refresh(): Promise<void> {
+  const { runLiveRefresh } = await import("../src/lib/pipeline/live");
+  const outcome = await runLiveRefresh({ trigger: "cron", log: console.log });
+  if (!outcome.ran) {
+    console.log(`skipped: ${outcome.skipped}`);
+    return;
+  }
+  const requests = Object.entries(outcome.providerRequests)
+    .map(([id, n]) => `${id} ${n}`)
+    .join(", ");
+  console.log(
+    `refreshed ${outcome.window.fromDate}..${outcome.window.toDate}: fetched ${outcome.fetched}, written ${outcome.written}, conflicts ${outcome.conflicts}, details ${outcome.detailsEnabled ? "on" : "off"}, ${outcome.catchUp.detailRequestsToday} detail requests spent today${requests ? ` (${requests})` : ""}`,
+  );
+}
+
 async function main() {
+  if (flag("refresh")) return refresh();
+
   const today = todayISO();
   // European seasons run July -> June.
   const seasonStart =
