@@ -7,6 +7,7 @@ import { AutoRefresh } from "./AutoRefresh";
 import { DateStrip } from "./DateStrip";
 import { FollowedTeams } from "./FollowedTeams";
 import { MatchList } from "./MatchList";
+import { ScoringRaces, type Race } from "./ScoringRaces";
 import { TeamCrest } from "./TeamCrest";
 
 /** Shared body for `/` and `/matches/[date]`. */
@@ -21,11 +22,26 @@ export async function DayPage({ date }: { date: ISODate }) {
   ]);
   const live = views.filter((v) => v.match.status === "live").length;
   const isToday = date === today;
+  const allTeams = await repo.listTeams();
   // The followed list lives on the device, so the names it will need have to
   // travel with the page: the browser knows the ids, not how to say them.
   const teamNames = Object.fromEntries(
-    (await repo.listTeams()).map((team) => [team.id, teamShortName(team, locale)]),
+    allTeams.map((team) => [team.id, teamShortName(team, locale)]),
   );
+
+  // Who is scoring, everywhere. Reads the chart the refresh already stores, so
+  // it costs nothing, and unlike a day's fixtures it is never empty.
+  const [races, playerList] = await Promise.all([
+    Promise.all(
+      competitions.map(async (c): Promise<Race> => ({
+        competition: c,
+        rows: (await repo.getTopScorers(c.id, 3)).rows,
+      })),
+    ),
+    repo.listPlayers(),
+  ]);
+  const players = new Map(playerList.map((p) => [p.id, p]));
+  const teamsById = new Map(allTeams.map((team) => [team.id, team]));
 
   const snapshots = await Promise.all(
     competitions.map(async (c) => {
@@ -52,6 +68,7 @@ export async function DayPage({ date }: { date: ISODate }) {
           competitions={competitions}
           emptyText={isToday ? t("emptyToday") : t("emptyDay")}
         />
+        <ScoringRaces races={races} players={players} teams={teamsById} />
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">

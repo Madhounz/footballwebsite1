@@ -60,7 +60,9 @@
     "inPlay": "{count, plural, one {# match} other {# matches}} in play — scores refresh automatically.",
     "emptyToday": "No matches in the tracked competitions today. Try tomorrow or pick a date.",
     "emptyDay": "No matches in the tracked competitions on this day.",
-    "atTheTop": "At the top"
+    "atTheTop": "At the top",
+    "scoringRaces": "Scoring races",
+    "goalsN": "{n, plural, one {# goal} other {# goals}}"
   },
   "match": {
     "matchday": "Matchday {n}",
