@@ -209,7 +209,8 @@
     "bestDefence": "Best defence",
     "cleanSheets": "Most clean sheets",
     "biggestWin": "Biggest win",
-    "highestScoring": "Most goals in a match"
+    "highestScoring": "Most goals in a match",
+    "assistsFromScorers": "Assists among the players in the competition's scorer chart, so a player who creates goals without scoring them will not appear."
   },
   "team": {
     "intro": "Every club in the tracked leagues, plus the European sides they meet in UEFA competition.",

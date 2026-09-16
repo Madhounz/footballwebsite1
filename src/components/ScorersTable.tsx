@@ -9,11 +9,19 @@ export async function ScorersTable({
   players,
   teams,
   compact = false,
+  rankBy = "goals",
 }: {
   rows: ScorerRow[];
   players: Map<string, Player>;
   teams: Map<string, Team>;
   compact?: boolean;
+  /**
+   * What the list is ordered by. That column is the emphasised one and sits
+   * last, so the number the eye lands on is the number the table is about —
+   * an assists chart that shouts its goals column is telling the reader the
+   * wrong thing.
+   */
+  rankBy?: "goals" | "assists";
 }) {
   const t = await getTranslations("league");
   const locale = await getLocale();
@@ -36,8 +44,12 @@ export async function ScorersTable({
                 {t("th.pens")}
               </th>
             )}
-            <th className="w-12 py-2.5 text-center font-medium">{t("th.ast")}</th>
-            <th className="w-14 py-2.5 pe-4 text-center font-semibold text-ink">{t("th.goals")}</th>
+            <th className="w-12 py-2.5 text-center font-medium">
+              {rankBy === "goals" ? t("th.ast") : t("th.goals")}
+            </th>
+            <th className="w-14 py-2.5 pe-4 text-center font-semibold text-ink">
+              {rankBy === "goals" ? t("th.goals") : t("th.ast")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -70,8 +82,12 @@ export async function ScorersTable({
                     {r.penalties}
                   </td>
                 )}
-                <td className="py-2 text-center text-muted">{r.assists}</td>
-                <td className="py-2 pe-4 text-center font-semibold">{r.goals}</td>
+                <td className="py-2 text-center text-muted">
+                  {rankBy === "goals" ? r.assists : r.goals}
+                </td>
+                <td className="py-2 pe-4 text-center font-semibold">
+                  {rankBy === "goals" ? r.goals : r.assists}
+                </td>
               </tr>
             );
           })}

@@ -15,13 +15,15 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
   const c = await repo.getCompetitionBySlug((await params).slug);
   if (!c) notFound();
   const [chart, teams, matches, standings] = await Promise.all([
-    repo.getTopScorers(c.id, 25),
+    repo.getTopScorers(c.id, 30),
     repo.listTeams(c.id),
     repo.getCompetitionMatches(c.id),
     repo.getStandings(c.id),
   ]);
   const facts = seasonFacts(matches, standings.rows);
-  const rows = chart.rows;
+  // The whole stored chart, so the assists list below is drawn from all of it;
+  // the scorers table itself stays the length it was.
+  const rows = chart.rows.slice(0, 25);
   const teamMap = new Map(teams.map((team) => [team.id, team]));
   const players = new Map<string, Player>();
   await Promise.all(
@@ -29,7 +31,12 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
       for (const p of await repo.getSquad(teamId)) players.set(p.id, p);
     }),
   );
-  const assists = [...rows]
+  // Drawn from the scorer chart, which the provider orders by goals: a player
+  // with eight assists and no goals is not in it and so cannot appear here.
+  // The whole chart is used rather than the 25 shown above, and the page says
+  // what the list is, because "Most assists" on its own is a claim we cannot
+  // make on this plan.
+  const assists = [...chart.rows]
     .sort((a, b) => b.assists - a.assists || b.goals - a.goals)
     .filter((r) => r.assists > 0)
     .slice(0, 10);
@@ -58,7 +65,10 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
           <SeasonFacts facts={facts} teams={teamMap} />
         </Section>
         <Section title={t("mostAssists")}>
-          <ScorersTable rows={assists} players={players} teams={teamMap} compact />
+          <ScorersTable rows={assists} players={players} teams={teamMap} compact rankBy="assists" />
+          {chart.source === "provider" && (
+            <p className="mt-2 text-xs text-faint">{t("assistsFromScorers")}</p>
+          )}
         </Section>
       </div>
     </div>
