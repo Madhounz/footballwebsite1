@@ -29,6 +29,7 @@ export default async function MatchCard({
 }) {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "match" });
+  const stages = await getTranslations({ locale, namespace: "league.stages" });
   const repo = await getRepository();
   const detail = await repo.getMatch(id);
   const fonts = await ogFonts(locale);
@@ -83,7 +84,12 @@ export default async function MatchCard({
           <Words dir={dir}>{competitionName(competition, locale)}</Words>
         </div>,
         <Words key="round" dir={dir}>
-          {m.stage ?? t("matchday", { n: m.round })}
+          {/* Provider stage labels are English; translate the ones we know. */}
+          {m.stage
+            ? stages.has(m.stage)
+              ? stages(m.stage)
+              : m.stage
+            : t("matchday", { n: m.round })}
         </Words>,
       ]}
       footer={[
@@ -103,11 +109,20 @@ export default async function MatchCard({
         }}
       >
         <Side team={home} crest={homeCrest} locale={locale} dir={dir} />
+        {/*
+          Satori does not shrink an overflowing flex child the way a browser
+          does, so a column sized by its own text can push its neighbour off
+          the canvas — which is exactly what a kick-off time used to do to the
+          away side. Every column is told its width: the sides are fixed, this
+          one takes what is left.
+        */}
         <div
           style={{
             display: "flex",
+            flex: 1,
             flexDirection: "column",
             alignItems: "center",
+            justifyContent: "center",
             padding: "0 20px",
           }}
         >
@@ -185,6 +200,7 @@ function Side({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        flexShrink: 0,
         width: 340,
       }}
     >

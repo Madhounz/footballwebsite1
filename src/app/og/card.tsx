@@ -100,7 +100,18 @@ export function Words({ children, dir }: { children: string; dir: "ltr" | "rtl" 
   if (dir !== "rtl" || !/[\u0600-\u06FF]/.test(children)) return <>{children}</>;
   const words = children.trim().split(/\s+/);
   return (
-    <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "baseline" }}>
+    // Wrapping matters as much as the order: a row of word boxes cannot break
+    // by itself, and satori does not shrink it either, so a long club name
+    // would run straight off the card.
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row-reverse",
+        flexWrap: "wrap",
+        justifyContent: "flex-start",
+        alignItems: "baseline",
+      }}
+    >
       {words.map((w, i) => (
         <div key={i} style={{ display: "flex", marginRight: i > 0 ? 10 : 0 }}>
           {w}
