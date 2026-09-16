@@ -96,6 +96,64 @@ describe("FootballDataProvider scorers", () => {
     ]);
   });
 
+  it("asks for a chart deep enough to hold the players who create goals", async () => {
+    const calls: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      noThrottle: true,
+      resolvePlayer: async (teamId, ref) => `${teamId}:${ref.externalId}`,
+      fetchImpl: (async (url: string) => {
+        calls.push(String(url));
+        return new Response(JSON.stringify(chart), { status: 200 });
+      }) as unknown as typeof fetch,
+    });
+    await p.fetchScorers(comp);
+    // Thirty rows is the top scorers' assists, not the competition's.
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain("limit=100");
+  });
+
+  it("asks for a narrower chart rather than leaving the old one standing", async () => {
+    const calls: string[] = [];
+    const lines: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      noThrottle: true,
+      resolvePlayer: async (teamId, ref) => `${teamId}:${ref.externalId}`,
+      log: (line) => lines.push(line),
+      fetchImpl: (async (url: string) => {
+        calls.push(String(url));
+        if (String(url).includes("limit=100")) return new Response("no", { status: 400 });
+        return new Response(JSON.stringify(chart), { status: 200 });
+      }) as unknown as typeof fetch,
+    });
+    const rows = await p.fetchScorers(comp);
+    expect(calls.map((u) => u.split("limit=")[1])).toEqual(["100", "30"]);
+    expect(rows).toHaveLength(2);
+    expect(lines.join(" ")).toContain("asking for 30");
+  });
+
+  it("does not spend a second request on a rate limit", async () => {
+    const calls: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      noThrottle: true,
+      resolvePlayer: async (teamId, ref) => `${teamId}:${ref.externalId}`,
+      fetchImpl: (async (url: string) => {
+        calls.push(String(url));
+        return new Response("slow down", { status: 429 });
+      }) as unknown as typeof fetch,
+    });
+    await expect(p.fetchScorers(comp)).rejects.toThrow(/rate limited/);
+    expect(calls).toHaveLength(1);
+  });
+
   it("fetches nothing without a way to resolve players", async () => {
     const calls: string[] = [];
     const p = new FootballDataProvider({

@@ -84,8 +84,20 @@ interface FDScorer {
   penalties: number | null;
 }
 
-/** Deep enough to be a chart, short enough to stay one response. */
-const SCORER_LIMIT = 30;
+/**
+ * How deep to ask for the scorer chart.
+ *
+ * It is one request either way, and the depth is what the assists list on the
+ * stats page is made of: the chart is ordered by goals, so at thirty rows a
+ * player who creates goals without scoring many of them is not in it, and the
+ * assists beside yesterday's results never appear. A hundred reaches the
+ * midfielders. It cannot reach a player who has not scored at all — this plan
+ * publishes scorers, not creators — which is why the page says what the list
+ * is.
+ */
+const SCORER_LIMIT = 100;
+/** What to ask for if the plan will not serve a chart that deep. */
+const SCORER_LIMIT_NARROW = 30;
 
 const STATUS: Record<FDMatch["status"], MatchStatus> = {
   SCHEDULED: "scheduled",
@@ -124,6 +136,17 @@ export interface FootballDataOptions {
   minGapMs?: number;
 }
 
+/** An HTTP failure that remembers its status, so a caller can tell one from another. */
+class FootballDataError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "FootballDataError";
+  }
+}
+
 export class FootballDataProvider implements Provider {
   readonly id = "football-data";
   /** Primary source for fixtures and results: highest trust, so ties settle here. */
@@ -154,13 +177,17 @@ export class FootballDataProvider implements Provider {
     });
     this.requestsMade++;
     if (res.status === 429) {
-      throw new Error(
+      throw new FootballDataError(
         `football-data rate limited; retry in ${res.headers.get("X-RequestCounter-Reset") ?? "?"}s`,
+        429,
       );
     }
     if (res.status === 403)
-      throw new Error(`football-data 403 for ${path}: competition not in your plan or bad key`);
-    if (!res.ok) throw new Error(`football-data ${res.status} for ${path}`);
+      throw new FootballDataError(
+        `football-data 403 for ${path}: competition not in your plan or bad key`,
+        403,
+      );
+    if (!res.ok) throw new FootballDataError(`football-data ${res.status} for ${path}`, res.status);
     return (await res.json()) as T;
   }
 
@@ -298,11 +325,9 @@ export class FootballDataProvider implements Provider {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     const resolvePlayer = this.opts.resolvePlayer;
     if (!code || !resolvePlayer) return [];
-    const data = await this.get<{ scorers: FDScorer[] }>(
-      `/competitions/${code}/scorers?limit=${SCORER_LIMIT}`,
-    );
+    const scorers = await this.scorerRows(code);
     const out: ProviderScorer[] = [];
-    for (const row of data.scorers ?? []) {
+    for (const row of scorers) {
       const teamId =
         resolveTeamId(row.team.name, this.opts.knownTeams) ??
         (row.team.shortName ? resolveTeamId(row.team.shortName, this.opts.knownTeams) : null);
@@ -325,6 +350,30 @@ export class FootballDataProvider implements Provider {
       });
     }
     return out;
+  }
+
+  /**
+   * The chart, as deep as the plan will give it.
+   *
+   * A chart that fails to come back is not replaced, it is simply left as it
+   * was — which is indistinguishable, on the page, from a chart that is not
+   * moving. So a depth this plan refuses costs one narrower request rather
+   * than a list that quietly stops. A rate limit is not that: asking again
+   * straight away only spends another request on the same refusal.
+   */
+  private async scorerRows(code: string): Promise<FDScorer[]> {
+    const ask = async (limit: number) =>
+      (await this.get<{ scorers: FDScorer[] }>(`/competitions/${code}/scorers?limit=${limit}`))
+        .scorers ?? [];
+    try {
+      return await ask(SCORER_LIMIT);
+    } catch (e) {
+      if (e instanceof FootballDataError && e.status === 429) throw e;
+      this.opts.log?.(
+        `football-data would not serve ${SCORER_LIMIT} scorers for ${code} (${e instanceof Error ? e.message : String(e)}); asking for ${SCORER_LIMIT_NARROW}`,
+      );
+      return ask(SCORER_LIMIT_NARROW);
+    }
   }
 
   async fetchTeams(competition: Competition): Promise<ProviderRecord<ProviderTeam>[]> {

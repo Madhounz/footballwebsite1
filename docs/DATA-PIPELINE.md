@@ -202,7 +202,16 @@ and sweeps the whole season.
   free plan — we hold events only for the matches we fetched detail for — and a
   chart that is quietly short is worse than one with a source. `getTopScorers`
   returns the stored chart when there is one and our own count otherwise, and
-  the stats page names which of the two the reader is looking at.
+  the stats page names which of the two the reader is looking at. The chart is
+  asked for a hundred deep rather than thirty, at the same one request: it is
+  ordered by goals, and the **Most assists** list is a re-sort of it, so a
+  chart that stops at thirty is the top scorers' assists rather than the
+  competition's — the players who create goals without scoring many sit below
+  that line and their assists never move. A hundred reaches them; nothing on
+  this plan reaches a creator who has not scored at all, which is what the note
+  under that list says. If the plan ever refuses a chart that deep the request
+  is made again at thirty, because a refused chart is not replaced, and a chart
+  left standing looks exactly like one that is not moving.
 - **Past winners** live in `data/honours/*.json` — curated, so a reviewer can
   read the diff when a season is added — but the season that just finished is
   pulled rather than typed: `pnpm honours` reads each competition's winner from

@@ -8,6 +8,12 @@ import { seasonFacts } from "@/lib/data/season-facts";
 import { dateOf, formatMediumDate } from "@/lib/dates";
 import type { Player } from "@/lib/types";
 
+/**
+ * How much of the scorer chart the page reads. It is one stored query either
+ * way, and the assists list is only as complete as this is deep.
+ */
+const CHART_DEPTH = 100;
+
 export default async function StatsPage({ params }: { params: Promise<{ slug: string }> }) {
   const t = await getTranslations("league");
   const locale = await getLocale();
@@ -15,22 +21,16 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
   const c = await repo.getCompetitionBySlug((await params).slug);
   if (!c) notFound();
   const [chart, teams, matches, standings] = await Promise.all([
-    repo.getTopScorers(c.id, 30),
+    // The whole stored chart. The scorers table shows the front of it; the
+    // assists list below is a re-sort of all of it, and at thirty rows that
+    // list was the top scorers' assists rather than the competition's.
+    repo.getTopScorers(c.id, CHART_DEPTH),
     repo.listTeams(c.id),
     repo.getCompetitionMatches(c.id),
     repo.getStandings(c.id),
   ]);
   const facts = seasonFacts(matches, standings.rows);
-  // The whole stored chart, so the assists list below is drawn from all of it;
-  // the scorers table itself stays the length it was.
   const rows = chart.rows.slice(0, 25);
-  const teamMap = new Map(teams.map((team) => [team.id, team]));
-  const players = new Map<string, Player>();
-  await Promise.all(
-    [...new Set(rows.map((r) => r.teamId))].map(async (teamId) => {
-      for (const p of await repo.getSquad(teamId)) players.set(p.id, p);
-    }),
-  );
   // Drawn from the scorer chart, which the provider orders by goals: a player
   // with eight assists and no goals is not in it and so cannot appear here.
   // The whole chart is used rather than the 25 shown above, and the page says
@@ -40,6 +40,16 @@ export default async function StatsPage({ params }: { params: Promise<{ slug: st
     .sort((a, b) => b.assists - a.assists || b.goals - a.goals)
     .filter((r) => r.assists > 0)
     .slice(0, 10);
+  const teamMap = new Map(teams.map((team) => [team.id, team]));
+  const players = new Map<string, Player>();
+  // Both lists, not just the scorers: the table drops a row whose player it
+  // cannot name, so a squad left unloaded here would take the assist leader
+  // off the list rather than show him without a name.
+  await Promise.all(
+    [...new Set([...rows, ...assists].map((r) => r.teamId))].map(async (teamId) => {
+      for (const p of await repo.getSquad(teamId)) players.set(p.id, p);
+    }),
+  );
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <Section title={t("topScorers")}>
