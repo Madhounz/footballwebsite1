@@ -101,10 +101,22 @@ export interface Streak {
  * and claiming it would be noise.
  */
 export function currentStreak(matches: MatchView[], teamId: string): Streak | null {
-  const results = playedBy(matches, teamId, "all")
-    .map((v) => resultFor(v, teamId))
-    .filter((r): r is FormResult => r !== null)
-    .reverse();
+  return streakFrom(
+    playedBy(matches, teamId, "all")
+      .map((v) => resultFor(v, teamId))
+      .filter((r): r is FormResult => r !== null)
+      .reverse(),
+  );
+}
+
+/**
+ * The same judgement from results alone, most recent first.
+ *
+ * A standings row already carries each club's last five, so the home page can
+ * ask this without reading a single match — and asking it here rather than
+ * writing the rule out twice means a run means one thing across the site.
+ */
+export function streakFrom(results: FormResult[]): Streak | null {
   if (results.length === 0) return null;
 
   let same = 1;
@@ -242,4 +254,42 @@ export function buildMatchContext({
     h2h,
     hasAnything: home.overall.played > 0 || away.overall.played > 0 || h2h.played > 0,
   };
+}
+
+/** A club on a run, with the competition the run was made in. */
+export interface FormEntry {
+  competitionId: string;
+  teamId: string;
+  streak: Streak;
+  /** Their last five, most recent first. */
+  form: FormResult[];
+}
+
+/**
+ * The clubs arriving in the best form, across every competition at once.
+ *
+ * Only runs worth the name: a win streak first, then an unbeaten one, longest
+ * first. Bad runs are left out — the site is somewhere to read a score, not a
+ * board of shame, and "three without a win" beside a golden boot race is a
+ * change of subject rather than a second opinion.
+ *
+ * Read from standings rows, which already carry each club's last five, so this
+ * asks nothing of the database that the page had not already asked.
+ */
+export function clubsInForm(
+  tables: { competitionId: string; rows: StandingRow[] }[],
+  limit = 6,
+): FormEntry[] {
+  const out: FormEntry[] = [];
+  for (const { competitionId, rows } of tables) {
+    for (const row of rows) {
+      // `form` is oldest first, and a run is read backwards from the last match.
+      const form = [...row.form].reverse();
+      const streak = streakFrom(form);
+      if (!streak || (streak.kind !== "W" && streak.kind !== "unbeaten")) continue;
+      out.push({ competitionId, teamId: row.teamId, streak, form });
+    }
+  }
+  const rank = (e: FormEntry) => (e.streak.kind === "W" ? 100 : 0) + e.streak.count;
+  return out.sort((a, b) => rank(b) - rank(a)).slice(0, limit);
 }

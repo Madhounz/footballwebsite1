@@ -62,7 +62,8 @@
     "emptyDay": "لا مباريات في البطولات المتابعة في هذا اليوم.",
     "atTheTop": "في الصدارة",
     "scoringRaces": "سباق الهدافين",
-    "goalsN": "{n, plural, zero {# أهداف} one {هدف واحد} two {هدفان} few {# أهداف} many {# هدفًا} other {# هدف}}"
+    "goalsN": "{n, plural, zero {# أهداف} one {هدف واحد} two {هدفان} few {# أهداف} many {# هدفًا} other {# هدف}}",
+    "inForm": "في أفضل حالاتهم"
   },
   "match": {
     "matchday": "الجولة {n}",

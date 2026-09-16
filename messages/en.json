@@ -62,7 +62,8 @@
     "emptyDay": "No matches in the tracked competitions on this day.",
     "atTheTop": "At the top",
     "scoringRaces": "Scoring races",
-    "goalsN": "{n, plural, one {# goal} other {# goals}}"
+    "goalsN": "{n, plural, one {# goal} other {# goals}}",
+    "inForm": "In form"
   },
   "match": {
     "matchday": "Matchday {n}",

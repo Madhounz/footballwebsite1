@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildMatchContext,
+  clubsInForm,
   currentStreak,
   headToHead,
   per,
@@ -198,5 +199,43 @@ describe("bar colours", () => {
   it("falls back to a neutral when a club has no second colour to offer", () => {
     const c = barColors(club("a", ["#C8102E", "#C9112F"]), club("b", ["#DA291C", "#D5202A"]));
     expect(c.away).toBe("var(--text-muted)");
+  });
+});
+
+describe("clubs in form", () => {
+  const row = (teamId: string, form: string) => ({ teamId, form: form.split("") }) as never;
+
+  it("ranks win streaks above unbeaten runs, longest first", () => {
+    const out = clubsInForm([
+      {
+        competitionId: "epl",
+        rows: [row("three-wins", "LLWWW"), row("five-unbeaten", "DWDWD"), row("two-wins", "LLLWW")],
+      },
+      { competitionId: "laliga", rows: [row("four-wins", "LWWWW")] },
+    ]);
+    expect(out.map((e) => e.teamId)).toEqual([
+      "four-wins",
+      "three-wins",
+      "two-wins",
+      "five-unbeaten",
+    ]);
+    expect(out[0].streak).toEqual({ kind: "W", count: 4 });
+    // Read backwards from the most recent match, not forwards from the oldest.
+    expect(out[0].form[0]).toBe("W");
+  });
+
+  it("leaves out bad runs and clubs on no run at all", () => {
+    const out = clubsInForm([
+      {
+        competitionId: "epl",
+        rows: [row("losing", "WLLLL"), row("winless", "WDLDL"), row("nothing", "WLWLW")],
+      },
+    ]);
+    expect(out).toEqual([]);
+  });
+
+  it("takes the best few across every competition", () => {
+    const rows = ["a", "b", "c", "d", "e", "f", "g"].map((id) => row(id, "LWWWW"));
+    expect(clubsInForm([{ competitionId: "epl", rows }], 3)).toHaveLength(3);
   });
 });

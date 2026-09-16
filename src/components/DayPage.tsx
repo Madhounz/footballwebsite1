@@ -1,11 +1,13 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRepository } from "@/lib/data";
+import { clubsInForm } from "@/lib/data/match-context";
 import { todayISO, type ISODate } from "@/lib/dates";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { AutoRefresh } from "./AutoRefresh";
 import { DateStrip } from "./DateStrip";
 import { FollowedTeams } from "./FollowedTeams";
+import { InForm } from "./InForm";
 import { MatchList } from "./MatchList";
 import { ScoringRaces, type Race } from "./ScoringRaces";
 import { TeamCrest } from "./TeamCrest";
@@ -48,9 +50,16 @@ export async function DayPage({ date }: { date: ISODate }) {
       const s = await repo.getStandings(c.id);
       const top = s.rows.slice(0, 3);
       const teams = new Map((await repo.listTeams(c.id)).map((team) => [team.id, team]));
-      return { competition: c, top, teams };
+      return { competition: c, top, rows: s.rows, teams };
     }),
   );
+  // Clubs on a run, from the last five each standings row already carries — so
+  // the whole section is free, and says the thing a table cannot: who is
+  // climbing, rather than who is top.
+  const inForm = clubsInForm(
+    snapshots.map(({ competition, rows }) => ({ competitionId: competition.id, rows })),
+  );
+  const competitionsById = new Map(competitions.map((c) => [c.id, c]));
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -69,6 +78,7 @@ export async function DayPage({ date }: { date: ISODate }) {
           emptyText={isToday ? t("emptyToday") : t("emptyDay")}
         />
         <ScoringRaces races={races} players={players} teams={teamsById} />
+        <InForm entries={inForm} teams={teamsById} competitions={competitionsById} />
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
