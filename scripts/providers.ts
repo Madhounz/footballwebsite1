@@ -62,6 +62,90 @@ async function footballData(apiKey: string) {
   if (missing.length) {
     console.log(`\n  We ask for these but the plan does not serve them: ${missing.join(", ")}`);
   }
+
+  await matchDetail(apiKey, all);
+}
+
+interface FDSide {
+  formation?: string | null;
+  lineup?: unknown[] | null;
+  bench?: unknown[] | null;
+  coach?: { name?: string | null } | null;
+}
+interface FDMatch {
+  id: number;
+  utcDate: string;
+  homeTeam: FDSide & { name?: string };
+  awayTeam: FDSide & { name?: string };
+  goals?: unknown[] | null;
+  bookings?: unknown[] | null;
+  substitutions?: unknown[] | null;
+  referees?: unknown[] | null;
+}
+
+/**
+ * Does this key get line-ups, or only a scoreline?
+ *
+ * The question matters more than it looks: line-ups and the formation are the
+ * part of a match page people actually come for, and they have only ever come
+ * from the metered provider. If football-data serves them too, a match page
+ * stops depending on one free plan staying healthy. The v4 match resource has
+ * fields for all of it; whether a given plan fills them in is a plan question,
+ * and the only honest way to answer it is to fetch one real match and look.
+ *
+ * Costs two requests: one finished match from a competition we cover, then
+ * that match by id.
+ */
+async function matchDetail(apiKey: string, all: FDCompetition[]) {
+  console.log("\n  Match detail (what a match page could show without API-Football):");
+  const code = [...coveredCodes(all)][0];
+  if (!code) {
+    console.log("    no covered competition on this key; skipped");
+    return;
+  }
+  const headers = { "X-Auth-Token": apiKey };
+  const listRes = await fetch(`${FD}/competitions/${code}/matches?status=FINISHED`, { headers });
+  if (!listRes.ok) {
+    console.log(`    ${code} finished matches: HTTP ${listRes.status}`);
+    return;
+  }
+  const list = (await listRes.json()) as { matches?: { id: number; utcDate: string }[] };
+  const last = (list.matches ?? []).sort((a, b) => b.utcDate.localeCompare(a.utcDate))[0];
+  if (!last) {
+    console.log(`    ${code}: no finished match to look at yet`);
+    return;
+  }
+  const res = await fetch(`${FD}/matches/${last.id}`, { headers });
+  if (!res.ok) {
+    console.log(`    /matches/${last.id}: HTTP ${res.status}`);
+    return;
+  }
+  const m = (await res.json()) as FDMatch;
+  const count = (v: unknown[] | null | undefined) => (Array.isArray(v) ? v.length : "absent");
+  const side = (label: string, t: FDSide & { name?: string }) =>
+    console.log(
+      `    ${label.padEnd(5)} ${t.name ?? "?"}: formation ${t.formation ?? "absent"}, ` +
+        `lineup ${count(t.lineup)}, bench ${count(t.bench)}, coach ${t.coach?.name ?? "absent"}`,
+    );
+  console.log(`    ${code} match ${m.id}, ${m.utcDate.slice(0, 10)}`);
+  side("home", m.homeTeam);
+  side("away", m.awayTeam);
+  console.log(
+    `    goals ${count(m.goals)}, bookings ${count(m.bookings)}, ` +
+      `substitutions ${count(m.substitutions)}, referees ${count(m.referees)}`,
+  );
+  console.log(
+    "    A count of 0 means the plan serves the field but not the data; 'absent'\n" +
+      "    means the plan does not serve it at all.",
+  );
+}
+
+/** The football-data codes we already cover, in the order this repo lists them. */
+function coveredCodes(all: FDCompetition[]): Set<string> {
+  const wanted = Object.values(COMPETITION_CODES)
+    .map((c) => c.footballData)
+    .filter((c): c is string => Boolean(c));
+  return new Set(wanted.filter((code) => all.some((c) => c.code === code)));
 }
 
 interface AFLeague {
