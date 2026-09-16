@@ -8,8 +8,12 @@ name: Sync data
 #   FOOTBALL_DATA_API_KEY   required
 #   API_FOOTBALL_KEY        optional second source
 #   ANTHROPIC_API_KEY       optional, enables the AI validator
-# Repository variable (same page -> Variables):
+# Repository variables (same page -> Variables):
 #   SYNC_ENABLED = true
+#   NINETY_API_FOOTBALL_OFF = 1   optional; leaves API-Football uncalled from
+#                                 here, the way the same name does on the host.
+#                                 Set it in both places or the key is still
+#                                 being called from one of them.
 on:
   schedule:
     # A backstop for the external cron, not a second pipeline: this one hands
@@ -76,4 +80,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          # The host has its own copy of this. A switch set in one place only
+          # silences half the traffic, which is the same as not setting it.
+          NINETY_API_FOOTBALL_OFF: ${{ vars.NINETY_API_FOOTBALL_OFF }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
