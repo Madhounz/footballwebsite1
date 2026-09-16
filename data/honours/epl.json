@@ -5,7 +5,10 @@
     {
       "season": "2025/26",
       "winner": "Arsenal",
-      "winnerTeamId": "arsenal"
+      "runnerUp": "Manchester City",
+      "detail": "First league title since 2003/04",
+      "winnerTeamId": "arsenal",
+      "runnerUpTeamId": "manchester-city"
     },
     {
       "season": "2024/25",

@@ -5,7 +5,10 @@
     {
       "season": "2025/26",
       "winner": "Inter",
-      "winnerTeamId": "inter"
+      "runnerUp": "SSC Napoli",
+      "detail": "21st Serie A title",
+      "winnerTeamId": "inter",
+      "runnerUpTeamId": "napoli"
     },
     {
       "season": "2024/25",

@@ -5,7 +5,10 @@
     {
       "season": "2025/26",
       "winner": "Barcelona",
-      "winnerTeamId": "barcelona"
+      "runnerUp": "Real Madrid",
+      "detail": "29th La Liga title",
+      "winnerTeamId": "barcelona",
+      "runnerUpTeamId": "real-madrid"
     },
     {
       "season": "2024/25",

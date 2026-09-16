@@ -5,7 +5,10 @@
     {
       "season": "2025/26",
       "winner": "Bayern München",
-      "winnerTeamId": "bayern-munich"
+      "runnerUp": "Borussia Dortmund",
+      "detail": "122 goals, only one defeat",
+      "winnerTeamId": "bayern-munich",
+      "runnerUpTeamId": "borussia-dortmund"
     },
     {
       "season": "2024/25",

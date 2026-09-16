@@ -5,7 +5,10 @@
     {
       "season": "2025/26",
       "winner": "Paris Saint-Germain",
-      "winnerTeamId": "psg"
+      "runnerUp": "Arsenal",
+      "detail": "Won on penalties; back-to-back titles",
+      "winnerTeamId": "psg",
+      "runnerUpTeamId": "arsenal"
     },
     {
       "season": "2024/25",
