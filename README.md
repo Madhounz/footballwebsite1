@@ -58,6 +58,7 @@ Historical winners live in `data/honours/*.json` and are curated, not fetched.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the code is organised and why
 - [docs/DATA-PIPELINE.md](docs/DATA-PIPELINE.md) — providers, reconciliation, the AI validator, running it on a schedule
 - [docs/DESIGN.md](docs/DESIGN.md) — name, logo, colour, type and layout rules
+- [docs/HARDCODED.md](docs/HARDCODED.md) — every value the site holds fixed instead of fetching, and what would make it dynamic
 - [docs/ROADMAP.md](docs/ROADMAP.md) — what comes next
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how to work on the repo
 
