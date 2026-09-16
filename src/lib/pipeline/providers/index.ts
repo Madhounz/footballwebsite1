@@ -18,6 +18,12 @@ export interface ProviderSetup {
   catchUp?: CatchUpWindow;
   /** Requests left below which catching up stops. Lower it for a deliberate repair run. */
   catchUpReserve?: number;
+  /**
+   * What this key has already spent today, read from the store. Without it the
+   * metered provider believes every run is the day's first — which, in a
+   * serverless refresh that starts afresh every minute, it always is.
+   */
+  spentToday?: number;
   /** Seed runs may also pull whole-season fixture lists from the metered provider. */
   seed?: boolean;
   /** "live" paces football-data for a handful of calls rather than a season walk. */
@@ -58,6 +64,7 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
         detailsEnabled: setup.detailsEnabled,
         catchUp: setup.catchUp,
         catchUpReserve: setup.catchUpReserve,
+        spentToday: setup.spentToday,
         seasonFetchEnabled: setup.seed ?? false,
         onUnknownTeam: (n, id) => onUnknownTeam?.("api-football", n, id),
         log: setup.log,

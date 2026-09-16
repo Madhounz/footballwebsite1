@@ -125,6 +125,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     resolveScorerPlayer: store.playerResolver("football-data"),
     detailStore: store,
     detailsEnabled,
+    spentToday,
     catchUp: catchUp
       ? {
           days: Number(process.env.NINETY_CATCH_UP_DAYS ?? DEFAULT_CATCH_UP_DAYS),

@@ -323,6 +323,44 @@ describe("ApiFootballProvider", () => {
     expect(off.catchUpAsked).toBeUndefined();
   });
 
+  it("counts what earlier runs spent today, not just its own", async () => {
+    // The refresh is a fresh process every minute, so a budget held only in
+    // memory is a budget that resets sixty times an hour. The day's spend comes
+    // from the store, and a key with nothing left makes no request at all —
+    // which is what keeps a hundred-request plan from being asked a thousand
+    // times and suspended for it.
+    const opts = {
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      resolvePlayer,
+      detailsEnabled: true,
+      now,
+    };
+
+    const spent: string[] = [];
+    const exhausted = new ApiFootballProvider({
+      ...opts,
+      detailStore: store([{}]),
+      spentToday: 96,
+      fetchImpl: fakeFetch(spent),
+    });
+    expect(await exhausted.fetchMatches(epl, window)).toEqual([]);
+    expect(spent).toEqual([]);
+
+    // Room left, and it spends it.
+    const fresh: string[] = [];
+    const ok = new ApiFootballProvider({
+      ...opts,
+      detailStore: store([{}]),
+      spentToday: 10,
+      fetchImpl: fakeFetch(fresh),
+    });
+    expect(await ok.fetchMatches(epl, window)).toHaveLength(1);
+    expect(fresh.length).toBeGreaterThan(0);
+    expect(ok.spentToday()).toBe(10 + fresh.length);
+  });
+
   it("does nothing for a match that already has everything", async () => {
     const calls: string[] = [];
     const p = new ApiFootballProvider({

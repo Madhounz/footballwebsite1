@@ -42,6 +42,8 @@ export const DETAILS_BEFORE_MIN = 70; // line-ups are published ~1h before kick-
 export const DETAILS_AFTER_MIN = 240; // keep refreshing a match for 4h after kick-off
 /** Daily requests kept back from the catch-up pass for matches in play. */
 const CATCH_UP_RESERVE = 60;
+/** What the free plan allows in a day. */
+export const DAILY_CAP = 100;
 
 interface AFTeamRef {
   id: number;
@@ -158,6 +160,21 @@ export interface ApiFootballOptions {
   catchUp?: CatchUpWindow;
   /** Requests left for the day that must not be spent. */
   reserve?: number;
+  /**
+   * Requests this key has already spent today, from the store rather than from
+   * this object.
+   *
+   * `remaining` is read from a response header and so is unknown until the
+   * first call of a run — which is fine for a long-running process and useless
+   * for this one. The refresh is a serverless invocation that lives for
+   * seconds, a fresh one every minute, each starting with an empty budget and
+   * therefore willing to spend. Twelve of those an hour through a match window
+   * is how a hundred-request plan is spent several times over, and a key that
+   * keeps asking after its quota is gone is a key that gets suspended.
+   */
+  spentToday?: number;
+  /** What the plan allows in a day. The free plan allows a hundred. */
+  dailyCap?: number;
   /** Requests left below which catching up stops, so live matches keep theirs. */
   catchUpReserve?: number;
   fetchImpl?: typeof fetch;
@@ -192,9 +209,18 @@ export class ApiFootballProvider implements Provider {
     return Boolean(COMPETITION_CODES[competitionId]?.apiFootball);
   }
 
+  /** What the day has spent, counting other runs as well as this one. */
+  spentToday(): number {
+    return (this.opts.spentToday ?? 0) + this.requestsMade;
+  }
+
   private canSpend(): boolean {
     if (this.disabledReason) return false;
     const reserve = this.opts.reserve ?? 5;
+    // Two limits, and the run stops at whichever bites first: what the day has
+    // spent across every run, and what the provider's own header last said.
+    const cap = this.opts.dailyCap ?? DAILY_CAP;
+    if (this.spentToday() >= cap - reserve) return false;
     return this.remaining === null || this.remaining > reserve;
   }
 
@@ -210,7 +236,8 @@ export class ApiFootballProvider implements Provider {
     if (this.disabledReason) throw new Error(`api-football disabled: ${this.disabledReason}`);
     if (!this.canSpend())
       throw new Error(
-        `api-football daily budget exhausted (${this.remaining} left, keeping a reserve)`,
+        `api-football daily budget exhausted (${this.spentToday()} spent today, ` +
+          `${this.remaining ?? "?"} reported left, keeping a reserve)`,
       );
     const res = await this.fetchImpl(`${BASE}${path}`, {
       headers: { "x-apisports-key": this.opts.apiKey },

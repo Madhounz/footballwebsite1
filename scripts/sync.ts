@@ -115,6 +115,7 @@ async function main() {
     resolvePlayer: store.playerResolver(),
     detailStore: store,
     detailsEnabled,
+    spentToday: await store.detailRequestsToday(),
     catchUp:
       catchUpLimit > 0
         ? { days: Number(arg("catch-up-days") ?? 365), limit: catchUpLimit }

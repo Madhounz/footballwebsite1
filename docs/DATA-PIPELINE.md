@@ -117,6 +117,14 @@ deliberately narrow so it finishes well inside a serverless timeout:
   to one request per competition, still only for the three-day window.
 - **Overlap lock**: a run that began under 150 seconds ago and has not finished
   blocks the next one, so a slow minute cannot pile up.
+- **A budget that survives the process**: what the key has spent today is read
+  from `SyncRun.detailRequests` and handed to the provider as `spentToday`. The
+  header the provider returns (`x-ratelimit-requests-remaining`) is unknown
+  until the first call of a run, which is useless here: each refresh is a
+  serverless invocation lasting seconds, and a fresh one every minute would
+  each believe the day had not started. Both limits apply and the stricter one
+  wins. Failed requests count, so a key that has been suspended or rate-limited
+  stops being asked rather than being asked all day.
 - **Metered detail**: API-Football is touched only while a match is within 70
   minutes before or 240 minutes after kick-off, and no more often than
   `NINETY_DETAIL_INTERVAL_MIN` (default 5). Line-ups and final events are still
