@@ -386,6 +386,7 @@ function toMatch(m: DbMatch): Match {
     venue: m.venue ?? undefined,
     attendance: m.attendance ?? undefined,
     referee: m.referee ?? undefined,
+    timelineComplete: m.status === "finished" ? m.eventsFinalAt != null : undefined,
     disputed: m.disputed || undefined,
     disputedFields: m.disputedFields.length > 0 ? m.disputedFields : undefined,
   };

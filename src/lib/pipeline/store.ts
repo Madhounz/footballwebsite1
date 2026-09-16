@@ -9,6 +9,8 @@ export interface SyncStore extends DetailStore {
   isSyncRunning(withinSeconds: number): Promise<boolean>;
   /** Minutes since the last run that spent detail requests, or null if there has never been one. */
   minutesSinceLastDetailRun(): Promise<number | null>;
+  /** Metered detail requests spent since midnight UTC, where the provider's daily quota resets. */
+  detailRequestsToday(now?: Date): Promise<number>;
   /** Delete every competition, team, player, match and event. Only for an explicit --reset. */
   reset(): Promise<void>;
   /** Whether any known match kicks off within [now - afterMin, now + beforeMin]. Gates paid detail fetches. */
@@ -53,6 +55,9 @@ export class DryRunStore implements SyncStore {
   async minutesSinceLastDetailRun() {
     return null;
   }
+  async detailRequestsToday() {
+    return 0;
+  }
   async reset() {
     this.log("[dry-run] reset: would delete all competitions, teams, players and matches");
   }
@@ -63,6 +68,9 @@ export class DryRunStore implements SyncStore {
     return [];
   }
   async saveMatchAlias() {}
+  async startingPlayerIds() {
+    return new Set<string>();
+  }
   playerResolver(): PlayerResolver {
     return async (teamId, p) => `${teamId}:${p.externalId}`;
   }
@@ -76,6 +84,12 @@ export class DryRunStore implements SyncStore {
   async upsertMatches(competition: Competition, matches: ReconciledMatch[]) {
     for (const m of matches) {
       const v = m.value;
+      if (m.detailOnly) {
+        this.log(
+          `[dry-run] ${competition.shortName} ${v.kickoff.slice(0, 16)} ${v.homeTeamId}-${v.awayTeamId}: detail only, ${v.events?.length ?? 0} events${v.eventsFinal ? " (complete)" : ""}`,
+        );
+        continue;
+      }
       const score = v.score ? `${v.score.home}-${v.score.away}` : "v";
       const flag = m.disputedFields.length ? ` DISPUTED:${m.disputedFields.join("/")}` : "";
       this.log(

@@ -29,6 +29,12 @@ export type ProviderMatch = Omit<Match, "season" | "minute" | "phase" | "slug"> 
    * reconciliation.
    */
   partial?: boolean;
+  /**
+   * These events are the provider's complete post-match list, not a snapshot of
+   * a match still in play. Stored as `Match.eventsFinalAt` so a timeline that
+   * stopped halfway is never mistaken for a finished one.
+   */
+  eventsFinal?: boolean;
 };
 
 /** A match the store knows about that may need detail from a provider. */
@@ -41,8 +47,24 @@ export interface MatchNeedingDetail {
   status: Match["status"];
   hasLineups: boolean;
   hasEvents: boolean;
+  /** The complete post-match event list has been fetched; the timeline is settled. */
+  hasFinalEvents: boolean;
   /** The provider's own id for this match, when already learned. */
   externalId: string | null;
+  /**
+   * An older match picked up by the catch-up pass rather than one around
+   * kick-off. Detail for these is worth having but never at the cost of
+   * covering a match in play, so providers spend on them last and only with
+   * plenty of quota left.
+   */
+  catchUp?: boolean;
+}
+
+/** How far back the catch-up pass looks for matches whose timeline never completed. */
+export interface CatchUpWindow {
+  days: number;
+  /** How many matches one run may take on. */
+  limit: number;
 }
 
 /** What a detail provider needs from the store. */
@@ -53,9 +75,16 @@ export interface DetailStore {
     now: Date,
     beforeMin: number,
     afterMin: number,
+    catchUp?: CatchUpWindow,
   ): Promise<MatchNeedingDetail[]>;
   /** Remember a provider's id for one of our matches. */
   saveMatchAlias(provider: string, matchId: string, externalId: string): Promise<void>;
+  /**
+   * Our ids for the players who started a match, when the line-ups are known.
+   * A starter cannot come on as a substitute, which is how the direction of a
+   * substitution is proved rather than assumed.
+   */
+  startingPlayerIds(matchId: string): Promise<Set<string>>;
 }
 
 /** A player as a provider names them inside a match (events, line-ups). */

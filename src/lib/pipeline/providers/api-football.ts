@@ -9,6 +9,7 @@ import type {
 import { COMPETITION_CODES, resolveTeamId } from "../normalize";
 import { matchKey } from "../reconcile";
 import type {
+  CatchUpWindow,
   DetailStore,
   FetchWindow,
   MatchNeedingDetail,
@@ -39,6 +40,8 @@ import { slugify } from "../../slug";
 const BASE = "https://v3.football.api-sports.io";
 export const DETAILS_BEFORE_MIN = 70; // line-ups are published ~1h before kick-off
 export const DETAILS_AFTER_MIN = 240; // keep refreshing a match for 4h after kick-off
+/** Daily requests kept back from the catch-up pass for matches in play. */
+const CATCH_UP_RESERVE = 60;
 
 interface AFTeamRef {
   id: number;
@@ -127,12 +130,7 @@ const STATUS: Record<string, [MatchStatus, ProviderMatch["phase"]]> = {
 
 const POS: Record<string, Position> = { G: "GK", D: "DF", M: "MF", F: "FW" };
 
-/**
- * API-Football substitution events: `player` is the player coming ON and
- * `assist` the player going OFF. If a live match shows the arrows the wrong
- * way round, flip this flag.
- */
-const SUBST_PLAYER_IS_IN = true;
+const message = (e: unknown) => String(e instanceof Error ? e.message : e);
 
 export interface ApiFootballOptions {
   apiKey: string;
@@ -153,8 +151,15 @@ export interface ApiFootballOptions {
   seasonFetchEnabled?: boolean;
   /** Whether to spend requests on match details this run. */
   detailsEnabled?: boolean;
+  /**
+   * Also fill in older matches whose timeline never completed. Off unless the
+   * caller asks: it is the only work here that is not about today.
+   */
+  catchUp?: CatchUpWindow;
   /** Requests left for the day that must not be spent. */
   reserve?: number;
+  /** Requests left below which catching up stops, so live matches keep theirs. */
+  catchUpReserve?: number;
   fetchImpl?: typeof fetch;
   now?: () => Date;
   onUnknownTeam?: (name: string, externalId: string) => void;
@@ -191,6 +196,14 @@ export class ApiFootballProvider implements Provider {
     if (this.disabledReason) return false;
     const reserve = this.opts.reserve ?? 5;
     return this.remaining === null || this.remaining > reserve;
+  }
+
+  /** Old matches are filled in only while the day still has room to spare. */
+  private canSpendOnCatchUp(): boolean {
+    if (!this.opts.catchUp || !this.canSpend()) return false;
+    return (
+      this.remaining === null || this.remaining > (this.opts.catchUpReserve ?? CATCH_UP_RESERVE)
+    );
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -260,6 +273,7 @@ export class ApiFootballProvider implements Provider {
         this.now(),
         DETAILS_BEFORE_MIN,
         DETAILS_AFTER_MIN,
+        this.canSpendOnCatchUp() ? this.opts.catchUp : undefined,
       );
     }
     return this.needing;
@@ -301,25 +315,42 @@ export class ApiFootballProvider implements Provider {
   }
 
   /**
-   * For each of our matches near kick-off: learn its fixture id (one day
-   * listing, remembered), then live minute+events from the shared live call,
-   * line-ups once, and final events once.
+   * Detail for the matches the store points at, cheapest first: fixture ids
+   * from a day listing, line-ups once they are published, minute and events for
+   * anything in play from the single live call, and the complete event list
+   * once the whistle has gone. Line-ups are fetched before events on purpose —
+   * knowing who started is what settles the direction of a substitution.
    */
   private async detailRecords(
     competition: Competition,
     league: number,
   ): Promise<ProviderRecord<ProviderMatch>[]> {
-    const mine = (await this.needingDetail()).filter((m) => m.competitionId === competition.id);
-    if (mine.length === 0) return [];
+    const all = (await this.needingDetail()).filter((m) => m.competitionId === competition.id);
+    if (all.length === 0) return [];
     const now = this.now();
+    /** Matches around kick-off come first; old ones only while quota is comfortable. */
+    const spend = (m: MatchNeedingDetail) =>
+      m.catchUp ? this.canSpendOnCatchUp() : this.canSpend();
 
     // Fixture ids: from the store, else from that day's listing.
     const ids = new Map<string, number>();
-    for (const m of mine) if (m.externalId) ids.set(m.id, Number(m.externalId));
-    const missing = mine.filter((m) => !ids.has(m.id));
-    for (const day of new Set(missing.map((m) => m.kickoff.slice(0, 10)))) {
-      if (!this.canSpend()) break;
-      for (const f of (await this.fixturesOn(day)).filter((f) => f.league.id === league)) {
+    for (const m of all) if (m.externalId) ids.set(m.id, Number(m.externalId));
+    const byDay = new Map<string, MatchNeedingDetail[]>();
+    for (const m of all) {
+      if (ids.has(m.id)) continue;
+      const day = m.kickoff.slice(0, 10);
+      byDay.set(day, [...(byDay.get(day) ?? []), m]);
+    }
+    for (const [day, list] of byDay) {
+      if (!list.some(spend)) continue;
+      let fixtures: AFFixture[];
+      try {
+        fixtures = await this.fixturesOn(day);
+      } catch (e) {
+        this.log(`${competition.shortName}: fixtures for ${day} failed: ${message(e)}`);
+        continue;
+      }
+      for (const f of fixtures.filter((f) => f.league.id === league)) {
         const home = this.teamId(f.teams.home);
         const away = this.teamId(f.teams.away);
         if (!home || !away) continue;
@@ -329,7 +360,7 @@ export class ApiFootballProvider implements Provider {
           homeTeamId: home,
           awayTeamId: away,
         });
-        const m = missing.find((x) => x.id === key);
+        const m = list.find((x) => x.id === key);
         if (m) {
           ids.set(m.id, f.fixture.id);
           await this.opts.detailStore.saveMatchAlias(this.id, m.id, String(f.fixture.id));
@@ -337,7 +368,6 @@ export class ApiFootballProvider implements Provider {
       }
     }
 
-    const records = new Map<string, ProviderRecord<ProviderMatch>>();
     const partialFor = (m: MatchNeedingDetail): ProviderMatch => ({
       id: m.id,
       competitionId: m.competitionId,
@@ -350,10 +380,40 @@ export class ApiFootballProvider implements Provider {
       halfTimeScore: null,
       partial: true,
     });
+    const records = new Map<string, ProviderRecord<ProviderMatch>>();
+    const record = (m: MatchNeedingDetail): ProviderRecord<ProviderMatch> => {
+      let rec = records.get(m.id);
+      if (!rec) {
+        rec = { provider: this.id, externalId: String(ids.get(m.id) ?? ""), value: partialFor(m) };
+        records.set(m.id, rec);
+      }
+      return rec;
+    };
+    const minutesInto = (m: MatchNeedingDetail) =>
+      (now.getTime() - new Date(m.kickoff).getTime()) / 60_000;
+
+    // Line-ups: once per match, from an hour before kick-off.
+    for (const m of all) {
+      const fid = ids.get(m.id);
+      if (!fid || m.hasLineups || minutesInto(m) < -DETAILS_BEFORE_MIN || !spend(m)) continue;
+      try {
+        const lineups = await this.get<AFLineup[]>(`/fixtures/lineups?fixture=${fid}`);
+        if (lineups.length === 2) {
+          record(m).value.lineups = await this.mapLineups(
+            lineups,
+            { home: m.homeTeamId, away: m.awayTeamId },
+            this.teamId.bind(this),
+          );
+        }
+      } catch (e) {
+        this.log(`${competition.shortName}: line-ups for ${m.id} failed: ${message(e)}`);
+      }
+    }
 
     // Live: one call for everything in play, with minute, score and events.
-    const maybeLive = mine.filter((m) => {
-      const mins = (now.getTime() - new Date(m.kickoff).getTime()) / 60_000;
+    const maybeLive = all.filter((m) => {
+      if (m.catchUp) return false;
+      const mins = minutesInto(m);
       return m.status === "live" || (mins >= -5 && mins <= 150 && m.status !== "finished");
     });
     if (maybeLive.length && this.canSpend()) {
@@ -370,57 +430,59 @@ export class ApiFootballProvider implements Provider {
           ids.set(m.id, f.fixture.id);
           await this.opts.detailStore.saveMatchAlias(this.id, m.id, String(f.fixture.id));
         }
-        const rec = this.toRecord(competition, f);
-        if (!rec) continue;
-        if (f.events) rec.value.events = await this.mapEvents(f, m.id, m.homeTeamId, m.awayTeamId);
-        records.set(m.id, rec);
+        const fresh = this.toRecord(competition, f);
+        if (!fresh) continue;
+        const rec = record(m);
+        // Keep line-ups fetched a moment ago; everything else is the live truth.
+        rec.value = { ...fresh.value, lineups: rec.value.lineups };
+        rec.externalId = String(f.fixture.id);
+        if (f.events) {
+          rec.value.events = await this.mapEvents(f, m, await this.startersFor(m, rec));
+        }
       }
     }
 
-    for (const m of mine) {
+    // The complete list, once, after the whistle. Until this runs the timeline
+    // is only as long as the last live snapshot happened to be.
+    for (const m of all) {
       const fid = ids.get(m.id);
-      if (!fid) continue;
-      const mins = (now.getTime() - new Date(m.kickoff).getTime()) / 60_000;
-      const rec = records.get(m.id) ?? {
-        provider: this.id,
-        externalId: String(fid),
-        value: partialFor(m),
-      };
-
-      // Line-ups: once, from an hour before kick-off.
-      if (!m.hasLineups && mins >= -DETAILS_BEFORE_MIN && this.canSpend()) {
-        try {
-          const lineups = await this.get<AFLineup[]>(`/fixtures/lineups?fixture=${fid}`);
-          if (lineups.length === 2) {
-            rec.value.lineups = await this.mapLineups(
-              lineups,
-              { home: m.homeTeamId, away: m.awayTeamId },
-              this.teamId.bind(this),
-            );
-          }
-        } catch (e) {
-          this.log(
-            `${competition.shortName}: line-ups for ${m.id} failed: ${String(e instanceof Error ? e.message : e)}`,
-          );
-        }
+      if (!fid || m.status !== "finished" || m.hasFinalEvents || !spend(m)) continue;
+      try {
+        const events = await this.get<AFEvent[]>(`/fixtures/events?fixture=${fid}`);
+        const f: AFFixture = { ...(await this.fixtureShell(m, fid)), events };
+        const rec = record(m);
+        rec.value.events = await this.mapEvents(f, m, await this.startersFor(m, rec));
+        // The match is over and the provider answered: this is the whole story,
+        // even if it answered with nothing. Retrying forever would spend the
+        // budget on the one match that will never have events.
+        rec.value.eventsFinal = true;
+        if (m.catchUp) this.log(`${competition.shortName}: filled in the timeline for ${m.id}`);
+      } catch (e) {
+        this.log(`${competition.shortName}: events for ${m.id} failed: ${message(e)}`);
       }
-      // Final events: once, after the match is over and the live feed no longer covers it.
-      if (!rec.value.events && m.status === "finished" && !m.hasEvents && this.canSpend()) {
-        try {
-          const f: AFFixture = {
-            ...(await this.fixtureShell(m, fid)),
-            events: await this.get<AFEvent[]>(`/fixtures/events?fixture=${fid}`),
-          };
-          rec.value.events = await this.mapEvents(f, m.id, m.homeTeamId, m.awayTeamId);
-        } catch (e) {
-          this.log(
-            `${competition.shortName}: events for ${m.id} failed: ${String(e instanceof Error ? e.message : e)}`,
-          );
-        }
-      }
-      if (rec.value.events || rec.value.lineups || !rec.value.partial) records.set(m.id, rec);
     }
-    return [...records.values()];
+
+    return [...records.values()].filter(
+      (r) => r.value.events || r.value.lineups || !r.value.partial,
+    );
+  }
+
+  /**
+   * Our ids for the players who started, from the line-ups just fetched or the
+   * ones already stored. Null when nobody knows yet.
+   */
+  private async startersFor(
+    m: MatchNeedingDetail,
+    rec: ProviderRecord<ProviderMatch>,
+  ): Promise<Set<string> | null> {
+    const lu = rec.value.lineups;
+    if (lu) {
+      const ids = new Set([...lu.home.starting, ...lu.away.starting].map((p) => p.playerId));
+      if (ids.size) return ids;
+    }
+    if (!m.hasLineups) return null;
+    const stored = await this.opts.detailStore.startingPlayerIds(m.id);
+    return stored.size ? stored : null;
   }
 
   private matchesKey(competition: Competition, f: AFFixture, key: string): boolean {
@@ -492,23 +554,29 @@ export class ApiFootballProvider implements Provider {
     };
   }
 
+  /**
+   * Provider events to ours. `starters` are our ids for the players who started,
+   * when the line-ups are known; they settle which way round a substitution goes.
+   */
   private async mapEvents(
     f: AFFixture,
-    matchId: string,
-    home: string,
-    away: string,
+    m: { id: string; homeTeamId: string; awayTeamId: string },
+    starters: Set<string> | null,
   ): Promise<MatchEvent[]> {
+    const { id: matchId, homeTeamId: home, awayTeamId: away } = m;
     const events: MatchEvent[] = [];
     for (const e of f.events ?? []) {
-      // Events carry the provider's team id; fall back to name resolution for shells.
+      // Events carry the provider's team id; a shell built without a day listing
+      // has none, so fall back to the name. An event we cannot attribute is
+      // dropped rather than guessed onto the home side.
       const teamId =
         e.team.id === f.teams.home.id
           ? home
           : e.team.id === f.teams.away.id
             ? away
-            : (this.teamId(e.team) ?? home);
+            : this.teamId(e.team);
       const type = eventType(e);
-      if (!type) continue;
+      if (!teamId || !type) continue;
       let playerId: string | null = null;
       let relatedPlayerId: string | null = null;
       const main =
@@ -520,10 +588,19 @@ export class ApiFootballProvider implements Provider {
           ? { externalId: String(e.assist.id), name: e.assist.name }
           : null;
       if (type === "substitution") {
-        const on = SUBST_PLAYER_IS_IN ? main : other;
-        const off = SUBST_PLAYER_IS_IN ? other : main;
-        playerId = off ? await this.opts.resolvePlayer(teamId, off) : null;
-        relatedPlayerId = on ? await this.opts.resolvePlayer(teamId, on) : null;
+        const first = main ? await this.opts.resolvePlayer(teamId, main) : null;
+        const second = other ? await this.opts.resolvePlayer(teamId, other) : null;
+        // API-Football names the player leaving the pitch in `player` and the one
+        // coming on in `assist`. Where the line-ups are known we prove it instead
+        // of trusting it: whoever was in the starting XI cannot be coming on.
+        let off = first;
+        let on = second;
+        if (second && starters?.has(second) && !(first && starters.has(first))) {
+          off = second;
+          on = first;
+        }
+        playerId = off;
+        relatedPlayerId = on;
       } else {
         // An own goal is credited to a player of the *other* team.
         const scorerTeam = type === "own_goal" ? (teamId === home ? away : home) : teamId;

@@ -8,6 +8,7 @@
  *   pnpm sync -- --from 2026-09-01 --to 2026-09-30 --competitions epl,ucl
  *   pnpm sync -- --no-ai              # deterministic reconciliation only
  *   pnpm sync -- --details            # force API-Football match details even with no match near kick-off
+ *   pnpm sync -- --catch-up 20        # also complete the timelines of up to 20 older matches
  *   pnpm sync -- --live               # today only, one combined request per provider (what /api/sync runs)
  *
  * Reads FOOTBALL_DATA_API_KEY, API_FOOTBALL_KEY, ANTHROPIC_API_KEY, DATABASE_URL.
@@ -75,6 +76,10 @@ async function main() {
   const detailsEnabled =
     seed || flag("details") || (await store.hasMatchesAround(new Date(), 70, 240));
 
+  // Finished matches whose timeline never completed, oldest gaps filled a few at
+  // a time. The refresh does this on its own; the flag is for catching up faster.
+  const catchUpLimit = Number(arg("catch-up") ?? 0);
+
   const unknown = new Map<string, { provider: string; externalId: string }>();
   const providers = providersFromEnv(process.env, {
     knownTeams,
@@ -82,6 +87,12 @@ async function main() {
     resolvePlayer: store.playerResolver(),
     detailStore: store,
     detailsEnabled,
+    catchUp:
+      catchUpLimit > 0
+        ? { days: Number(arg("catch-up-days") ?? 365), limit: catchUpLimit }
+        : undefined,
+    // Asking for a repair run means meaning it: spend down to the last few requests.
+    catchUpReserve: 5,
     seed,
     mode: live ? "live" : "full",
     onUnknownTeam: (provider, name, externalId) => unknown.set(name, { provider, externalId }),
@@ -93,7 +104,7 @@ async function main() {
   }
   const ai = useAI ? new AIValidator() : null;
   console.log(
-    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} mode=${live ? "live" : "full"} details=${detailsEnabled} ${dryRun ? "(dry run)" : ""}`,
+    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} mode=${live ? "live" : "full"} details=${detailsEnabled} catch-up=${catchUpLimit} ${dryRun ? "(dry run)" : ""}`,
   );
 
   if (reset) {

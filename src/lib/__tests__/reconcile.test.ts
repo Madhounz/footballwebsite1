@@ -85,6 +85,44 @@ describe("reconcileMatches", () => {
     expect(needsReview).toHaveLength(0);
     expect(matches[0].id).toBe(matchKey(rec("x").value));
   });
+  it("keeps a filled-in timeline without touching the stored result", () => {
+    // Only the detail provider has anything to say: the match is older than the
+    // refresh window, so its scoreline came from a run that could still see it.
+    const detail = rec("api-football", {
+      partial: true,
+      score: null,
+      halfTimeScore: null,
+      round: 0,
+      events: [
+        {
+          id: "",
+          matchId: "",
+          minute: 63,
+          teamId: "arsenal",
+          type: "substitution",
+          playerId: "saka",
+          relatedPlayerId: "jesus",
+        },
+      ],
+      eventsFinal: true,
+    });
+    const { matches } = reconcileMatches([detail], W);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].detailOnly).toBe(true);
+    expect(matches[0].value.events).toHaveLength(1);
+    expect(matches[0].value.eventsFinal).toBe(true);
+  });
+  it("drops a partial record that carries no detail at all", () => {
+    expect(reconcileMatches([rec("api-football", { partial: true })], W).matches).toEqual([]);
+  });
+  it("marks a complete timeline as complete when a full record is also present", () => {
+    const { matches } = reconcileMatches(
+      [rec("football-data"), rec("api-football", { partial: true, eventsFinal: true, events: [] })],
+      W,
+    );
+    expect(matches[0].detailOnly).toBeUndefined();
+    expect(matches[0].value.eventsFinal).toBe(true);
+  });
   it("quarantines a disputed scoreline instead of sending it to a model", () => {
     const { matches, needsReview } = reconcileMatches(
       [rec("football-data"), rec("api-football", { score: { home: 2, away: 2 } })],

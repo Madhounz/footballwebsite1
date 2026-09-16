@@ -1,4 +1,4 @@
-import type { DetailStore, PlayerResolver, Provider } from "../types";
+import type { CatchUpWindow, DetailStore, PlayerResolver, Provider } from "../types";
 import { FootballDataProvider } from "./football-data";
 import { ApiFootballProvider } from "./api-football";
 
@@ -12,6 +12,10 @@ export interface ProviderSetup {
   detailStore: DetailStore;
   /** Spend API-Football requests on match details this run. */
   detailsEnabled: boolean;
+  /** Also fill in older matches whose timeline never completed. */
+  catchUp?: CatchUpWindow;
+  /** Requests left below which catching up stops. Lower it for a deliberate repair run. */
+  catchUpReserve?: number;
   /** Seed runs may also pull whole-season fixture lists from the metered provider. */
   seed?: boolean;
   /** "live" paces football-data for a handful of calls rather than a season walk. */
@@ -49,6 +53,8 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
           ? ["uel"]
           : ["epl", "laliga", "bundesliga", "seriea", "ucl", "uel"],
         detailsEnabled: setup.detailsEnabled,
+        catchUp: setup.catchUp,
+        catchUpReserve: setup.catchUpReserve,
         seasonFetchEnabled: setup.seed ?? false,
         onUnknownTeam: (n, id) => onUnknownTeam?.("api-football", n, id),
         log: setup.log,

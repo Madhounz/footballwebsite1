@@ -110,6 +110,12 @@ export interface Match {
   venue?: string;
   attendance?: number;
   referee?: string;
+  /**
+   * For a finished match: whether the complete post-match event list has been
+   * fetched. False means the timeline is whatever the live feed managed to see,
+   * and is still being filled in.
+   */
+  timelineComplete?: boolean;
   /** Sources disagreed on this settled result; shown from the primary source, flagged for review. */
   disputed?: boolean;
   disputedFields?: string[];

@@ -77,6 +77,11 @@ export interface ReconciledMatch {
    * rather than quietly picking a winner.
    */
   disputedFields: string[];
+  /**
+   * Only detail was reconciled — events and line-ups for a match already
+   * stored. Its own row keeps the kickoff, scoreline and status it has.
+   */
+  detailOnly?: boolean;
 }
 
 /**
@@ -98,9 +103,41 @@ export function reconcileMatches(
   const matches: ReconciledMatch[] = [];
   const needsReview: Conflict[] = [];
   for (const [key, list] of byKey) {
-    // Partial records only contribute detail; a match nobody describes in full is dropped.
+    // Detail is a union across providers, whether or not anyone described the
+    // match in full this run: events de-duplicated by (minute, team, type,
+    // player), line-ups from the first provider that has them.
+    const seen = new Set<string>();
+    const events = list
+      .flatMap((r) => r.value.events ?? [])
+      .filter((e) => {
+        const k = `${e.minute}|${e.teamId}|${e.type}|${e.playerId ?? ""}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .sort((a, b) => a.minute - b.minute || (a.addedTime ?? 0) - (b.addedTime ?? 0));
+    const lineups = list.find((r) => r.value.lineups)?.value.lineups;
+    const eventsFinal = list.some((r) => r.value.eventsFinal);
+
+    // Partial records only contribute detail. A match nobody describes in full
+    // is either one we do not know at all — dropped — or an older one being
+    // filled in, whose scoreline was settled by the run that could still see it
+    // and must not be overwritten from a record that carries no score.
     const full = list.filter((r) => !r.value.partial);
-    if (full.length === 0) continue;
+    if (full.length === 0) {
+      if (events.length === 0 && !lineups && !eventsFinal) continue;
+      const value: ProviderMatch = { ...list[0].value, id: key, events, lineups, eventsFinal };
+      delete value.partial;
+      matches.push({
+        id: key,
+        value,
+        confidence: 1,
+        conflicts: [],
+        disputedFields: [],
+        detailOnly: true,
+      });
+      continue;
+    }
     const base = {
       ...full.sort((a, b) => (weights[b.provider] ?? 0) - (weights[a.provider] ?? 0))[0].value,
     };
@@ -138,21 +175,9 @@ export function reconcileMatches(
         }
       }
     }
-    // events: union of providers, de-duplicated by (minute, team, type)
-    const seen = new Set<string>();
-    const events = list
-      .flatMap((r) => r.value.events ?? [])
-      .filter((e) => {
-        const k = `${e.minute}|${e.teamId}|${e.type}|${e.playerId ?? ""}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .sort((a, b) => a.minute - b.minute || (a.addedTime ?? 0) - (b.addedTime ?? 0));
-    // line-ups: first provider that has them; live minute: any provider that reports one
-    const lineups = list.find((r) => r.value.lineups)?.value.lineups;
+    // live minute: any provider that reports one
     const minute = list.find((r) => r.value.minute != null)?.value.minute ?? base.minute ?? null;
-    const value: ProviderMatch = { ...base, id: key, events, lineups, minute };
+    const value: ProviderMatch = { ...base, id: key, events, lineups, minute, eventsFinal };
     delete value.partial;
     // Before full time the sources are simply at different points in the match,
     // which is lag rather than disagreement; only a settled result is flagged.

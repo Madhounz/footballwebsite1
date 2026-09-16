@@ -6,6 +6,7 @@ import { matchSlug } from "../match-slug";
 import { slugify } from "../slug";
 import { matchPlayer, type SquadEntry } from "./players";
 import type {
+  CatchUpWindow,
   Conflict,
   MatchNeedingDetail,
   PlayerResolver,
@@ -39,6 +40,17 @@ export class PrismaSyncStore implements SyncStore {
     return last ? (Date.now() - last.startedAt.getTime()) / 60_000 : null;
   }
 
+  async detailRequestsToday(now = new Date()) {
+    const midnightUTC = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
+    const spent = await this.db.syncRun.aggregate({
+      _sum: { detailRequests: true },
+      where: { startedAt: { gte: midnightUTC } },
+    });
+    return spent._sum.detailRequests ?? 0;
+  }
+
   async hasMatchesAround(now: Date, beforeMin: number, afterMin: number) {
     const n = await this.db.match.count({
       where: {
@@ -57,23 +69,43 @@ export class PrismaSyncStore implements SyncStore {
     now: Date,
     beforeMin: number,
     afterMin: number,
+    catchUp?: CatchUpWindow,
   ): Promise<MatchNeedingDetail[]> {
+    const counts = { _count: { select: { events: true, lineups: true } } } as const;
+    const windowStart = new Date(now.getTime() - afterMin * 60_000);
     const rows = await this.db.match.findMany({
       where: {
-        kickoff: {
-          gte: new Date(now.getTime() - afterMin * 60_000),
-          lte: new Date(now.getTime() + beforeMin * 60_000),
-        },
+        kickoff: { gte: windowStart, lte: new Date(now.getTime() + beforeMin * 60_000) },
         status: { notIn: ["postponed", "cancelled"] },
       },
-      include: { _count: { select: { events: true, lineups: true } } },
+      include: counts,
     });
-    if (rows.length === 0) return [];
+    // Older matches whose timeline never completed: a refresh that was down
+    // while they were played, or one that only ever saw the live feed. Most
+    // recent first, because that is what people look at.
+    const older = catchUp
+      ? await this.db.match.findMany({
+          where: {
+            status: "finished",
+            eventsFinalAt: null,
+            kickoff: {
+              gte: new Date(now.getTime() - catchUp.days * 86_400_000),
+              lt: windowStart,
+            },
+          },
+          orderBy: { kickoff: "desc" },
+          take: catchUp.limit,
+          include: counts,
+        })
+      : [];
+    const all = [...rows, ...older];
+    if (all.length === 0) return [];
     const aliases = await this.db.entityAlias.findMany({
-      where: { provider, entityType: "match", entityId: { in: rows.map((r) => r.id) } },
+      where: { provider, entityType: "match", entityId: { in: all.map((r) => r.id) } },
     });
     const byMatch = new Map(aliases.map((a) => [a.entityId, a.externalId]));
-    return rows.map((r) => ({
+    const olderIds = new Set(older.map((r) => r.id));
+    return all.map((r) => ({
       id: r.id,
       competitionId: r.competitionId,
       kickoff: r.kickoff.toISOString(),
@@ -82,8 +114,24 @@ export class PrismaSyncStore implements SyncStore {
       status: r.status as MatchNeedingDetail["status"],
       hasLineups: r._count.lineups >= 2,
       hasEvents: r._count.events > 0,
+      hasFinalEvents: r.eventsFinalAt != null,
       externalId: byMatch.get(r.id) ?? null,
+      catchUp: olderIds.has(r.id) || undefined,
     }));
+  }
+
+  async startingPlayerIds(matchId: string): Promise<Set<string>> {
+    const rows = await this.db.lineup.findMany({
+      where: { matchId },
+      select: { starting: true },
+    });
+    const ids = new Set<string>();
+    for (const r of rows) {
+      for (const p of (r.starting ?? []) as { playerId?: string }[]) {
+        if (p?.playerId) ids.add(p.playerId);
+      }
+    }
+    return ids;
   }
 
   async saveMatchAlias(provider: string, matchId: string, externalId: string) {
@@ -280,6 +328,18 @@ export class PrismaSyncStore implements SyncStore {
     let n = 0;
     for (const m of matches) {
       const v = m.value;
+      if (m.detailOnly) {
+        // An older match being filled in: write the timeline, leave the result
+        // alone. A match we have never stored is not created from detail.
+        const known = await this.db.match.findUnique({ where: { id: m.id }, select: { id: true } });
+        if (!known) continue;
+        if (v.eventsFinal) {
+          await this.db.match.update({ where: { id: m.id }, data: { eventsFinalAt: new Date() } });
+        }
+        await this.writeDetail(m.id, v);
+        n++;
+        continue;
+      }
       const data = {
         slug: matchSlug({ homeTeamId: v.homeTeamId, awayTeamId: v.awayTeamId, kickoff: v.kickoff }),
         competitionId: competition.id,
@@ -302,46 +362,54 @@ export class PrismaSyncStore implements SyncStore {
         confidence: m.confidence,
         disputed: m.disputedFields.length > 0,
         disputedFields: m.disputedFields,
+        // Only ever set, never cleared: a completed timeline does not become
+        // incomplete again, and a live snapshot arriving late must not unset it.
+        ...(v.eventsFinal ? { eventsFinalAt: new Date() } : {}),
       };
       await this.db.match.upsert({
         where: { id: m.id },
         create: { id: m.id, ...data },
         update: data,
       });
-      if (v.events?.length) {
-        await this.db.matchEvent.deleteMany({ where: { matchId: m.id } });
-        await this.db.matchEvent.createMany({
-          data: v.events.map((e, i) => ({
-            id: `${m.id}-e${i}`,
-            matchId: m.id,
-            minute: e.minute,
-            addedTime: e.addedTime ?? null,
-            teamId: e.teamId,
-            type: e.type,
-            playerId: e.playerId,
-            relatedPlayerId: e.relatedPlayerId ?? null,
-            detail: e.detail ?? null,
-          })),
-        });
-      }
-      if (v.lineups) {
-        for (const side of [v.lineups.home, v.lineups.away]) {
-          const data = {
-            formation: side.formation,
-            starting: side.starting as unknown as object[],
-            bench: side.bench as unknown as object[],
-            coach: side.coach ?? null,
-          };
-          await this.db.lineup.upsert({
-            where: { matchId_teamId: { matchId: m.id, teamId: side.teamId } },
-            create: { matchId: m.id, teamId: side.teamId, ...data },
-            update: data,
-          });
-        }
-      }
+      await this.writeDetail(m.id, v);
       n++;
     }
     return n;
+  }
+
+  /** Events replace whatever was there; line-ups are upserted per side. */
+  private async writeDetail(matchId: string, v: ReconciledMatch["value"]) {
+    if (v.events?.length) {
+      await this.db.matchEvent.deleteMany({ where: { matchId } });
+      await this.db.matchEvent.createMany({
+        data: v.events.map((e, i) => ({
+          id: `${matchId}-e${i}`,
+          matchId,
+          minute: e.minute,
+          addedTime: e.addedTime ?? null,
+          teamId: e.teamId,
+          type: e.type,
+          playerId: e.playerId,
+          relatedPlayerId: e.relatedPlayerId ?? null,
+          detail: e.detail ?? null,
+        })),
+      });
+    }
+    if (v.lineups) {
+      for (const side of [v.lineups.home, v.lineups.away]) {
+        const data = {
+          formation: side.formation,
+          starting: side.starting as unknown as object[],
+          bench: side.bench as unknown as object[],
+          coach: side.coach ?? null,
+        };
+        await this.db.lineup.upsert({
+          where: { matchId_teamId: { matchId, teamId: side.teamId } },
+          create: { matchId, teamId: side.teamId, ...data },
+          update: data,
+        });
+      }
+    }
   }
 
   async recordConflicts(runId: string, conflicts: Conflict[], resolutions: (Resolution | null)[]) {

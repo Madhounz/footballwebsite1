@@ -78,8 +78,8 @@
     "kickoff": "Kick-off",
     "lineups": "Line-ups",
     "lineupsLater": "Line-ups are published about an hour before kick-off.",
-    "lineupsUnavailable": "Line-ups are not available for this match yet. They arrive with our next data source.",
-    "eventsUnavailable": "Goal and card details are not available for this match yet. They arrive with our next data source.",
+    "lineupsUnavailable": "No line-ups were published for this match.",
+    "eventsUnavailable": "No goals, cards or substitutions were recorded for this match.",
     "timeline": "Timeline",
     "noEvents": "No events yet.",
     "form": "Form",
@@ -100,7 +100,10 @@
     "at": "at",
     "startingLineups": "Starting line-ups",
     "disputed": "Result under review: our sources do not agree on this scoreline.",
-    "disputedShort": "result under review"
+    "disputedShort": "result under review",
+    "timelinePending": "Still being completed. The full timeline follows shortly after the whistle.",
+    "subOn": "On",
+    "subOff": "Off"
   },
   "league": {
     "topFlight": "Top flight",

@@ -23,6 +23,8 @@ Read `README.md` and `docs/ARCHITECTURE.md` first. Next.js 16 conventions are in
 - Match ingestion never creates teams from a bare name. Only the `--seed` step may create a team, from a provider's full team record, and it must log it.
 - Club crests come from the data provider (`Team.crestUrl`); `TeamCrest` falls back to a generated badge from club colours when there is none or it fails to load. No player photos or other third-party logos.
 - Live freshness comes from `/api/sync` (every minute, external cron), not from GitHub's scheduler. Keep that path cheap: one combined provider request, a three-day window, and API-Football only inside the detail window and interval.
+- A finished match's timeline is only trustworthy once the full event list has been fetched (`Match.eventsFinalAt`); the live feed alone leaves it truncated. The catch-up pass fills old ones in, bounded by the daily detail budget — never widen it without checking the 100-request plan.
+- Substitution direction is proved from the starting XI, never assumed from a provider's field order.
 - Schema changes need a migration folder under `prisma/migrations/`; Vercel applies pending migrations at build time through `scripts/migrate-if-db.mjs`.
 - Demo players and results are synthetic; do not present them as real anywhere.
 

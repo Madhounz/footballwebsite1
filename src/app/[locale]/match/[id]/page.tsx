@@ -206,6 +206,7 @@ export default async function MatchPage({ params }: { params: Params }) {
                 players={players}
                 halfTime={m.halfTimeScore}
                 finished={m.status === "finished"}
+                complete={m.timelineComplete}
               />
             )}
           </Section>

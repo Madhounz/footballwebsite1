@@ -22,6 +22,18 @@ const DETAIL_BEFORE_MIN = 70;
 const DETAIL_AFTER_MIN = 240;
 /** Minutes between detail fetches, so a busy day cannot drain the daily budget. */
 const DEFAULT_DETAIL_INTERVAL_MIN = 5;
+/** Minutes between the slower passes that finish off old timelines. */
+const CATCH_UP_INTERVAL_MIN = 20;
+/** How far back to look for a match whose timeline never completed. */
+const DEFAULT_CATCH_UP_DAYS = 45;
+/** Matches one catch-up pass may take on. */
+const CATCH_UP_LIMIT = 2;
+/**
+ * Metered requests a day may spend on old matches. The provider's own reserve
+ * cannot help before the first response of a run tells it what is left, so the
+ * day's spend so far — which we do store — decides whether to try at all.
+ */
+const CATCH_UP_DAILY_BUDGET = 40;
 
 export interface LiveRefreshOutcome {
   ran: boolean;
@@ -29,6 +41,8 @@ export interface LiveRefreshOutcome {
   skipped?: string;
   window: { fromDate: string; toDate: string };
   detailsEnabled: boolean;
+  /** Whether this run was allowed to fill in older timelines, and what the day has spent. */
+  catchUp: { enabled: boolean; detailRequestsToday: number };
   competitions: number;
   fetched: number;
   written: number;
@@ -55,6 +69,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     skipped,
     window,
     detailsEnabled: false,
+    catchUp: { enabled: false, detailRequestsToday: 0 },
     competitions,
     fetched: 0,
     written: 0,
@@ -73,16 +88,23 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
   const [competitions, teams] = await Promise.all([repo.listCompetitions(), repo.listTeams()]);
   if (competitions.length === 0) return idle("no competitions stored yet; run the seed job first");
 
-  // Detail requests are metered. Spend them only while a match is in range,
-  // and never more often than the interval.
+  // Detail requests are metered. A match in range is worth the interval; with
+  // nothing in range the pass runs far less often, and only to finish the
+  // timelines of matches that were played while nobody was watching.
   const near = await store.hasMatchesAround(new Date(), DETAIL_BEFORE_MIN, DETAIL_AFTER_MIN);
   const sinceDetail = await store.minutesSinceLastDetailRun();
   const interval = Number(process.env.NINETY_DETAIL_INTERVAL_MIN ?? DEFAULT_DETAIL_INTERVAL_MIN);
-  const detailsEnabled = near && (sinceDetail === null || sinceDetail >= interval);
-  if (near && !detailsEnabled) {
+  const wait = near ? interval : CATCH_UP_INTERVAL_MIN;
+  const detailsEnabled = sinceDetail === null || sinceDetail >= wait;
+  if (!detailsEnabled) {
     log(
-      `details skipped: last detail run was ${Math.round(sinceDetail ?? 0)} min ago (interval ${interval})`,
+      `details skipped: last detail run was ${Math.round(sinceDetail ?? 0)} min ago (every ${wait})`,
     );
+  }
+  const spentToday = await store.detailRequestsToday();
+  const catchUp = spentToday < CATCH_UP_DAILY_BUDGET;
+  if (detailsEnabled && !catchUp) {
+    log(`catch-up paused: ${spentToday} detail requests spent today, keeping the rest for live`);
   }
 
   const seasonStartYear = Number(competitions[0].season.slice(0, 4));
@@ -92,6 +114,12 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     resolvePlayer: store.playerResolver(),
     detailStore: store,
     detailsEnabled,
+    catchUp: catchUp
+      ? {
+          days: Number(process.env.NINETY_CATCH_UP_DAYS ?? DEFAULT_CATCH_UP_DAYS),
+          limit: CATCH_UP_LIMIT,
+        }
+      : undefined,
     seed: false,
     mode: "live",
     log,
@@ -118,6 +146,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     ran: true,
     window,
     detailsEnabled,
+    catchUp: { enabled: catchUp, detailRequestsToday: spentToday },
     competitions: competitions.length,
     fetched: result.fetched,
     written: result.written,

@@ -24,6 +24,10 @@ on:
         description: "Wipe teams, players and matches first (start over; keeps nothing)"
         type: boolean
         default: false
+      catch_up:
+        description: "Also complete the timelines of this many older matches (0 = none)"
+        type: string
+        default: "0"
 
 concurrency:
   group: sync
@@ -51,6 +55,8 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.seed }}" = "true" ]; then ARGS="--seed"; fi
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.reset }}" = "true" ]; then ARGS="$ARGS --reset"; fi
           if [ "${{ github.event.schedule }}" = "17 4 * * *" ]; then ARGS="--seed"; fi
+          CATCH_UP="${{ github.event.inputs.catch_up }}"
+          if [ -n "$CATCH_UP" ] && [ "$CATCH_UP" != "0" ]; then ARGS="$ARGS --catch-up $CATCH_UP"; fi
           pnpm sync -- $ARGS
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

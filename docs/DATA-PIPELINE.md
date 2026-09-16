@@ -114,6 +114,17 @@ deliberately narrow so it finishes well inside a serverless timeout:
   `NINETY_DETAIL_INTERVAL_MIN` (default 5). Line-ups and final events are still
   fetched once per match, so a normal day stays inside the 100-request budget.
   If the budget runs out the refresh keeps working on scores alone.
+- **Catching up**: a timeline built from the live feed stops wherever the last
+  refresh left it, and a match played while the refresh was down has none at
+  all. `Match.eventsFinalAt` records that the complete post-match list was
+  fetched, so those gaps are visible rather than silent. Every 20 minutes the
+  refresh fills in up to two of them, most recent first, within
+  `NINETY_CATCH_UP_DAYS` (default 45) — but only while the day has spent fewer
+  than 40 detail requests and the provider reports more than 60 left, so a
+  match in play never loses its quota to one from last week. Until a match is
+  filled in, its page says the timeline is still being completed. To repair
+  faster, run the **Sync data** workflow with a catch-up count, or
+  `pnpm sync -- --catch-up 20`.
 
 Authenticate with `Authorization: Bearer $SYNC_SECRET`, or `?key=` for cron
 services that cannot send headers. The comparison is constant-time. The route
@@ -163,6 +174,10 @@ The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
 ### How the two free tiers are combined
 
 - **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
+- **Substitutions** are read from the line-ups, not from the order of the
+  provider's fields: whoever was in the starting XI cannot be the player coming
+  on. Where the line-ups are unknown the provider's own convention is used
+  (`player` off, `assist` on).
 - **API-Football** is spent only where it adds something: one request for each day around today (all leagues at once) and one request per 20 matches for events and line-ups, and only when a match is within 70 minutes before or 4 hours after kick-off (`store.hasMatchesAround`). It is the sole source for the Europa League, so it fetches that whole season on seed runs. It reads the `x-ratelimit-requests-remaining` header and stops with a reserve of 5 left. A plan or token error disables it for the rest of the run.
 - Players named in events and line-ups are matched to the squad already in the database by normalised surname, initial and shirt number (`src/lib/pipeline/players.ts`). No match → the player is created with id `af-<id>`, and either way the mapping is remembered in `EntityAlias`.
 - When both providers report the same match, every field is reconciled; disagreements land in `Discrepancy` and, with an Anthropic key, go to the validator.

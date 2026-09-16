@@ -25,6 +25,7 @@ export async function EventTimeline({
   players,
   halfTime,
   finished = false,
+  complete,
 }: {
   events: MatchEvent[];
   home: Team;
@@ -32,19 +33,25 @@ export async function EventTimeline({
   players: Record<string, Player>;
   halfTime: { home: number; away: number } | null;
   finished?: boolean;
+  /** False while a finished match still has only what the live feed saw. */
+  complete?: boolean;
 }) {
   const t = await getTranslations("match");
   const locale = await getLocale();
+  // A timeline that stops mid-match says so rather than passing for the whole story.
+  const pending = finished && complete === false;
   if (events.length === 0) {
     return (
       <div className="card px-6 py-10 text-center text-sm text-muted">
-        {finished ? t("eventsUnavailable") : t("noEvents")}
+        {!finished ? t("noEvents") : pending ? t("timelinePending") : t("eventsUnavailable")}
       </div>
     );
   }
   const first = events.filter((e) => e.minute <= 45);
   const second = events.filter((e) => e.minute > 45);
   const labels = {
+    on: t("subOn"),
+    off: t("subOff"),
     assist: (n: string) => t("assist", { name: n }),
     yellow: t("yellow"),
     red: t("red"),
@@ -78,11 +85,18 @@ export async function EventTimeline({
         <span>{teamShortName(home, locale)}</span>
         <span>{teamShortName(away, locale)}</span>
       </div>
+      {pending && (
+        <p className="mt-3 border-t border-line pt-3 text-center text-[11px] text-faint">
+          {t("timelinePending")}
+        </p>
+      )}
     </div>
   );
 }
 
 interface Labels {
+  on: string;
+  off: string;
   assist: (n: string) => string;
   yellow: string;
   red: string;
@@ -113,7 +127,10 @@ function Item({
       <span className={`truncate text-sm ${isGoal ? "font-semibold" : ""}`}>
         {e.type === "substitution" ? (
           <>
-            <span className="text-win">▲</span> {rel ? <PlayerLink p={rel} /> : "—"}
+            <span className="text-win" title={labels.on} aria-label={labels.on}>
+              ▲
+            </span>{" "}
+            {rel ? <PlayerLink p={rel} /> : "—"}
           </>
         ) : p ? (
           <PlayerLink p={p} />
@@ -130,7 +147,10 @@ function Item({
       <span className="truncate text-xs text-muted">
         {e.type === "substitution" ? (
           <>
-            <span className="text-loss">▼</span> {p ? p.name : ""}
+            <span className="text-loss" title={labels.off} aria-label={labels.off}>
+              ▼
+            </span>{" "}
+            {p ? <PlayerLink p={p} /> : ""}
           </>
         ) : e.type === "goal" && rel ? (
           labels.assist(rel.name)

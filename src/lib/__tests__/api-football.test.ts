@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiFootballProvider } from "../pipeline/providers/api-football";
 import type { Competition } from "../types";
-import type { DetailStore, MatchNeedingDetail } from "../pipeline/types";
+import type { CatchUpWindow, DetailStore, MatchNeedingDetail } from "../pipeline/types";
 
 const epl: Competition = {
   id: "epl",
@@ -69,8 +69,8 @@ const events = [
   {
     time: { elapsed: 63, extra: null },
     team: { id: 42, name: "Arsenal" },
-    player: { id: 5, name: "G. Jesus" },
-    assist: { id: 1, name: "B. Saka" },
+    player: { id: 1, name: "B. Saka" },
+    assist: { id: 5, name: "G. Jesus" },
     type: "subst",
     detail: "Substitution 1",
   },
@@ -136,26 +136,37 @@ const known = [
 const resolvePlayer = async (teamId: string, p: { externalId: string }) =>
   `${teamId}:${p.externalId}`;
 
-function store(needing: Partial<MatchNeedingDetail>[]): DetailStore & { saved: string[] } {
+function store(
+  needing: Partial<MatchNeedingDetail>[],
+  starters: string[] = [],
+): DetailStore & { saved: string[]; catchUpAsked: CatchUpWindow | undefined } {
   const saved: string[] = [];
   return {
     saved,
-    async matchesNeedingDetail() {
-      return needing.map((m) => ({
-        id: KEY,
-        competitionId: "epl",
-        kickoff: "2026-09-19T14:00:00.000Z",
-        homeTeamId: "arsenal",
-        awayTeamId: "chelsea",
-        status: "live",
-        hasLineups: false,
-        hasEvents: false,
-        externalId: null,
-        ...m,
-      }));
+    catchUpAsked: undefined,
+    async matchesNeedingDetail(_provider, _now, _before, _after, catchUp) {
+      this.catchUpAsked = catchUp;
+      return needing
+        .filter((m) => catchUp || !m.catchUp)
+        .map((m) => ({
+          id: KEY,
+          competitionId: "epl",
+          kickoff: "2026-09-19T14:00:00.000Z",
+          homeTeamId: "arsenal",
+          awayTeamId: "chelsea",
+          status: "live" as const,
+          hasLineups: false,
+          hasEvents: false,
+          hasFinalEvents: false,
+          externalId: null,
+          ...m,
+        }));
     },
     async saveMatchAlias(_p, matchId, externalId) {
       saved.push(`${matchId}=${externalId}`);
+    },
+    async startingPlayerIds() {
+      return new Set(starters);
     },
   };
 }
@@ -180,8 +191,8 @@ describe("ApiFootballProvider", () => {
     const out = await p.fetchMatches(epl, window);
     expect(calls.map((c) => c.replace("https://v3.football.api-sports.io", ""))).toEqual([
       "/fixtures?date=2026-09-19&timezone=UTC",
-      "/fixtures?live=all&timezone=UTC",
       "/fixtures/lineups?fixture=1001",
+      "/fixtures?live=all&timezone=UTC",
     ]);
     expect(st.saved).toEqual([`${KEY}=1001`]);
     expect(out).toHaveLength(1);
@@ -213,7 +224,9 @@ describe("ApiFootballProvider", () => {
       season: 2026,
       knownTeams: [...known],
       resolvePlayer,
-      detailStore: store([{ status: "finished", hasLineups: true, externalId: "1001" }]),
+      detailStore: store([
+        { status: "finished", hasLineups: true, hasEvents: true, externalId: "1001" },
+      ]),
       detailsEnabled: true,
       fetchImpl: fakeFetch(calls),
       now: () => new Date("2026-09-19T17:00:00Z"),
@@ -222,6 +235,92 @@ describe("ApiFootballProvider", () => {
     expect(calls.map((c) => c.split("io")[1])).toEqual(["/fixtures/events?fixture=1001"]);
     expect(out[0].value.partial).toBe(true);
     expect(out[0].value.events).toHaveLength(5);
+    // Events the live feed already left behind are no reason to skip the full
+    // list: that is exactly how a timeline ends up stopping at the 60th minute.
+    expect(out[0].value.eventsFinal).toBe(true);
+  });
+
+  it("reads the direction of a substitution from the starting XI, not from the field order", async () => {
+    // The provider says Saka went off and Jesus came on. Here Jesus is the one
+    // who started, so the arrows have to point the other way.
+    const p = new ApiFootballProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      resolvePlayer,
+      detailStore: store(
+        [{ status: "finished", hasLineups: true, hasEvents: true, externalId: "1001" }],
+        ["arsenal:5"],
+      ),
+      detailsEnabled: true,
+      fetchImpl: fakeFetch([]),
+      now: () => new Date("2026-09-19T17:00:00Z"),
+    });
+    const out = await p.fetchMatches(epl, window);
+    const sub = out[0].value.events!.find((e) => e.type === "substitution");
+    expect(sub).toMatchObject({ playerId: "arsenal:5", relatedPlayerId: "arsenal:1" });
+  });
+
+  it("fills in an old match whose timeline never completed", async () => {
+    const calls: string[] = [];
+    const st = store([
+      { catchUp: true, status: "finished", hasLineups: true, hasEvents: true, externalId: "1001" },
+    ]);
+    const p = new ApiFootballProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      resolvePlayer,
+      detailStore: st,
+      detailsEnabled: true,
+      catchUp: { days: 45, limit: 2 },
+      fetchImpl: fakeFetch(calls),
+      now: () => new Date("2026-09-25T12:00:00Z"),
+    });
+    const out = await p.fetchMatches(epl, window);
+    expect(st.catchUpAsked).toEqual({ days: 45, limit: 2 });
+    expect(calls.map((c) => c.split("io")[1])).toEqual(["/fixtures/events?fixture=1001"]);
+    expect(out[0].value.events).toHaveLength(5);
+    expect(out[0].value.eventsFinal).toBe(true);
+  });
+
+  it("stops catching up once the day's quota runs low, and never asks without one", async () => {
+    const calls: string[] = [];
+    const rows: Partial<MatchNeedingDetail>[] = [
+      { catchUp: true, status: "finished", hasLineups: true, externalId: "1001" },
+      {
+        id: "epl:2026-09-12:arsenal:chelsea",
+        catchUp: true,
+        status: "finished",
+        hasLineups: true,
+        externalId: "1002",
+      },
+    ];
+    const opts = {
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      resolvePlayer,
+      detailsEnabled: true,
+      now: () => new Date("2026-09-25T12:00:00Z"),
+    };
+    // 30 requests left is below the reserve kept for matches in play, so the
+    // second match waits for tomorrow.
+    const lean = store(rows);
+    const p = new ApiFootballProvider({
+      ...opts,
+      detailStore: lean,
+      catchUp: { days: 45, limit: 2 },
+      fetchImpl: fakeFetch(calls, "30"),
+    });
+    await p.fetchMatches(epl, window);
+    expect(calls.map((c) => c.split("io")[1])).toEqual(["/fixtures/events?fixture=1001"]);
+
+    // And with catching up switched off, the store is not even asked for them.
+    const off = store(rows);
+    const q = new ApiFootballProvider({ ...opts, detailStore: off, fetchImpl: fakeFetch([]) });
+    expect(await q.fetchMatches(epl, window)).toEqual([]);
+    expect(off.catchUpAsked).toBeUndefined();
   });
 
   it("does nothing for a match that already has everything", async () => {
@@ -232,7 +331,13 @@ describe("ApiFootballProvider", () => {
       knownTeams: [...known],
       resolvePlayer,
       detailStore: store([
-        { status: "finished", hasLineups: true, hasEvents: true, externalId: "1001" },
+        {
+          status: "finished",
+          hasLineups: true,
+          hasEvents: true,
+          hasFinalEvents: true,
+          externalId: "1001",
+        },
       ]),
       detailsEnabled: true,
       fetchImpl: fakeFetch(calls),

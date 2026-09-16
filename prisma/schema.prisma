@@ -112,6 +112,8 @@ model Match {
   referee       String?
   events        MatchEvent[]
   lineups       Lineup[]
+  /** When the full post-match event list was fetched. Null means the timeline may still be incomplete. */
+  eventsFinalAt DateTime?
   /** 0..1 agreement between providers for the scoreline; see Discrepancy. */
   confidence    Float    @default(1)
   /** Sources disagreed on a settled result; the primary source's value is shown, flagged for review. */
@@ -124,6 +126,7 @@ model Match {
   @@index([homeTeamId])
   @@index([awayTeamId])
   @@index([status])
+  @@index([status, eventsFinalAt])
 }
 
 model MatchEvent {
