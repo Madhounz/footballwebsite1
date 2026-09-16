@@ -50,6 +50,11 @@ async function refresh(): Promise<void> {
     console.log(`skipped: ${outcome.skipped}`);
     return;
   }
+  if (outcome.unknownTeams.length) {
+    console.log(
+      `${outcome.unknownTeams.length} club(s) matched nothing and their matches were skipped: ${outcome.unknownTeams.join(", ")}`,
+    );
+  }
   const requests = Object.entries(outcome.providerRequests)
     .map(([id, n]) => `${id} ${n}`)
     .join(", ");

@@ -55,6 +55,15 @@ export interface LiveRefreshOutcome {
   scorers: Record<string, number>;
   /** Whether this run was allowed to fill in older timelines, and what the day has spent. */
   catchUp: { enabled: boolean; detailRequestsToday: number };
+  /**
+   * Clubs a provider named that we hold no team for. Their matches were
+   * skipped, which is indistinguishable from there being no match at all
+   * unless somebody says so — and for the Champions League, whose field comes
+   * from leagues we do not cover, it is the likeliest reason a matchday looks
+   * empty. Fixed by a seed run, which creates a competition's clubs from the
+   * provider's own team list.
+   */
+  unknownTeams: string[];
   competitions: number;
   fetched: number;
   written: number;
@@ -83,6 +92,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     detailsEnabled: false,
     scorers: {},
     catchUp: { enabled: false, detailRequestsToday: 0 },
+    unknownTeams: [],
     competitions,
     fetched: 0,
     written: 0,
@@ -121,6 +131,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
   }
 
   const seasonStartYear = Number(competitions[0].season.slice(0, 4));
+  const unknown = new Map<string, string>();
   const providers = providersFromEnv(process.env, {
     knownTeams: teams.map((t) => ({ id: t.id, name: t.name, shortName: t.shortName })),
     seasonStartYear,
@@ -137,6 +148,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
       : undefined,
     seed: false,
     mode: "live",
+    onUnknownTeam: (provider, name) => unknown.set(name, provider),
     log,
   });
   if (providers.length === 0) {
@@ -162,12 +174,21 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     log,
   });
 
+  if (unknown.size) {
+    log(
+      `${unknown.size} club(s) named by a provider matched nothing, so their matches were skipped: ` +
+        [...unknown].map(([name, provider]) => `${provider} "${name}"`).join(", ") +
+        ". Run the seed to create them.",
+    );
+  }
+
   return {
     ran: true,
     window,
     detailsEnabled,
     scorers: result.scorers,
     catchUp: { enabled: catchUp, detailRequestsToday: spentToday },
+    unknownTeams: [...unknown.keys()],
     competitions: competitions.length,
     fetched: result.fetched,
     written: result.written,
