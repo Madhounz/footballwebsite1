@@ -9,6 +9,7 @@ import { Empty, Section, Stat } from "@/components/Section";
 import { Score } from "@/components/Score";
 import { StandingsTable } from "@/components/StandingsTable";
 import { TeamCrest } from "@/components/TeamCrest";
+import { FollowButton } from "@/components/FollowButton";
 import { getRepository } from "@/lib/data";
 import { pageMeta } from "@/lib/seo";
 import { ageFromDOB } from "@/lib/dates";
@@ -105,6 +106,7 @@ export default async function TeamPage({ params }: { params: Params }) {
             </span>
           </div>
         </div>
+        <FollowButton teamId={team.id} name={name} />
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

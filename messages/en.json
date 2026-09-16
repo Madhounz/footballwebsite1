@@ -311,5 +311,13 @@
     "GB-SCT": "Scotland",
     "GB-WLS": "Wales",
     "EU": "Europe"
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "followTitle": "Follow {name} — their matches lead your home page",
+    "followingTitle": "Following {name}. Tap to stop.",
+    "yourClubs": "Your clubs",
+    "noFixture": "No fixture yet"
   }
 }

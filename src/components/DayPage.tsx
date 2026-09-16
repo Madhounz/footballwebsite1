@@ -5,6 +5,7 @@ import { todayISO, type ISODate } from "@/lib/dates";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { AutoRefresh } from "./AutoRefresh";
 import { DateStrip } from "./DateStrip";
+import { FollowedTeams } from "./FollowedTeams";
 import { MatchList } from "./MatchList";
 import { TeamCrest } from "./TeamCrest";
 
@@ -20,6 +21,11 @@ export async function DayPage({ date }: { date: ISODate }) {
   ]);
   const live = views.filter((v) => v.match.status === "live").length;
   const isToday = date === today;
+  // The followed list lives on the device, so the names it will need have to
+  // travel with the page: the browser knows the ids, not how to say them.
+  const teamNames = Object.fromEntries(
+    (await repo.listTeams()).map((team) => [team.id, teamShortName(team, locale)]),
+  );
 
   const snapshots = await Promise.all(
     competitions.map(async (c) => {
@@ -35,6 +41,7 @@ export async function DayPage({ date }: { date: ISODate }) {
       <AutoRefresh enabled={isToday && live > 0} seconds={30} />
       <div className="min-w-0 space-y-5">
         <DateStrip date={date} today={today} />
+        {isToday && <FollowedTeams names={teamNames} />}
         {live > 0 && (
           <p className="flex items-center gap-2 text-sm text-live">
             <span className="live-dot" /> {t("inPlay", { count: live })}
