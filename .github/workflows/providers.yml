@@ -1,0 +1,31 @@
+name: Check providers
+
+# Prints what the data keys can actually see: which competitions football-data
+# will serve, and which leagues and seasons API-Football's plan covers. Adding a
+# competition is a plan question first, and this answers it with facts rather
+# than recollection. Reads only; commits nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      countries:
+        description: "Countries to ask API-Football about"
+        type: string
+        default: "Saudi Arabia,Egypt,United Arab Emirates,Qatar"
+
+jobs:
+  providers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Ask the providers
+        run: pnpm providers -- --countries "${{ github.event.inputs.countries }}"
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}

@@ -22,6 +22,7 @@
     "demo:generate": "tsx scripts/generate-demo.ts",
     "sync": "tsx scripts/sync.ts",
     "honours": "tsx scripts/honours.ts",
+    "providers": "tsx scripts/providers.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
