@@ -49,7 +49,16 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
       }),
     );
   }
-  if (env.API_FOOTBALL_KEY) {
+  // A key can be alive and still not worth calling. An account under review is
+  // the case this exists for: the budget below stops us at a hundred requests,
+  // but a hundred refusals a day from a suspended key is not a thing to be
+  // doing while somebody decides whether to trust us again. Unset it to switch
+  // the provider back on; the key itself is left in place.
+  const off = /^(1|true|yes)$/i.test(env.NINETY_API_FOOTBALL_OFF ?? "");
+  if (off && env.API_FOOTBALL_KEY) {
+    setup.log?.("api-football: switched off by NINETY_API_FOOTBALL_OFF; not called at all");
+  }
+  if (env.API_FOOTBALL_KEY && !off) {
     list.push(
       new ApiFootballProvider({
         apiKey: env.API_FOOTBALL_KEY,
