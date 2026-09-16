@@ -16,6 +16,7 @@ import { getRepository } from "@/lib/data";
 import { buildMatchContext } from "@/lib/data/match-context";
 import { pageMeta } from "@/lib/seo";
 import { livePhaseLabel } from "@/lib/format";
+import { isLive, isStaleLive } from "@/lib/live-status";
 import { dateOf, formatMediumDate } from "@/lib/dates";
 import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
 import type { Team } from "@/lib/types";
@@ -51,7 +52,9 @@ export default async function MatchPage({ params }: { params: Params }) {
   if (!detail) notFound();
   const { view, events, lineups, players } = detail;
   const { match: m, home, away, competition } = view;
-  const live = m.status === "live";
+  // A record left saying "live" after an abandonment is not a match in play.
+  const live = isLive(m);
+  const stale = isStaleLive(m);
 
   const [homeMatches, awayMatches, standings] = await Promise.all([
     repo.getTeamMatches(home.id),
@@ -81,11 +84,13 @@ export default async function MatchPage({ params }: { params: Params }) {
         : livePhaseLabel(m.phase, m.minute)
     : m.status === "finished"
       ? t("fullTime")
-      : m.status === "postponed"
-        ? t("postponed")
-        : m.status === "cancelled"
-          ? t("cancelled")
-          : t("kickoff");
+      : stale
+        ? t("noUpdate")
+        : m.status === "postponed"
+          ? t("postponed")
+          : m.status === "cancelled"
+            ? t("cancelled")
+            : t("kickoff");
 
   return (
     <div className="space-y-8">

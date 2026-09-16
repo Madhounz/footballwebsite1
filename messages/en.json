@@ -127,7 +127,8 @@
     "meetings": "{n, plural, one {# meeting} other {# meetings}}",
     "winsN": "{n} won",
     "drawnN": "{n} drawn",
-    "buildUp": "How they arrive"
+    "buildUp": "How they arrive",
+    "noUpdate": "No update"
   },
   "league": {
     "topFlight": "Top flight",

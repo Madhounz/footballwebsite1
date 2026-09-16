@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { MatchView } from "@/lib/types";
 import { livePhaseLabel } from "@/lib/format";
+import { isLive, isStaleLive } from "@/lib/live-status";
 import { teamName, teamShortName } from "@/lib/i18n/names";
 import { LocalTime } from "./LocalTime";
 import { Score } from "./Score";
@@ -21,7 +22,10 @@ export async function MatchRow({
   const t = await getTranslations("match");
   const locale = await getLocale();
   const { match: m, home, away } = view;
-  const live = m.status === "live";
+  // Not `status === "live"`: a record can stay live after a match was abandoned
+  // or postponed, and a green pulse beside one of those is a lie.
+  const live = isLive(m);
+  const stale = isStaleLive(m);
   const finished = m.status === "finished";
   const homeWin = finished && m.score && m.score.home > m.score.away;
   const awayWin = finished && m.score && m.score.away > m.score.home;
@@ -38,13 +42,15 @@ export async function MatchRow({
         : m.phase === "ET"
           ? t("aet")
           : t("ft")
-      : m.status === "postponed"
-        ? t("postponed")
-        : m.status === "cancelled"
-          ? t("cancelled")
-          : showRound
-            ? t("md", { n: m.round })
-            : "";
+      : stale
+        ? t("noUpdate")
+        : m.status === "postponed"
+          ? t("postponed")
+          : m.status === "cancelled"
+            ? t("cancelled")
+            : showRound
+              ? t("md", { n: m.round })
+              : "";
 
   return (
     <Link

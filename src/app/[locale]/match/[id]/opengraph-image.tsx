@@ -16,6 +16,7 @@ import { dateOf, formatKickoffUTC, formatMediumDate } from "@/lib/dates";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { isRtl } from "@/i18n/routing";
 import type { Team } from "@/lib/types";
+import { isLive } from "@/lib/live-status";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
@@ -42,7 +43,7 @@ export default async function MatchCard({
     loadCrest(home.crestUrl),
     loadCrest(away.crestUrl),
   ]);
-  const live = m.status === "live";
+  const live = isLive(m);
   const status = live
     ? m.phase === "HT"
       ? t("ht")

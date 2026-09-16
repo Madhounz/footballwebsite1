@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { isLive } from "@/lib/live-status";
 import { useFollowing } from "./useFollowing";
 
 /**
@@ -80,7 +81,7 @@ export function FollowedTeams({ names }: { names: Record<string, string> }) {
       <ul className="grid gap-2 sm:grid-cols-2">
         {teams.map((team) => {
           const m = team.next ?? team.last;
-          const live = m?.status === "live";
+          const live = m ? isLive(m) : false;
           const opponent = m && (m.home.id === team.id ? m.away : m.home);
           return (
             <li key={team.id} className="card overflow-hidden">

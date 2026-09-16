@@ -22,6 +22,7 @@ import {
   teamShortName,
 } from "@/lib/i18n/names";
 import type { Position } from "@/lib/types";
+import { isLive } from "@/lib/live-status";
 
 type Params = Promise<{ locale: string; slug: string }>;
 
@@ -61,7 +62,7 @@ export default async function TeamPage({ params }: { params: Params }) {
     : new Map();
   const row = standings?.rows.find((r) => r.teamId === team.id);
 
-  const live = matches.find((v) => v.match.status === "live");
+  const live = matches.find((v) => isLive(v.match));
   const results = matches
     .filter((v) => v.match.status === "finished")
     .slice(-5)

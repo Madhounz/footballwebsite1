@@ -4,6 +4,7 @@ import { getRepository } from "@/lib/data";
 import { clubsInForm } from "@/lib/data/match-context";
 import { todayISO, type ISODate } from "@/lib/dates";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
+import { isLive } from "@/lib/live-status";
 import { AutoRefresh } from "./AutoRefresh";
 import { DateStrip } from "./DateStrip";
 import { FollowedTeams } from "./FollowedTeams";
@@ -22,7 +23,7 @@ export async function DayPage({ date }: { date: ISODate }) {
     repo.getMatchesOnDate(date),
     repo.listCompetitions(),
   ]);
-  const live = views.filter((v) => v.match.status === "live").length;
+  const live = views.filter((v) => isLive(v.match)).length;
   const isToday = date === today;
   const allTeams = await repo.listTeams();
   // The followed list lives on the device, so the names it will need have to

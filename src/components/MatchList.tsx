@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Competition, MatchView } from "@/lib/types";
 import { competitionName } from "@/lib/i18n/names";
+import { isLive } from "@/lib/live-status";
 import { MatchRow } from "./MatchRow";
 import { StageLabel } from "./StageLabel";
 
@@ -29,7 +30,7 @@ export async function MatchList({
   return (
     <div className="space-y-4">
       {groups.map(({ competition, views }) => {
-        const liveCount = views.filter((v) => v.match.status === "live").length;
+        const liveCount = views.filter((v) => isLive(v.match)).length;
         const round = views[0]?.match.round;
         return (
           <section

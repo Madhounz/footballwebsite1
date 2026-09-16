@@ -127,7 +127,8 @@
     "meetings": "{n, plural, zero {# مواجهات} one {مواجهة واحدة} two {مواجهتان} few {# مواجهات} many {# مواجهة} other {# مواجهة}}",
     "winsN": "{n} فوز",
     "drawnN": "{n} تعادل",
-    "buildUp": "كيف يصلان"
+    "buildUp": "كيف يصلان",
+    "noUpdate": "لا تحديث"
   },
   "league": {
     "topFlight": "الدرجة الأولى",
