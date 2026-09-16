@@ -3,6 +3,14 @@
   "name": "UEFA Europa League",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Aston Villa",
+      "runnerUp": "SC Freiburg",
+      "detail": "3–0, Beşiktaş Park",
+      "winnerTeamId": "aston-villa",
+      "runnerUpTeamId": "sc-freiburg"
+    },
+    {
       "season": "2024/25",
       "winner": "Tottenham Hotspur",
       "runnerUp": "Manchester United",
@@ -376,14 +384,14 @@
       "teamId": "sevilla"
     },
     {
+      "team": "Atlético Madrid",
+      "count": 3,
+      "teamId": "atletico-madrid"
+    },
+    {
       "team": "Inter",
       "count": 3,
       "teamId": "inter"
-    },
-    {
-      "team": "Liverpool",
-      "count": 3,
-      "teamId": "liverpool"
     },
     {
       "team": "Juventus",
@@ -391,9 +399,9 @@
       "teamId": "juventus"
     },
     {
-      "team": "Atlético Madrid",
+      "team": "Liverpool",
       "count": 3,
-      "teamId": "atletico-madrid"
+      "teamId": "liverpool"
     },
     {
       "team": "Tottenham Hotspur",
@@ -401,19 +409,19 @@
       "teamId": "tottenham-hotspur"
     },
     {
+      "team": "Borussia Mönchengladbach",
+      "count": 2,
+      "teamId": "borussia-monchengladbach"
+    },
+    {
       "team": "Chelsea",
       "count": 2,
       "teamId": "chelsea"
     },
     {
-      "team": "Porto",
+      "team": "Eintracht Frankfurt",
       "count": 2,
-      "teamId": "porto"
-    },
-    {
-      "team": "Real Madrid",
-      "count": 2,
-      "teamId": "real-madrid"
+      "teamId": "eintracht-frankfurt"
     },
     {
       "team": "Feyenoord",
@@ -430,14 +438,19 @@
       "teamId": "parma"
     },
     {
-      "team": "Borussia Mönchengladbach",
+      "team": "Porto",
       "count": 2,
-      "teamId": "borussia-monchengladbach"
+      "teamId": "porto"
     },
     {
-      "team": "Eintracht Frankfurt",
+      "team": "Real Madrid",
       "count": 2,
-      "teamId": "eintracht-frankfurt"
+      "teamId": "real-madrid"
+    },
+    {
+      "team": "Aston Villa",
+      "teamId": "aston-villa",
+      "count": 1
     }
   ],
   "note": "Includes the UEFA Cup (1971–2009)."

@@ -95,11 +95,17 @@ describe("DemoRepository", () => {
     expect(scorers.rows[0].goals).toBeGreaterThanOrEqual(scorers.rows[1].goals);
   });
 
-  it("has honours for every competition", async () => {
+  it("has honours for every competition, newest first", async () => {
     for (const c of await repo.listCompetitions()) {
       const h = await repo.getHonours(c.id);
       expect(h?.entries.length).toBeGreaterThan(20);
-      expect(h?.entries[0].season).toBe("2024/25");
+      const seasons = h!.entries.map((e) => e.season);
+      // The newest season is deliberately not pinned to a year. A list that is
+      // up to date has to be free to change; a test naming one is a test that
+      // fails precisely when somebody fixes the staleness it was meant to catch.
+      expect([...seasons].sort((a, b) => b.localeCompare(a))).toEqual(seasons);
+      expect(new Set(seasons).size).toBe(seasons.length);
+      for (const season of seasons) expect(season).toMatch(/^\d{4}(\/\d{2})?$/);
     }
   });
 });

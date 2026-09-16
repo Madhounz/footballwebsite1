@@ -103,17 +103,21 @@ async function main() {
     }
 
     // "The file already has everything" and "the plan showed us nothing usable"
-    // read identically from the outside, and they call for opposite responses:
-    // one means the job is done, the other means a season has to be added by
-    // hand. So the run says which of the two it was.
+    // read identically from the outside and call for opposite responses: one
+    // means the job is done, the other that a season has to be added by hand.
+    // The newest three, because the season worth knowing about is rarely the
+    // newest — the one in play has no winner and should not, while the one that
+    // ended in May either names a champion or proves the plan will not.
     const dated = body.seasons.filter((s) => s.startDate && s.endDate);
-    const newest = [...dated].sort((a, b) => b.endDate.localeCompare(a.endDate))[0];
-    if (newest) {
-      const label = seasonLabel(newest.startDate, newest.endDate);
-      const who = newest.winner
-        ? `won by ${newest.winner.name}`
-        : "no winner named — either still being played, or not on this plan";
-      console.log(`${competitionId}: ${dated.length} season(s) offered, newest ${label}, ${who}`);
+    const recent = [...dated].sort((a, b) => b.endDate.localeCompare(a.endDate)).slice(0, 3);
+    if (recent.length) {
+      const said = recent
+        .map((s) => {
+          const label = seasonLabel(s.startDate, s.endDate);
+          return `${label} ${s.winner ? s.winner.name : "(no winner named)"}`;
+        })
+        .join(", ");
+      console.log(`${competitionId}: ${dated.length} season(s) offered; newest are ${said}`);
     }
 
     const honours = JSON.parse(fs.readFileSync(file, "utf8")) as Honours;
