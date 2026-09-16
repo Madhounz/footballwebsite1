@@ -12,7 +12,9 @@ import { Score } from "@/components/Score";
 import { StageLabel } from "@/components/StageLabel";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
+import { pageMeta } from "@/lib/seo";
 import { livePhaseLabel } from "@/lib/format";
+import { dateOf, formatMediumDate } from "@/lib/dates";
 import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
 import type { MatchView, Team } from "@/lib/types";
 
@@ -23,9 +25,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const repo = await getRepository();
   const d = await repo.getMatch(id);
   if (!d) return {};
-  const { match: m, home, away } = d.view;
+  const { match: m, home, away, competition } = d.view;
   const score = m.score ? `${m.score.home}–${m.score.away}` : "v";
-  return { title: `${teamShortName(home, locale)} ${score} ${teamShortName(away, locale)}` };
+  const t = await getTranslations({ locale, namespace: "match" });
+  return pageMeta({
+    locale,
+    path: `/match/${m.slug}`,
+    title: `${teamShortName(home, locale)} ${score} ${teamShortName(away, locale)}`,
+    description: t("metaDescription", {
+      home: teamName(home, locale),
+      away: teamName(away, locale),
+      competition: competitionName(competition, locale),
+      date: formatMediumDate(dateOf(m.kickoff), locale),
+    }),
+  });
 }
 
 export default async function MatchPage({ params }: { params: Params }) {

@@ -10,6 +10,7 @@ import { Score } from "@/components/Score";
 import { StandingsTable } from "@/components/StandingsTable";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
+import { pageMeta } from "@/lib/seo";
 import { ageFromDOB } from "@/lib/dates";
 import { ordinal, signed } from "@/lib/format";
 import {
@@ -30,7 +31,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!team) return {};
   const t = await getTranslations({ locale, namespace: "team" });
   const name = teamName(team, locale);
-  return { title: name, description: t("description", { name }) };
+  return pageMeta({
+    locale,
+    path: `/teams/${team.slug}`,
+    title: name,
+    description: t("description", { name }),
+  });
 }
 
 export default async function TeamPage({ params }: { params: Params }) {

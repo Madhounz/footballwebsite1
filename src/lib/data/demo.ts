@@ -251,6 +251,10 @@ export class DemoRepository implements Repository {
     return this.playersBySlug.get(slug) ?? null;
   }
 
+  async listPlayers() {
+    return [...this.playersBySlug.values()].map((p) => ({ id: p.id, slug: p.slug, name: p.name }));
+  }
+
   // ---- matches -----------------------------------------------------------
   async getMatchesOnDate(date: ISODate): Promise<MatchView[]> {
     const now = this.now();

@@ -42,8 +42,18 @@ export class PrismaRepository implements Repository {
     };
   }
 
+  /**
+   * Competitions worth showing: the ones we actually have matches for. A
+   * section with nothing in it reads as a broken site rather than an honest
+   * gap, and free provider plans do not cover every competition we define. A
+   * competition still resolves by slug, so an existing link never breaks; it
+   * simply stops being advertised until data arrives.
+   */
   async listCompetitions(): Promise<Competition[]> {
-    const rows = await this.db.competition.findMany({ orderBy: { order: "asc" } });
+    const rows = await this.db.competition.findMany({
+      where: { matches: { some: {} } },
+      orderBy: { order: "asc" },
+    });
     return rows.map(toCompetition);
   }
   async getCompetitionBySlug(slug: string): Promise<Competition | null> {
@@ -278,6 +288,13 @@ export class PrismaRepository implements Repository {
         });
     }
     return out;
+  }
+
+  async listPlayers() {
+    return this.db.player.findMany({
+      select: { id: true, slug: true, name: true },
+      orderBy: { name: "asc" },
+    });
   }
 
   async searchIndex(): Promise<SearchItem[]> {

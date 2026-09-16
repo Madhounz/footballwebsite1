@@ -103,7 +103,8 @@
     "disputedShort": "result under review",
     "timelinePending": "Still being completed. The full timeline follows shortly after the whistle.",
     "subOn": "On",
-    "subOff": "Off"
+    "subOff": "Off",
+    "metaDescription": "{home} v {away} in the {competition} on {date}: score, line-ups, goals and the full timeline."
   },
   "league": {
     "topFlight": "Top flight",
@@ -130,7 +131,7 @@
     "seasons": "{n} seasons",
     "mostTitles": "Most titles",
     "noHistory": "No history recorded yet.",
-    "intro": "Six competitions, followed properly. Pick one for the full table, fixtures, results, scorers and history.",
+    "intro": "Every competition we follow, with the full table, fixtures, results, scorers and history.",
     "fullTable": "Full table →",
     "th": {
       "pos": "#",
@@ -172,7 +173,8 @@
       "Quarter finals": "Quarter-finals",
       "Semi finals": "Semi-finals",
       "Final": "Final"
-    }
+    },
+    "metaDescription": "{league} {season}: live table, fixtures, results, top scorers and past winners."
   },
   "team": {
     "intro": "Every club in the tracked leagues, plus the European sides they meet in UEFA competition.",
@@ -219,7 +221,8 @@
     "right": "Right",
     "both": "Both",
     "club": "Club",
-    "others": "Other {position}s at {team}"
+    "others": "Other {position}s at {team}",
+    "metaDescription": "{name}, {position} for {team}: goals, assists, appearances and form this season."
   },
   "positions": {
     "GK": "Goalkeeper",

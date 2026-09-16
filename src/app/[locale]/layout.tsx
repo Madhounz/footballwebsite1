@@ -25,7 +25,9 @@ export async function generateMetadata({
     description: t("description"),
     applicationName: "ninety",
     openGraph: { siteName: "ninety", type: "website", locale: locale === "ar" ? "ar_EG" : "en_GB" },
+    // Pages set their own canonical through `pageMeta`; this covers the rest.
     alternates: { languages: { en: "/", ar: "/ar", "x-default": "/" } },
+    twitter: { card: "summary_large_image" },
   };
 }
 

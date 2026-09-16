@@ -1,11 +1,34 @@
 import type { MetadataRoute } from "next";
 import { getRepository } from "@/lib/data";
+import { addDays, dateOf, todayISO } from "@/lib/dates";
 import { SITE } from "@/lib/site";
+
+/** Crawlers can ask often; the list does not need to be minute-fresh. */
+export const revalidate = 3600;
+
+/**
+ * Match pages are the ones people search for — "arsenal vs chelsea" — so they
+ * belong here, not just in the internal links. The window is wide enough to
+ * cover a season's worth of interest without listing every fixture ever played.
+ */
+const MATCH_DAYS_BACK = 120;
+const MATCH_DAYS_AHEAD = 45;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE.url;
   const repo = await getRepository();
-  const [competitions, teams] = await Promise.all([repo.listCompetitions(), repo.listTeams()]);
+  const [competitions, teams, players] = await Promise.all([
+    repo.listCompetitions(),
+    repo.listTeams(),
+    repo.listPlayers(),
+  ]);
+  const today = todayISO();
+  const from = addDays(today, -MATCH_DAYS_BACK);
+  const to = addDays(today, MATCH_DAYS_AHEAD);
+  const matches = (
+    await Promise.all(competitions.map((c) => repo.getCompetitionMatches(c.id)))
+  ).flat();
+
   const paths: {
     path: string;
     changeFrequency: "hourly" | "daily" | "weekly" | "monthly";
@@ -26,6 +49,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       path: `/teams/${t.slug}`,
       changeFrequency: "daily" as const,
       priority: 0.6,
+    })),
+    ...matches
+      .filter((v) => {
+        const day = dateOf(v.match.kickoff);
+        return day >= from && day <= to;
+      })
+      .map((v) => ({
+        path: `/match/${v.match.slug}`,
+        // A finished match is settled; one still to come changes with the news.
+        changeFrequency: (v.match.status === "finished" ? "weekly" : "daily") as "weekly" | "daily",
+        priority: v.match.status === "finished" ? 0.6 : 0.7,
+      })),
+    ...players.map((p) => ({
+      path: `/players/${p.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.4,
     })),
   ];
   return paths.map((p) => ({

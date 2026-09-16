@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Tabs } from "@/components/Tabs";
 import { getRepository } from "@/lib/data";
+import { pageMeta } from "@/lib/seo";
 import { competitionName, countryName } from "@/lib/i18n/names";
 
 type Params = Promise<{ locale: string; slug: string }>;
@@ -12,7 +13,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const repo = await getRepository();
   const c = await repo.getCompetitionBySlug(slug);
   if (!c) return {};
-  return { title: `${competitionName(c, locale)} ${c.season}` };
+  const t = await getTranslations({ locale, namespace: "league" });
+  return pageMeta({
+    locale,
+    path: `/leagues/${c.slug}`,
+    title: `${competitionName(c, locale)} ${c.season}`,
+    description: t("metaDescription", { league: competitionName(c, locale), season: c.season }),
+  });
 }
 
 export default async function LeagueLayout({

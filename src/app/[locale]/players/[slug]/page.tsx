@@ -5,17 +5,32 @@ import { Link } from "@/i18n/navigation";
 import { Stat } from "@/components/Section";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
+import { pageMeta } from "@/lib/seo";
 import { ageFromDOB, formatMediumDate, type ISODate } from "@/lib/dates";
 import { teamName, teamShortName } from "@/lib/i18n/names";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const repo = await getRepository();
-  const p = await repo.getPlayerBySlug((await params).slug);
-  return p ? { title: p.name } : {};
+  const { locale, slug } = await params;
+  const p = await repo.getPlayerBySlug(slug);
+  if (!p) return {};
+  const team = await repo.getTeamById(p.teamId);
+  const t = await getTranslations({ locale, namespace: "player" });
+  const tp = await getTranslations({ locale, namespace: "positions" });
+  return pageMeta({
+    locale,
+    path: `/players/${p.slug}`,
+    title: p.name,
+    description: t("metaDescription", {
+      name: p.name,
+      position: tp(p.position),
+      team: team ? teamName(team, locale) : "",
+    }),
+  });
 }
 
 export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {

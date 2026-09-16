@@ -43,6 +43,8 @@ export interface Repository {
   getSquad(teamId: string): Promise<Player[]>;
 
   getPlayerBySlug(slug: string): Promise<Player | null>;
+  /** Every player, for the sitemap. Slug and name only — squads come from `getSquad`. */
+  listPlayers(): Promise<Pick<Player, "id" | "slug" | "name">[]>;
 
   /** All matches on a calendar day (UTC), any competition, sorted by kickoff. */
   getMatchesOnDate(date: ISODate): Promise<MatchView[]>;
