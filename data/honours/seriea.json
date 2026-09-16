@@ -3,6 +3,11 @@
   "name": "Serie A",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Inter",
+      "winnerTeamId": "inter"
+    },
+    {
       "season": "2024/25",
       "winner": "Napoli",
       "runnerUp": "Inter",
@@ -193,7 +198,7 @@
     },
     {
       "team": "Inter",
-      "count": 20,
+      "count": 21,
       "teamId": "inter"
     },
     {
@@ -207,11 +212,6 @@
       "teamId": "genoa"
     },
     {
-      "team": "Torino",
-      "count": 7,
-      "teamId": "torino"
-    },
-    {
       "team": "Bologna",
       "count": 7,
       "teamId": "bologna"
@@ -219,6 +219,11 @@
     {
       "team": "Pro Vercelli",
       "count": 7
+    },
+    {
+      "team": "Torino",
+      "count": 7,
+      "teamId": "torino"
     },
     {
       "team": "Napoli",
@@ -231,14 +236,14 @@
       "teamId": "roma"
     },
     {
-      "team": "Lazio",
-      "count": 2,
-      "teamId": "lazio"
-    },
-    {
       "team": "Fiorentina",
       "count": 2,
       "teamId": "fiorentina"
+    },
+    {
+      "team": "Lazio",
+      "count": 2,
+      "teamId": "lazio"
     }
   ]
 }

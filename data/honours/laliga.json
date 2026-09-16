@@ -3,6 +3,11 @@
   "name": "La Liga",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Barcelona",
+      "winnerTeamId": "barcelona"
+    },
+    {
       "season": "2024/25",
       "winner": "Barcelona",
       "runnerUp": "Real Madrid",
@@ -190,7 +195,7 @@
     },
     {
       "team": "Barcelona",
-      "count": 28,
+      "count": 29,
       "teamId": "barcelona"
     },
     {
@@ -218,14 +223,14 @@
       "count": 1
     },
     {
-      "team": "Sevilla",
-      "count": 1,
-      "teamId": "sevilla"
-    },
-    {
       "team": "Real Betis",
       "count": 1,
       "teamId": "real-betis"
+    },
+    {
+      "team": "Sevilla",
+      "count": 1,
+      "teamId": "sevilla"
     }
   ]
 }

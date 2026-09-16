@@ -3,6 +3,11 @@
   "name": "Bundesliga",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Bayern München",
+      "winnerTeamId": "bayern-munich"
+    },
+    {
       "season": "2024/25",
       "winner": "Bayern München",
       "runnerUp": "Bayer Leverkusen",
@@ -182,7 +187,7 @@
   "mostTitles": [
     {
       "team": "Bayern München",
-      "count": 33,
+      "count": 34,
       "teamId": "bayern-munich"
     },
     {
@@ -211,13 +216,13 @@
       "teamId": "vfb-stuttgart"
     },
     {
+      "team": "1. FC Kaiserslautern",
+      "count": 2
+    },
+    {
       "team": "1. FC Köln",
       "count": 2,
       "teamId": "fc-koln"
-    },
-    {
-      "team": "1. FC Kaiserslautern",
-      "count": 2
     },
     {
       "team": "Bayer Leverkusen",

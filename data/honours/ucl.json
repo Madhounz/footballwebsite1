@@ -3,6 +3,11 @@
   "name": "UEFA Champions League",
   "entries": [
     {
+      "season": "2025/26",
+      "winner": "Paris Saint-Germain",
+      "winnerTeamId": "psg"
+    },
+    {
       "season": "2024/25",
       "winner": "Paris Saint-Germain",
       "runnerUp": "Inter",
@@ -598,14 +603,19 @@
       "teamId": "manchester-united"
     },
     {
-      "team": "Juventus",
-      "count": 2,
-      "teamId": "juventus"
-    },
-    {
       "team": "Benfica",
       "count": 2,
       "teamId": "benfica"
+    },
+    {
+      "team": "Chelsea",
+      "count": 2,
+      "teamId": "chelsea"
+    },
+    {
+      "team": "Juventus",
+      "count": 2,
+      "teamId": "juventus"
     },
     {
       "team": "Nottingham Forest",
@@ -613,14 +623,14 @@
       "teamId": "nottingham-forest"
     },
     {
+      "team": "Paris Saint-Germain",
+      "teamId": "psg",
+      "count": 2
+    },
+    {
       "team": "Porto",
       "count": 2,
       "teamId": "porto"
-    },
-    {
-      "team": "Chelsea",
-      "count": 2,
-      "teamId": "chelsea"
     }
   ],
   "note": "Includes the European Cup (1955–1992)."
