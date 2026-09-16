@@ -6,17 +6,19 @@ import { AutoRefresh } from "@/components/AutoRefresh";
 import { EventTimeline } from "@/components/EventTimeline";
 import { LineupPitch } from "@/components/LineupPitch";
 import { LocalTime } from "@/components/LocalTime";
+import { MatchBuildUp } from "@/components/MatchBuildUp";
 import { MatchRow } from "@/components/MatchRow";
 import { Empty, Section } from "@/components/Section";
 import { Score } from "@/components/Score";
 import { StageLabel } from "@/components/StageLabel";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
+import { buildMatchContext } from "@/lib/data/match-context";
 import { pageMeta } from "@/lib/seo";
 import { livePhaseLabel } from "@/lib/format";
 import { dateOf, formatMediumDate } from "@/lib/dates";
 import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
-import type { MatchView, Team } from "@/lib/types";
+import type { Team } from "@/lib/types";
 
 type Params = Promise<{ locale: string; id: string }>;
 
@@ -51,27 +53,22 @@ export default async function MatchPage({ params }: { params: Params }) {
   const { match: m, home, away, competition } = view;
   const live = m.status === "live";
 
-  const [homeMatches, awayMatches] = await Promise.all([
+  const [homeMatches, awayMatches, standings] = await Promise.all([
     repo.getTeamMatches(home.id),
     repo.getTeamMatches(away.id),
+    repo.getStandings(competition.id).catch(() => null),
   ]);
-  const h2h = homeMatches
-    .filter(
-      (v) =>
-        v.match.status === "finished" &&
-        (v.home.id === away.id || v.away.id === away.id) &&
-        v.match.id !== m.id,
-    )
-    .slice(-5)
-    .reverse();
-  const homeForm = homeMatches
-    .filter((v) => v.match.status === "finished" && v.match.id !== m.id)
-    .slice(-5)
-    .reverse();
-  const awayForm = awayMatches
-    .filter((v) => v.match.status === "finished" && v.match.id !== m.id)
-    .slice(-5)
-    .reverse();
+  // Everything a match page can say without a provider's match detail. The
+  // fixture is left out of its own build-up: a result cannot be part of the
+  // form a club took into it.
+  const context = buildMatchContext({
+    homeId: home.id,
+    awayId: away.id,
+    homeMatches,
+    awayMatches,
+    rows: standings?.rows ?? [],
+    excludeMatchId: m.id,
+  });
   const goals = events.filter(
     (e) => e.type === "goal" || e.type === "penalty" || e.type === "own_goal",
   );
@@ -191,6 +188,10 @@ export default async function MatchPage({ params }: { params: Params }) {
         </div>
       </section>
 
+      <Section title={t("buildUp")}>
+        <MatchBuildUp context={context} home={home} away={away} locale={locale} />
+      </Section>
+
       <div className="grid gap-8 lg:grid-cols-2">
         <Section title={t("lineups")}>
           {lineups ? (
@@ -223,32 +224,10 @@ export default async function MatchPage({ params }: { params: Params }) {
               />
             )}
           </Section>
-          <Section title={t("form")}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FormList
-                title={teamShortName(home, locale)}
-                views={homeForm}
-                teamId={home.id}
-                locale={locale}
-                empty={t("noResults")}
-                vs={t("vs")}
-                at={t("at")}
-              />
-              <FormList
-                title={teamShortName(away, locale)}
-                views={awayForm}
-                teamId={away.id}
-                locale={locale}
-                empty={t("noResults")}
-                vs={t("vs")}
-                at={t("at")}
-              />
-            </div>
-          </Section>
           <Section title={t("h2h")}>
-            {h2h.length ? (
+            {context.h2h.recent.length ? (
               <div className="card divide-y divide-line overflow-hidden">
-                {h2h.map((v) => (
+                {context.h2h.recent.map((v) => (
                   <MatchRow key={v.match.id} view={v} showRound />
                 ))}
               </div>
@@ -284,59 +263,5 @@ function TeamHeader({
         <span className="hidden text-xs text-muted sm:block">{team.city}</span>
       </span>
     </Link>
-  );
-}
-
-function FormList({
-  title,
-  views,
-  teamId,
-  locale,
-  empty,
-  vs,
-  at,
-}: {
-  title: string;
-  views: MatchView[];
-  teamId: string;
-  locale: string;
-  empty: string;
-  vs: string;
-  at: string;
-}) {
-  return (
-    <div className="card overflow-hidden">
-      <div className="border-b border-line px-3 py-2 text-xs font-semibold">{title}</div>
-      <ul className="divide-y divide-line text-xs">
-        {views.length === 0 && <li className="px-3 py-3 text-muted">{empty}</li>}
-        {views.map((v) => {
-          const isHome = v.home.id === teamId;
-          const opp = isHome ? v.away : v.home;
-          const gf = isHome ? v.match.score!.home : v.match.score!.away;
-          const ga = isHome ? v.match.score!.away : v.match.score!.home;
-          const r = gf > ga ? "W" : gf === ga ? "D" : "L";
-          return (
-            <li key={v.match.id}>
-              <Link
-                href={`/match/${v.match.slug}`}
-                className="row-hover tnum flex items-center gap-2 px-3 py-1.5"
-              >
-                <span
-                  className={`inline-flex h-4 w-4 items-center justify-center rounded-[4px] text-[9px] font-semibold text-white ${r === "W" ? "bg-win" : r === "D" ? "bg-draw" : "bg-loss"}`}
-                >
-                  {r}
-                </span>
-                <span className="flex-1 truncate">
-                  {isHome ? vs : at} {teamShortName(opp, locale)}
-                </span>
-                <span className="font-medium" dir="ltr">
-                  {gf}–{ga}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
   );
 }

@@ -188,6 +188,41 @@ html[dir="rtl"] .uppercase {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Match page build-up
+   A bar's width is set in the style attribute and the animation only travels
+   to it, so a browser that refuses to animate still draws the right bar. That
+   is also why the reduced-motion rule below can simply switch the animation
+   off: there is nothing for it to undo.
+--------------------------------------------------------------------------- */
+
+@keyframes tape-grow {
+  from {
+    inline-size: 0;
+  }
+}
+.tape-fill {
+  inline-size: var(--w, 0%);
+  animation: tape-grow 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.rise {
+  animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tape-fill,
+  .rise {
+    animation: none;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }

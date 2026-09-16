@@ -49,6 +49,30 @@ Team ids are stable kebab-case slugs (`manchester-united`) defined in `data/demo
 
 Vitest covers the pure parts: reconciliation, name normalisation, standings maths, date helpers, and the demo repository's consistency (live score equals revealed goals, future matches hide results, tables are complete). Playwright is used ad hoc for screenshots; there is no browser test suite yet.
 
+## What a match page says on its own
+
+Line-ups and timelines come from a metered plan of a hundred requests a day
+across five competitions. That cannot reach every match even when it is
+healthy, and when the key was suspended it reached none — which left a page
+that was two crests and a kick-off time.
+
+So the page is built the other way round. `src/lib/data/match-context.ts`
+derives the build-up from scorelines, which we hold for every match of the
+season: each club's league row, their last five with a link to each result, the
+run they arrive on, the side of the season they are playing here, and the
+head-to-head. It costs no request, it is the same before kick-off, during and
+years afterwards, and it is computed rather than stored, like the tables. The
+fixture is left out of its own build-up: a result cannot be part of the form a
+club took into it.
+
+Line-ups and the timeline then sit on top of that rather than being the whole
+of it. A match with no detail is a page that still tells you something.
+
+Bars are keyed by club colour, which fails where it matters most — Liverpool
+against Manchester United is two reds, and a chart in one colour says nothing.
+`barColors` measures the distance between the two and moves the away side to
+its second colour, or to a neutral, keeping the home club on its own.
+
 ## Installable, and readable offline
 
 `public/sw.js` makes the site installable and keeps the last pages someone
