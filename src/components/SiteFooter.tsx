@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { DataSourceInfo } from "@/lib/types";
 import { SITE } from "@/lib/site";
+import { InstallButton } from "./InstallButton";
 import { Mark } from "./Logo";
 
 export async function SiteFooter({ info }: { info: DataSourceInfo }) {
@@ -30,8 +31,11 @@ export async function SiteFooter({ info }: { info: DataSourceInfo }) {
           </Link>
         </div>
         <div className="space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wide text-faint">
-            {t("shortcuts")}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+              {t("shortcuts")}
+            </span>
+            <InstallButton />
           </div>
           <ul className="space-y-1">
             <li>

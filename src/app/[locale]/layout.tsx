@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import { getRepository } from "@/lib/data";
 import { isRtl, routing } from "@/i18n/routing";
 import { SITE } from "@/lib/site";
@@ -87,6 +88,7 @@ export default async function LocaleLayout({
           />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-6 sm:px-6">{children}</main>
           <SiteFooter info={info} />
+          <ServiceWorker />
         </NextIntlClientProvider>
       </body>
     </html>

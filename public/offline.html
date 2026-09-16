@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline · ninety</title>
+    <!--
+      Shown only when a page was asked for and neither the network nor the cache
+      could answer. It is deliberately one file with no dependencies: anything it
+      needed to fetch would fail for the same reason it is being shown.
+    -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f6f3;
+        --text: #121211;
+        --muted: #6d6d67;
+        --line: #e4e4dd;
+        --accent: #0e9f6e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f0f0e;
+          --text: #f2f2ef;
+          --muted: #9a9a93;
+          --line: #2a2a27;
+          --accent: #34d399;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          ui-sans-serif,
+          -apple-system,
+          "Segoe UI",
+          Inter,
+          Roboto,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        text-align: center;
+      }
+      main {
+        max-width: 26rem;
+      }
+      svg {
+        color: var(--text);
+      }
+      h1 {
+        margin: 24px 0 8px;
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0 0 4px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      p[dir="rtl"] {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+      button {
+        margin-top: 24px;
+        padding: 10px 20px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg
+        width="56"
+        height="56"
+        viewBox="0 0 64 64"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="5"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <line x1="32" y1="6" x2="32" y2="58" />
+        <circle cx="32" cy="32" r="18" />
+        <circle cx="32" cy="32" r="3.5" fill="currentColor" stroke="none" />
+      </svg>
+      <h1>No connection</h1>
+      <p>Pages you have already opened are still here. This one needs the network.</p>
+      <p dir="rtl" lang="ar">الصفحات التي فتحتها من قبل ما زالت متاحة. هذه الصفحة تحتاج اتصالًا.</p>
+      <button type="button" onclick="location.reload()">Try again · إعادة المحاولة</button>
+    </main>
+  </body>
+</html>

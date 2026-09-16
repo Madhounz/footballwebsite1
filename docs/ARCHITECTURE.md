@@ -48,3 +48,17 @@ Team ids are stable kebab-case slugs (`manchester-united`) defined in `data/demo
 ## Testing
 
 Vitest covers the pure parts: reconciliation, name normalisation, standings maths, date helpers, and the demo repository's consistency (live score equals revealed goals, future matches hide results, tables are complete). Playwright is used ad hoc for screenshots; there is no browser test suite yet.
+
+## Installable, and readable offline
+
+`public/sw.js` makes the site installable and keeps the last pages someone
+opened. Its one rule is that a score is never served stale: pages go to the
+network first and the cached copy answers only when the network has already
+failed, so the offline copy is a fallback rather than a source. Build output is
+content-hashed and cache-first; `/api/sync` is never intercepted; RSC payloads
+are never cached, because one of those served beside fresh HTML is two versions
+of the same page.
+
+A page nobody has opened falls back to `public/offline.html` — one file, no
+dependencies, both languages, since anything it had to fetch would fail for the
+same reason it is being shown.
