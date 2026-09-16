@@ -63,7 +63,7 @@ A page nobody has opened falls back to `public/offline.html` — one file, no
 dependencies, both languages, since anything it had to fetch would fail for the
 same reason it is being shown.
 
-`vercel.json` states the two cache headers this depends on. `/sw.js` must
+`next.config.ts` states the two cache headers this depends on. `/sw.js` must
 revalidate every time: a worker a CDN is holding on to cannot be replaced by
 deploying a new one, which is the only unrecoverable caching mistake here. The
 icons are not content-hashed, so they get a week rather than a year — long
