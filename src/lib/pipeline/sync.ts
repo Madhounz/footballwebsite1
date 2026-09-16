@@ -26,6 +26,12 @@ export interface SyncOptions {
    * minute-by-minute refresh needs.
    */
   mode?: "full" | "live";
+  /**
+   * Competitions whose scorer chart to refresh this run. The live path passes
+   * one at a time so the chart costs a single request every so often rather
+   * than one per competition per minute.
+   */
+  scorersFor?: Competition[];
   log?: (line: string) => void;
 }
 
@@ -36,6 +42,8 @@ export interface SyncResult {
   conflicts: number;
   aiResolved: number;
   unresolved: Conflict[];
+  /** Scorer chart rows written, by competition. */
+  scorers: Record<string, number>;
   /** "competition/provider" pairs that were skipped because the provider refused them. */
   skipped: string[];
   /** Requests each provider spent, for budget reporting. */
@@ -63,6 +71,7 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
     conflicts: 0,
     aiResolved: 0,
     unresolved: [],
+    scorers: {},
     skipped: [],
     providerRequests: {},
   };
@@ -170,6 +179,28 @@ export async function runSync(opts: SyncOptions): Promise<SyncResult> {
       result.written += written;
       log(`${competition.shortName}: wrote ${written} matches`);
       await opts.store.recordConflicts(runId, allConflicts, resolutions);
+    }
+
+    // The scorer chart comes from the primary source whole, rather than being
+    // counted from the events we happen to hold. One request per competition,
+    // and only for the competitions the caller asked about this run.
+    for (const competition of opts.scorersFor ?? []) {
+      const provider = opts.providers.find((p) => p.fetchScorers && p.supports(competition.id));
+      if (!provider?.fetchScorers) continue;
+      try {
+        const rows = await provider.fetchScorers(competition);
+        if (rows.length === 0) {
+          log(`${competition.shortName}: ${provider.id} returned no scorers; chart left as it is`);
+          continue;
+        }
+        const n = await opts.store.upsertScorers(competition, provider.id, rows);
+        result.scorers[competition.id] = n;
+        log(`${competition.shortName}: scorer chart from ${provider.id}, ${n} players`);
+      } catch (e) {
+        log(
+          `${competition.shortName}: scorer chart failed: ${String(e instanceof Error ? e.message : e)}`,
+        );
+      }
     }
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);

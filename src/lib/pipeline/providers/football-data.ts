@@ -2,9 +2,11 @@ import type { Competition, MatchStatus, Position } from "../../types";
 import { COMPETITION_CODES, resolveTeamId } from "../normalize";
 import type {
   FetchWindow,
+  PlayerResolver,
   Provider,
   ProviderMatch,
   ProviderRecord,
+  ProviderScorer,
   ProviderSquadPlayer,
   ProviderTeam,
 } from "../types";
@@ -73,6 +75,18 @@ interface FDTeam {
   }[];
 }
 
+interface FDScorer {
+  player: { id: number; name: string; position: string | null };
+  team: { id: number; name: string; shortName: string | null };
+  playedMatches: number | null;
+  goals: number | null;
+  assists: number | null;
+  penalties: number | null;
+}
+
+/** Deep enough to be a chart, short enough to stay one response. */
+const SCORER_LIMIT = 30;
+
 const STATUS: Record<FDMatch["status"], MatchStatus> = {
   SCHEDULED: "scheduled",
   TIMED: "scheduled",
@@ -97,6 +111,11 @@ export interface FootballDataOptions {
   log?: (line: string) => void;
   /** Disable the rate-limit pacing (tests). */
   noThrottle?: boolean;
+  /**
+   * Maps a provider player onto ours, creating one when nobody matches. Only
+   * the scorer chart needs it; without it that chart is simply not fetched.
+   */
+  resolvePlayer?: PlayerResolver;
   /**
    * Milliseconds to wait between requests. The free tier allows 10 a minute;
    * the default paces a season-wide run, the live refresh sets it lower
@@ -270,6 +289,44 @@ export class FootballDataProvider implements Provider {
    * match nothing known get an id minted from the name and are flagged `isNew`;
    * they are appended to `knownTeams` so their matches resolve in the same run.
    */
+  /**
+   * The competition's scorer chart: one request, the whole season, straight
+   * from the primary source. Players are resolved through the store so a chart
+   * row links to a real player page.
+   */
+  async fetchScorers(competition: Competition): Promise<ProviderScorer[]> {
+    const code = COMPETITION_CODES[competition.id]?.footballData;
+    const resolvePlayer = this.opts.resolvePlayer;
+    if (!code || !resolvePlayer) return [];
+    const data = await this.get<{ scorers: FDScorer[] }>(
+      `/competitions/${code}/scorers?limit=${SCORER_LIMIT}`,
+    );
+    const out: ProviderScorer[] = [];
+    for (const row of data.scorers ?? []) {
+      const teamId =
+        resolveTeamId(row.team.name, this.opts.knownTeams) ??
+        (row.team.shortName ? resolveTeamId(row.team.shortName, this.opts.knownTeams) : null);
+      if (!teamId) {
+        this.opts.onUnknownTeam?.(row.team.name, String(row.team.id));
+        continue;
+      }
+      const playerId = await resolvePlayer(teamId, {
+        externalId: String(row.player.id),
+        name: row.player.name,
+        position: mapPosition(row.player.position),
+      });
+      out.push({
+        playerId,
+        teamId,
+        goals: row.goals ?? 0,
+        assists: row.assists ?? 0,
+        penalties: row.penalties ?? 0,
+        appearances: row.playedMatches ?? 0,
+      });
+    }
+    return out;
+  }
+
   async fetchTeams(competition: Competition): Promise<ProviderRecord<ProviderTeam>[]> {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     if (!code) return [];

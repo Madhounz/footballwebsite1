@@ -10,6 +10,7 @@ import type {
   Conflict,
   MatchNeedingDetail,
   PlayerResolver,
+  ProviderScorer,
   ProviderTeam,
   Resolution,
 } from "./types";
@@ -154,7 +155,13 @@ export class PrismaSyncStore implements SyncStore {
    * player nobody recognises is created (id "af-<externalId>") so events and
    * line-ups can reference them; the alias is remembered for next time.
    */
-  playerResolver(): PlayerResolver {
+  /**
+   * Player identity for a given provider. The alias table is keyed by provider,
+   * so two providers' ids for the same person both land on our player; the id
+   * we mint for someone nobody recognises carries the provider's initials.
+   */
+  playerResolver(provider = "api-football"): PlayerResolver {
+    const mintPrefix = provider === "football-data" ? "fd" : "af";
     const squads = new Map<string, SquadEntry[]>();
     const aliases = new Map<string, string>();
     const loadSquad = async (teamId: string) => {
@@ -181,7 +188,7 @@ export class PrismaSyncStore implements SyncStore {
       const stored = await this.db.entityAlias.findUnique({
         where: {
           provider_entityType_externalId: {
-            provider: "api-football",
+            provider,
             entityType: "player",
             externalId: ref.externalId,
           },
@@ -194,7 +201,7 @@ export class PrismaSyncStore implements SyncStore {
       const squad = await loadSquad(teamId);
       let id = matchPlayer(ref, squad);
       if (!id) {
-        id = `af-${ref.externalId}`;
+        id = `${mintPrefix}-${ref.externalId}`;
         const parts = ref.name.trim().split(/\s+/);
         const base = slugify(ref.name) || id;
         const clash = await this.db.player.findUnique({
@@ -224,18 +231,18 @@ export class PrismaSyncStore implements SyncStore {
       await this.db.entityAlias.upsert({
         where: {
           provider_entityType_externalId: {
-            provider: "api-football",
+            provider,
             entityType: "player",
             externalId: ref.externalId,
           },
         },
         create: {
-          provider: "api-football",
+          provider,
           entityType: "player",
           externalId: ref.externalId,
           externalName: ref.name,
           entityId: id,
-          source: id.startsWith("af-") ? "created" : "matched",
+          source: id.startsWith(`${mintPrefix}-`) ? "created" : "matched",
         },
         update: { entityId: id, externalName: ref.name },
       });
@@ -410,6 +417,52 @@ export class PrismaSyncStore implements SyncStore {
         });
       }
     }
+  }
+
+  /**
+   * The chart is the provider's, wholesale: a player who has dropped out of it
+   * has to drop out of ours too, so the season's rows are replaced rather than
+   * merged. Rows whose player or team we failed to resolve never get here.
+   */
+  async upsertScorers(competition: Competition, provider: string, rows: ProviderScorer[]) {
+    const ranked = [...rows]
+      .sort((a, b) => b.goals - a.goals || b.assists - a.assists)
+      .map((r, i) => ({
+        competitionId: competition.id,
+        season: competition.season,
+        rank: i + 1,
+        playerId: r.playerId,
+        teamId: r.teamId,
+        goals: r.goals,
+        assists: r.assists,
+        penalties: r.penalties,
+        appearances: r.appearances,
+        provider,
+        updatedAt: new Date(),
+      }));
+    await this.db.$transaction([
+      this.db.seasonScorer.deleteMany({
+        where: { competitionId: competition.id, season: competition.season },
+      }),
+      this.db.seasonScorer.createMany({ data: ranked }),
+    ]);
+    return ranked.length;
+  }
+
+  async stalestScorerChart(competitions: Competition[], olderThanMin: number, now = new Date()) {
+    if (competitions.length === 0) return null;
+    const rows = await this.db.seasonScorer.groupBy({
+      by: ["competitionId"],
+      where: { competitionId: { in: competitions.map((c) => c.id) } },
+      _max: { updatedAt: true },
+    });
+    const freshestPer = new Map(rows.map((r) => [r.competitionId, r._max.updatedAt]));
+    // Never fetched beats merely old; otherwise the oldest goes first.
+    const candidates = competitions
+      .map((c) => ({ competition: c, at: freshestPer.get(c.id) ?? null }))
+      .filter((x) => x.at === null || now.getTime() - x.at.getTime() >= olderThanMin * 60_000)
+      .sort((a, b) => (a.at?.getTime() ?? 0) - (b.at?.getTime() ?? 0));
+    return candidates[0]?.competition ?? null;
   }
 
   async recordConflicts(runId: string, conflicts: Conflict[], resolutions: (Resolution | null)[]) {

@@ -174,6 +174,14 @@ The 15-minute cron keeps results fresh; the 04:17 UTC daily run re-seeds squads.
 ### How the two free tiers are combined
 
 - **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
+- **Scorer charts** come from football-data's own chart for the competition,
+  one request at a time: the live refresh refreshes whichever competition was
+  left longest, at most every 30 minutes, so five competitions cost two
+  requests an hour. Counting goals from our own events cannot be complete on a
+  free plan — we hold events only for the matches we fetched detail for — and a
+  chart that is quietly short is worse than one with a source. `getTopScorers`
+  returns the stored chart when there is one and our own count otherwise, and
+  the stats page names which of the two the reader is looking at.
 - **Past winners** live in `data/honours/*.json` — curated, so a reviewer can
   read the diff when a season is added — but the season that just finished is
   pulled rather than typed: `pnpm honours` reads each competition's winner from

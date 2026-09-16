@@ -194,6 +194,20 @@ export interface Standings {
   rows: StandingRow[];
 }
 
+/**
+ * A competition's scorer chart and where it came from. A free provider plan
+ * cannot give us every match's goals, so counting them from our own events
+ * publishes a chart that is quietly short; when the primary source publishes
+ * its own chart we show that instead, and say which one the reader is looking
+ * at rather than leaving them to guess.
+ */
+export interface ScorerChart {
+  rows: ScorerRow[];
+  source: "provider" | "matches";
+  /** When the provider's chart was last fetched. */
+  updatedAt?: string;
+}
+
 export interface ScorerRow {
   playerId: string;
   teamId: string;

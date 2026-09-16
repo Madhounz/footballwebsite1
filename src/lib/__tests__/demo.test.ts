@@ -90,8 +90,9 @@ describe("DemoRepository", () => {
       }
     }
     const scorers = await repo.getTopScorers("epl", 5);
-    expect(scorers.length).toBe(5);
-    expect(scorers[0].goals).toBeGreaterThanOrEqual(scorers[1].goals);
+    expect(scorers.source).toBe("matches");
+    expect(scorers.rows.length).toBe(5);
+    expect(scorers.rows[0].goals).toBeGreaterThanOrEqual(scorers.rows[1].goals);
   });
 
   it("has honours for every competition", async () => {

@@ -175,7 +175,9 @@
       "Semi finals": "Semi-finals",
       "Final": "Final"
     },
-    "metaDescription": "{league} {season}: live table, fixtures, results, top scorers and past winners."
+    "metaDescription": "{league} {season}: live table, fixtures, results, top scorers and past winners.",
+    "scorersProvider": "The competition's own chart, from our data provider. Last checked {date}.",
+    "scorersCounted": "Counted from the matches we have followed, so it can run short of the official chart."
   },
   "team": {
     "intro": "Every club in the tracked leagues, plus the European sides they meet in UEFA competition.",

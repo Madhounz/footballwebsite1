@@ -10,6 +10,7 @@ import type {
   MatchView,
   Player,
   Position,
+  ScorerChart,
   ScorerRow,
   SearchItem,
   Standings,
@@ -219,7 +220,41 @@ export class PrismaRepository implements Repository {
       matches.map(toMatch),
     );
   }
-  async getTopScorers(competitionId: string, limit = 20): Promise<ScorerRow[]> {
+  /**
+   * The primary source's chart when we have it, our own count when we do not.
+   * Ours can only see the matches we fetched events for, which on a free plan
+   * is never all of them, so the provider's chart wins where it exists.
+   */
+  async getTopScorers(competitionId: string, limit = 20): Promise<ScorerChart> {
+    const competition = await this.db.competition.findUnique({ where: { id: competitionId } });
+    if (competition) {
+      const published = await this.db.seasonScorer.findMany({
+        where: { competitionId, season: competition.season },
+        orderBy: { rank: "asc" },
+        take: limit,
+      });
+      if (published.length) {
+        return {
+          rows: published.map((r) => ({
+            playerId: r.playerId,
+            teamId: r.teamId,
+            goals: r.goals,
+            assists: r.assists,
+            penalties: r.penalties,
+            appearances: r.appearances,
+          })),
+          source: "provider",
+          updatedAt: published
+            .reduce((a, b) => (a.updatedAt > b.updatedAt ? a : b))
+            .updatedAt.toISOString(),
+        };
+      }
+    }
+    return { rows: await this.countScorers(competitionId, limit), source: "matches" };
+  }
+
+  /** Goals as our own stored events tell them, which is only ever a subset. */
+  private async countScorers(competitionId: string, limit: number): Promise<ScorerRow[]> {
     const events = await this.db.matchEvent.findMany({
       where: {
         match: { competitionId, status: { in: ["live", "finished"] } },

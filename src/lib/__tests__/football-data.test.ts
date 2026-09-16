@@ -35,6 +35,84 @@ const known = [
   { id: "chelsea", name: "Chelsea", shortName: "Chelsea" },
 ];
 
+describe("FootballDataProvider scorers", () => {
+  const chart = {
+    scorers: [
+      {
+        player: { id: 44, name: "Bukayo Saka", position: "Offence" },
+        team: { id: 57, name: "Arsenal FC", shortName: "Arsenal" },
+        playedMatches: 6,
+        goals: 7,
+        assists: 3,
+        penalties: 1,
+      },
+      {
+        player: { id: 91, name: "Cole Palmer", position: "Midfield" },
+        team: { id: 61, name: "Chelsea FC", shortName: "Chelsea" },
+        playedMatches: 6,
+        goals: 5,
+        assists: null,
+        penalties: null,
+      },
+      {
+        player: { id: 12, name: "Someone Else", position: null },
+        team: { id: 99, name: "Elsewhere United", shortName: null },
+        playedMatches: 4,
+        goals: 4,
+        assists: 1,
+        penalties: 0,
+      },
+    ],
+  };
+
+  it("reads the chart the competition publishes, resolving players and teams", async () => {
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      noThrottle: true,
+      resolvePlayer: async (teamId, ref) => `${teamId}:${ref.externalId}`,
+      fetchImpl: fake({ "/competitions/PL/scorers": chart }),
+    });
+    const rows = await p.fetchScorers(comp);
+    // A club we do not have is left out rather than guessed at.
+    expect(rows).toEqual([
+      {
+        playerId: "arsenal:44",
+        teamId: "arsenal",
+        goals: 7,
+        assists: 3,
+        penalties: 1,
+        appearances: 6,
+      },
+      {
+        playerId: "chelsea:91",
+        teamId: "chelsea",
+        goals: 5,
+        assists: 0,
+        penalties: 0,
+        appearances: 6,
+      },
+    ]);
+  });
+
+  it("fetches nothing without a way to resolve players", async () => {
+    const calls: string[] = [];
+    const p = new FootballDataProvider({
+      apiKey: "k",
+      season: 2026,
+      knownTeams: [...known],
+      noThrottle: true,
+      fetchImpl: (async (url: string) => {
+        calls.push(String(url));
+        return new Response("{}", { status: 200 });
+      }) as unknown as typeof fetch,
+    });
+    expect(await p.fetchScorers(comp)).toEqual([]);
+    expect(calls).toEqual([]);
+  });
+});
+
 describe("FootballDataProvider", () => {
   it("maps a season's matches into our model and filters by window", async () => {
     const calls: string[] = [];

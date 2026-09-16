@@ -12,6 +12,7 @@ import type {
   MatchView,
   Player,
   Position,
+  ScorerChart,
   ScorerRow,
   SearchItem,
   Standings,
@@ -328,7 +329,8 @@ export class DemoRepository implements Repository {
       this.now().toISOString(),
     );
   }
-  async getTopScorers(competitionId: string, limit = 20): Promise<ScorerRow[]> {
+  /** The demo season is complete in itself, so counting its goals is the whole truth. */
+  async getTopScorers(competitionId: string, limit = 20): Promise<ScorerChart> {
     const now = this.now();
     const played = (this.shifted().byCompetition.get(competitionId) ?? []).filter(
       (m) => clockFor(m.kickoff, now).status !== "scheduled" && m.result,
@@ -344,7 +346,7 @@ export class DemoRepository implements Repository {
       for (const e of m.events ?? [])
         if (e[3] === "substitution" && e[5]) apps.set(e[5], (apps.get(e[5]) ?? 0) + 1);
     }
-    return computeScorers(events, apps, limit);
+    return { rows: computeScorers(events, apps, limit), source: "matches" };
   }
   async getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null> {
     const p = this.playersById.get(playerId);
@@ -359,7 +361,7 @@ export class DemoRepository implements Repository {
       appearances: 0,
     };
     for (const compId of team?.competitionIds ?? []) {
-      const rows = await this.getTopScorers(compId, 10_000);
+      const { rows } = await this.getTopScorers(compId, 10_000);
       const r = rows.find((x) => x.playerId === playerId);
       if (r) {
         total.goals += r.goals;

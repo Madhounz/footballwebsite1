@@ -37,6 +37,20 @@ export type ProviderMatch = Omit<Match, "season" | "minute" | "phase" | "slug"> 
   eventsFinal?: boolean;
 };
 
+/**
+ * One row of a competition's scorer chart as a provider publishes it. Goals are
+ * the provider's own count for the season, not a tally of events we hold.
+ */
+export interface ProviderScorer {
+  /** Our player id, resolved (and created when new) through the store. */
+  playerId: string;
+  teamId: string;
+  goals: number;
+  assists: number;
+  penalties: number;
+  appearances: number;
+}
+
 /** A match the store knows about that may need detail from a provider. */
 export interface MatchNeedingDetail {
   id: string;
@@ -141,6 +155,11 @@ export interface Provider {
     competitions: Competition[],
     window: FetchWindow,
   ): Promise<ProviderRecord<ProviderMatch>[]>;
+  /**
+   * The competition's scorer chart, when the provider publishes one. Optional:
+   * a provider that only knows matches does not implement it.
+   */
+  fetchScorers?(competition: Competition): Promise<ProviderScorer[]>;
   fetchTeams(competition: Competition): Promise<ProviderRecord<ProviderTeam>[]>;
   fetchSquad(teamExternalId: string): Promise<ProviderRecord<ProviderSquadPlayer>[]>;
 }

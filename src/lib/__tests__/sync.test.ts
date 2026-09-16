@@ -158,3 +158,87 @@ describe("runSync in live mode", () => {
     expect(result.written).toBe(1);
   });
 });
+
+describe("runSync scorer charts", () => {
+  const chart = [
+    { playerId: "p1", teamId: "a", goals: 7, assists: 2, penalties: 1, appearances: 6 },
+  ];
+
+  it("asks only for the competitions it was given, and stores what comes back", async () => {
+    const asked: string[] = [];
+    const written: { competition: string; provider: string; rows: number }[] = [];
+    const provider: Provider = {
+      ...fakeProvider(),
+      async fetchScorers(c: Competition) {
+        asked.push(c.id);
+        return chart;
+      },
+    };
+    const store = new DryRunStore(() => {});
+    store.upsertScorers = async (c, p, rows) => {
+      written.push({ competition: c.id, provider: p, rows: rows.length });
+      return rows.length;
+    };
+    const result = await runSync({
+      competitions: [comp("epl"), comp("laliga")],
+      providers: [provider],
+      window: { fromDate: "2026-07-01", toDate: "2027-06-30" },
+      store,
+      scorersFor: [comp("laliga")],
+    });
+    expect(asked).toEqual(["laliga"]);
+    expect(written).toEqual([{ competition: "laliga", provider: "fake", rows: 1 }]);
+    expect(result.scorers).toEqual({ laliga: 1 });
+  });
+
+  it("keeps the chart it has when the provider fails, and finishes the run", async () => {
+    const lines: string[] = [];
+    const provider: Provider = {
+      ...fakeProvider(),
+      async fetchScorers() {
+        throw new Error("503 from the provider");
+      },
+    };
+    const store = new DryRunStore(() => {});
+    let wrote = false;
+    store.upsertScorers = async (_c, _p, rows) => {
+      wrote = true;
+      return rows.length;
+    };
+    const result = await runSync({
+      competitions: [comp("epl")],
+      providers: [provider],
+      window: { fromDate: "2026-07-01", toDate: "2027-06-30" },
+      store,
+      scorersFor: [comp("epl")],
+      log: (l) => lines.push(l),
+    });
+    expect(wrote).toBe(false);
+    expect(result.scorers).toEqual({});
+    expect(result.written).toBe(1);
+    expect(lines.some((l) => l.includes("scorer chart failed"))).toBe(true);
+  });
+
+  it("leaves the stored chart alone when the provider returns an empty one", async () => {
+    const provider: Provider = {
+      ...fakeProvider(),
+      async fetchScorers() {
+        return [];
+      },
+    };
+    const store = new DryRunStore(() => {});
+    let wrote = false;
+    store.upsertScorers = async (_c, _p, rows) => {
+      wrote = true;
+      return rows.length;
+    };
+    await runSync({
+      competitions: [comp("epl")],
+      providers: [provider],
+      window: { fromDate: "2026-07-01", toDate: "2027-06-30" },
+      store,
+      scorersFor: [comp("epl")],
+    });
+    expect(wrote).toBe(false);
+  });
+});

@@ -1,6 +1,13 @@
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
-import type { Conflict, DetailStore, PlayerResolver, ProviderTeam, Resolution } from "./types";
+import type {
+  Conflict,
+  DetailStore,
+  PlayerResolver,
+  ProviderScorer,
+  ProviderTeam,
+  Resolution,
+} from "./types";
 
 /** Where reconciled data lands. Prisma in production, a printer for --dry-run. */
 export interface SyncStore extends DetailStore {
@@ -15,14 +22,29 @@ export interface SyncStore extends DetailStore {
   reset(): Promise<void>;
   /** Whether any known match kicks off within [now - afterMin, now + beforeMin]. Gates paid detail fetches. */
   hasMatchesAround(now: Date, beforeMin: number, afterMin: number): Promise<boolean>;
-  /** Player identity for providers that name players inside matches. */
-  playerResolver(): PlayerResolver;
+  /** Player identity for providers that name players, per provider. */
+  playerResolver(provider?: string): PlayerResolver;
   /** Upsert a competition, the teams taking part this season and their squads. */
   seed(
     competition: Competition,
     teams: ProviderTeam[],
   ): Promise<{ teams: number; players: number }>;
   upsertMatches(competition: Competition, matches: ReconciledMatch[]): Promise<number>;
+  /** Replace a competition's scorer chart for the season with the provider's. */
+  upsertScorers(
+    competition: Competition,
+    provider: string,
+    rows: ProviderScorer[],
+  ): Promise<number>;
+  /**
+   * The competition whose scorer chart was refreshed longest ago, or one that
+   * has never been fetched. Null when they are all fresher than `olderThanMin`.
+   */
+  stalestScorerChart(
+    competitions: Competition[],
+    olderThanMin: number,
+    now?: Date,
+  ): Promise<Competition | null>;
   recordConflicts(
     runId: string,
     conflicts: Conflict[],
@@ -97,6 +119,15 @@ export class DryRunStore implements SyncStore {
       );
     }
     return matches.length;
+  }
+  async upsertScorers(competition: Competition, provider: string, rows: ProviderScorer[]) {
+    this.log(
+      `[dry-run] ${competition.shortName} scorer chart from ${provider}: ${rows.length} players, top ${rows[0]?.goals ?? 0} goals`,
+    );
+    return rows.length;
+  }
+  async stalestScorerChart() {
+    return null;
   }
   async recordConflicts(_runId: string, conflicts: Conflict[], resolutions: (Resolution | null)[]) {
     conflicts.forEach((c, i) => {

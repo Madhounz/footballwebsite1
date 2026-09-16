@@ -10,6 +10,8 @@ export interface ProviderSetup {
   seasonStartYear: number;
   resolvePlayer: PlayerResolver;
   detailStore: DetailStore;
+  /** Maps football-data's scorer-chart players onto ours; without it no chart is fetched. */
+  resolveScorerPlayer?: PlayerResolver;
   /** Spend API-Football requests on match details this run. */
   detailsEnabled: boolean;
   /** Also fill in older matches whose timeline never completed. */
@@ -35,6 +37,7 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
         season: seasonStartYear,
         knownTeams,
         minGapMs: setup.mode === "live" ? 1_200 : undefined,
+        resolvePlayer: setup.resolveScorerPlayer,
         onUnknownTeam: (n, id) => onUnknownTeam?.("football-data", n, id),
         log: setup.log,
       }),

@@ -8,6 +8,7 @@ import type {
   MatchEvent,
   MatchView,
   Player,
+  ScorerChart,
   ScorerRow,
   SearchItem,
   Standings,
@@ -71,7 +72,7 @@ export interface Repository {
   getTeamMatches(teamId: string): Promise<MatchView[]>;
 
   getStandings(competitionId: string): Promise<Standings>;
-  getTopScorers(competitionId: string, limit?: number): Promise<ScorerRow[]>;
+  getTopScorers(competitionId: string, limit?: number): Promise<ScorerChart>;
   getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null>;
   /** Every match the player appeared in this season, most recent first. */
   getPlayerMatches(playerId: string): Promise<PlayerMatch[]>;

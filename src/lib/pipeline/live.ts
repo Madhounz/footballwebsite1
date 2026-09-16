@@ -34,6 +34,13 @@ const CATCH_UP_LIMIT = 2;
  * day's spend so far — which we do store — decides whether to try at all.
  */
 const CATCH_UP_DAILY_BUDGET = 40;
+/**
+ * Minutes before a competition's scorer chart is worth another request. Five
+ * competitions at this cadence is one football-data call every half hour, and
+ * each chart refreshed a few times a day — a scorer chart moves at the speed of
+ * matchdays, not minutes.
+ */
+const SCORER_INTERVAL_MIN = 30;
 
 export interface LiveRefreshOutcome {
   ran: boolean;
@@ -41,6 +48,8 @@ export interface LiveRefreshOutcome {
   skipped?: string;
   window: { fromDate: string; toDate: string };
   detailsEnabled: boolean;
+  /** Scorer chart rows written this run, by competition. */
+  scorers: Record<string, number>;
   /** Whether this run was allowed to fill in older timelines, and what the day has spent. */
   catchUp: { enabled: boolean; detailRequestsToday: number };
   competitions: number;
@@ -69,6 +78,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     skipped,
     window,
     detailsEnabled: false,
+    scorers: {},
     catchUp: { enabled: false, detailRequestsToday: 0 },
     competitions,
     fetched: 0,
@@ -112,6 +122,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     knownTeams: teams.map((t) => ({ id: t.id, name: t.name, shortName: t.shortName })),
     seasonStartYear,
     resolvePlayer: store.playerResolver(),
+    resolveScorerPlayer: store.playerResolver("football-data"),
     detailStore: store,
     detailsEnabled,
     catchUp: catchUp
@@ -131,9 +142,14 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     );
   }
 
+  // At most one competition's scorer chart per run, whichever was left longest.
+  const stalest = await store.stalestScorerChart(competitions, SCORER_INTERVAL_MIN);
+  if (stalest) log(`refreshing the ${stalest.shortName} scorer chart`);
+
   const result = await runSync({
     competitions,
     providers,
+    scorersFor: stalest ? [stalest] : [],
     window,
     store,
     ai: AIValidator.available() ? new AIValidator() : null,
@@ -146,6 +162,7 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     ran: true,
     window,
     detailsEnabled,
+    scorers: result.scorers,
     catchUp: { enabled: catchUp, detailRequestsToday: spentToday },
     competitions: competitions.length,
     fetched: result.fetched,
