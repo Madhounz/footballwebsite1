@@ -193,9 +193,12 @@ and sweeps the whole season.
 
 - **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
 - **Scorer charts** come from football-data's own chart for the competition,
-  one request at a time: the live refresh refreshes whichever competition was
-  left longest, at most every 30 minutes, so five competitions cost two
-  requests an hour. Counting goals from our own events cannot be complete on a
+  one request at a time: every refresh takes whichever competition has been
+  left longest, provided its chart is over 30 minutes old. Each competition is
+  therefore re-read about every half hour — a dozen requests an hour across the
+  six, which beside the once-a-minute match call is nothing next to that plan's
+  ten a minute — and a goal appears within half an hour of the provider
+  publishing it. Counting goals from our own events cannot be complete on a
   free plan — we hold events only for the matches we fetched detail for — and a
   chart that is quietly short is worse than one with a source. `getTopScorers`
   returns the stored chart when there is one and our own count otherwise, and

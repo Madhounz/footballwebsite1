@@ -35,10 +35,13 @@ const CATCH_UP_LIMIT = 2;
  */
 const CATCH_UP_DAILY_BUDGET = 40;
 /**
- * Minutes before a competition's scorer chart is worth another request. Five
- * competitions at this cadence is one football-data call every half hour, and
- * each chart refreshed a few times a day — a scorer chart moves at the speed of
- * matchdays, not minutes.
+ * Minutes before a competition's scorer chart is worth another request.
+ *
+ * The pass runs every refresh, ungated, and takes whichever competition has
+ * been left longest — so each one is re-read about half an hour after its last
+ * read, and a goal reaches the site within that of the provider publishing it.
+ * Six competitions is a dozen football-data calls an hour, which beside the
+ * once-a-minute match call is nothing next to that plan's ten a minute.
  */
 const SCORER_INTERVAL_MIN = 30;
 
