@@ -14,6 +14,12 @@ export interface Competition {
   country: string; // "England" | "Europe"
   countryCode: string; // ISO 3166-1 alpha-2, "EU" for UEFA
   kind: CompetitionKind;
+  /**
+   * Which division of its country this is: 1 for a top flight, 2 for the one
+   * below it. Absent means 1. It exists because the site prints it, and
+   * calling the Championship a top flight is simply false.
+   */
+  tier?: number;
   /** Display order on the home page and in navigation. */
   order: number;
   /** Current season label, e.g. "2026/27". */

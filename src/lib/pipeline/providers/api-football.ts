@@ -138,6 +138,8 @@ export interface ApiFootballOptions {
   apiKey: string;
   /** Season start year, e.g. 2026 for 2026/27. */
   season: number;
+  /** The season number for one competition, where it is not the run's (see football-data). */
+  seasonOf?: (competitionId: string) => number;
   knownTeams: { id: string; name: string; shortName: string }[];
   /** Maps provider players to ours (creating them when needed). */
   resolvePlayer: PlayerResolver;
@@ -277,14 +279,18 @@ export class ApiFootballProvider implements Provider {
     return list;
   }
 
-  private async fixturesForSeason(league: number): Promise<AFFixture[]> {
+  private async fixturesForSeason(league: number, competitionId: string): Promise<AFFixture[]> {
     const cached = this.seasonCache.get(league);
     if (cached) return cached;
     const list = await this.get<AFFixture[]>(
-      `/fixtures?league=${league}&season=${this.opts.season}&timezone=UTC`,
+      `/fixtures?league=${league}&season=${this.season(competitionId)}&timezone=UTC`,
     );
     this.seasonCache.set(league, list);
     return list;
+  }
+
+  private season(competitionId: string): number {
+    return this.opts.seasonOf?.(competitionId) ?? this.opts.season;
   }
 
   private async liveFixtures(): Promise<AFFixture[]> {
@@ -318,7 +324,7 @@ export class ApiFootballProvider implements Provider {
 
     // 1. Whole season when we are the only source (e.g. Europa League).
     if ((this.opts.seasonFetchEnabled ?? true) && this.opts.primaryFor?.includes(competition.id)) {
-      const season = (await this.fixturesForSeason(league)).filter((f) => {
+      const season = (await this.fixturesForSeason(league, competition.id)).filter((f) => {
         const day = f.fixture.date.slice(0, 10);
         return day >= window.fromDate && day <= window.toDate;
       });
@@ -696,7 +702,7 @@ export class ApiFootballProvider implements Provider {
     const league = COMPETITION_CODES[competition.id]?.apiFootball;
     if (!league || !(this.opts.primaryFor?.includes(competition.id) ?? false)) return [];
     const entries = await this.get<AFTeamEntry[]>(
-      `/teams?league=${league}&season=${this.opts.season}`,
+      `/teams?league=${league}&season=${this.season(competition.id)}`,
     );
     return entries.map(({ team, venue }) => {
       const known = resolveTeamId(team.name, this.opts.knownTeams);

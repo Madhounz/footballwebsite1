@@ -39,9 +39,16 @@ export async function ScoringRaces({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
-        {t("scoringRaces")}
-      </h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
+          {t("scoringRaces")}
+        </h2>
+        {/* Six leaders is a front page; the whole chart, added up, is a page
+            of its own. */}
+        <Link href="/scorers" className="text-[11px] text-muted hover:text-ink">
+          {t("allScorers")}
+        </Link>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map(({ competition, rows }, card) => {
           // Every bar is read against the leader, so the top of each chart is

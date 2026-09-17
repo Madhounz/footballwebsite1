@@ -28,6 +28,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const matches = (
     await Promise.all(competitions.map((c) => repo.getCompetitionMatches(c.id)))
   ).flat();
+  const honours = new Set(
+    (
+      await Promise.all(
+        competitions.map(async (c) => ((await repo.getHonours(c.id)) ? c.id : null)),
+      )
+    ).filter((id): id is string => id !== null),
+  );
 
   const paths: {
     path: string;
@@ -36,10 +43,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }[] = [
     { path: "/", changeFrequency: "hourly", priority: 1 },
     { path: "/leagues", changeFrequency: "daily", priority: 0.8 },
+    { path: "/scorers", changeFrequency: "daily", priority: 0.7 },
     { path: "/teams", changeFrequency: "weekly", priority: 0.5 },
     { path: "/about", changeFrequency: "monthly", priority: 0.3 },
     ...competitions.flatMap((c) =>
-      ["", "/fixtures", "/results", "/stats", "/history"].map((s) => ({
+      // The same sections the competition's own tabs offer — history only
+      // where there is a curated honours file behind it, so the sitemap never
+      // sends a crawler to a page that says "nothing here yet".
+      [
+        "",
+        "/fixtures",
+        "/results",
+        "/race",
+        "/halves",
+        "/stats",
+        ...(honours.has(c.id) ? ["/history"] : []),
+      ].map((s) => ({
         path: `/leagues/${c.slug}${s}`,
         changeFrequency: "daily" as const,
         priority: 0.8,

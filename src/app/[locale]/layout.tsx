@@ -10,7 +10,7 @@ import { ServiceWorker } from "@/components/ServiceWorker";
 import { getRepository } from "@/lib/data";
 import { isRtl, routing } from "@/i18n/routing";
 import { SITE } from "@/lib/site";
-import { teamName, teamShortName } from "@/lib/i18n/names";
+import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(SITE.url),
     title: { default: t("title"), template: "%s · ninety" },
-    description: t("description"),
+    description: await coverageLine(locale, t),
     applicationName: "ninety",
     openGraph: {
       siteName: "ninety",
@@ -41,6 +41,30 @@ export async function generateMetadata({
     },
     twitter: { card: "summary_large_image" },
   };
+}
+
+/**
+ * What the site covers, in one sentence, built from what it actually holds.
+ *
+ * This is the line search engines and chat apps print under the link, and it
+ * was a list of five competitions typed out by hand — which is exactly the
+ * kind of sentence that is still saying five a year after it became eleven.
+ * The first few are named because a name is what somebody searches for; the
+ * rest are counted, so the sentence stays a sentence.
+ */
+const NAMED = 4;
+
+async function coverageLine(
+  locale: string,
+  t: Awaited<ReturnType<typeof getTranslations<"meta">>>,
+): Promise<string> {
+  const competitions = await (await getRepository()).listCompetitions();
+  if (competitions.length === 0) return t("descriptionPlain");
+  const named = competitions.slice(0, NAMED).map((c) => competitionName(c, locale));
+  const rest = competitions.length - named.length;
+  if (rest > 0) named.push(t("andMore", { n: rest }));
+  const list = new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(named);
+  return t("description", { competitions: list });
 }
 
 export const viewport: Viewport = {

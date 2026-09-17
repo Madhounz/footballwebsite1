@@ -1,12 +1,15 @@
 {
   "meta": {
     "title": "ninety — the full 90, all in one place",
-    "description": "Live scores, tables, fixtures, squads and history for the Premier League, La Liga, Bundesliga, Serie A and the Champions League.",
+    "description": "Live scores, tables, fixtures, squads and history — {competitions}.",
     "matchesOn": "Matches on {date}",
     "leagues": "Leagues & competitions",
     "teams": "Teams",
     "about": "About",
-    "aboutDescription": "Why ninety exists and how its data is kept right."
+    "aboutDescription": "Why ninety exists and how its data is kept right.",
+    "descriptionPlain": "Live scores, tables, fixtures, squads and history — in English and Arabic.",
+    "andMore": "{n, plural, one {# more competition} other {# more competitions}}",
+    "scorers": "Top scorers"
   },
   "nav": {
     "matches": "Matches",
@@ -20,7 +23,8 @@
     "switchTo": "العربية",
     "switchToLabel": "Switch to Arabic",
     "toDark": "Switch to dark",
-    "toLight": "Switch to light"
+    "toLight": "Switch to light",
+    "scorers": "Scorers"
   },
   "search": {
     "button": "Search",
@@ -65,7 +69,9 @@
     "reasonForm": "both unbeaten in {n}",
     "scoringRaces": "Scoring races",
     "goalsN": "{n, plural, one {# goal} other {# goals}}",
-    "inForm": "In form"
+    "inForm": "In form",
+    "moreLeagues": "{n, plural, one {# more competition} other {# more competitions}}",
+    "allScorers": "All competitions →"
   },
   "match": {
     "matchday": "Matchday {n}",
@@ -253,7 +259,10 @@
     "cleanSheets": "Most clean sheets",
     "biggestWin": "Biggest win",
     "highestScoring": "Most goals in a match",
-    "assistsFromScorers": "Assists among the players in the competition's scorer chart, so a player who creates goals without scoring them will not appear."
+    "assistsFromScorers": "Assists among the players in the competition's scorer chart, so a player who creates goals without scoring them will not appear.",
+    "groupLeagues": "Domestic leagues",
+    "groupCups": "European competitions",
+    "tier": "{n, plural, =2 {Second tier} =3 {Third tier} other {Tier #}}"
   },
   "team": {
     "intro": "Every club in the tracked leagues, plus the European sides they meet in UEFA competition.",
@@ -383,5 +392,16 @@
   "install": {
     "add": "Add to home screen",
     "dismiss": "Not now"
+  },
+  "scorers": {
+    "title": "Top scorers, everywhere",
+    "lead": "Every competition's scorer chart, added together. The bar under each name shows where the goals came from — a total that hides that is worth less than no total.",
+    "note": "Each competition's own chart from our data provider, added up. Goals scored in competitions we do not follow are not in it.",
+    "noteCounted": "Counted from the matches we hold and added up, so it can run short of an official chart. Goals scored in competitions we do not follow are not in it.",
+    "empty": "No goals recorded yet this season.",
+    "goalsShort": "goals",
+    "inN": "{n, plural, one {# competition} other {# competitions}}",
+    "key": "Which colour is which",
+    "leading": "Leading each competition"
   }
 }

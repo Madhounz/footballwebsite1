@@ -240,5 +240,62 @@
         "tone": "bottom"
       }
     ]
+  },
+  {
+    "id": "eredivisie",
+    "slug": "eredivisie",
+    "name": "Eredivisie",
+    "shortName": "ERE",
+    "country": "Netherlands",
+    "countryCode": "NL",
+    "kind": "league",
+    "order": 8,
+    "teamCount": 18,
+    "rounds": 34,
+    "color": "#00838f",
+    "zones": []
+  },
+  {
+    "id": "primeira",
+    "slug": "primeira-liga",
+    "name": "Primeira Liga",
+    "shortName": "PPL",
+    "country": "Portugal",
+    "countryCode": "PT",
+    "kind": "league",
+    "order": 9,
+    "teamCount": 18,
+    "rounds": 34,
+    "color": "#2e7d32",
+    "zones": []
+  },
+  {
+    "id": "championship",
+    "slug": "championship",
+    "name": "Championship",
+    "shortName": "ELC",
+    "country": "England",
+    "countryCode": "GB-ENG",
+    "kind": "league",
+    "tier": 2,
+    "order": 10,
+    "teamCount": 24,
+    "rounds": 46,
+    "color": "#37474f",
+    "zones": []
+  },
+  {
+    "id": "brasileirao",
+    "slug": "brasileirao",
+    "name": "Campeonato Brasileiro Série A",
+    "shortName": "BSA",
+    "country": "Brazil",
+    "countryCode": "BR",
+    "kind": "league",
+    "order": 11,
+    "teamCount": 20,
+    "rounds": 38,
+    "color": "#f9a825",
+    "zones": []
   }
 ]

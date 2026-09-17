@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRepository } from "@/lib/data";
+import { competitionFocus } from "@/lib/data/focus";
 import { clubsInForm } from "@/lib/data/match-context";
 import { worthWatching } from "@/lib/data/worth-watching";
 import { todayISO, type ISODate } from "@/lib/dates";
@@ -15,6 +16,14 @@ import { ScoringRaces, type Race } from "./ScoringRaces";
 import { TeamCrest } from "./TeamCrest";
 import { WorthWatching } from "./WorthWatching";
 
+/**
+ * How many competitions the page leads with. Six is two rows of scoring races
+ * and a rail that ends on the screen it started on; past that a front page
+ * turns into a directory, and every extra card is a table's worth of queries
+ * on a page that is rendered per request.
+ */
+const RAIL = 6;
+
 /** Shared body for `/` and `/matches/[date]`. */
 export async function DayPage({ date }: { date: ISODate }) {
   const t = await getTranslations("home");
@@ -27,6 +36,10 @@ export async function DayPage({ date }: { date: ISODate }) {
   ]);
   const live = views.filter((v) => isLive(v.match)).length;
   const isToday = date === today;
+  // The day's fixtures are always complete; the rail beside them is not, and
+  // should not be. It leads with whoever is playing today, and the leagues
+  // page holds the rest.
+  const focus = competitionFocus(competitions, views, RAIL);
   const allTeams = await repo.listTeams();
   // The followed list lives on the device, so the names it will need have to
   // travel with the page: the browser knows the ids, not how to say them.
@@ -38,7 +51,7 @@ export async function DayPage({ date }: { date: ISODate }) {
   // it costs nothing, and unlike a day's fixtures it is never empty.
   const [races, playerList] = await Promise.all([
     Promise.all(
-      competitions.map(async (c): Promise<Race> => ({
+      focus.shown.map(async (c): Promise<Race> => ({
         competition: c,
         rows: (await repo.getTopScorers(c.id, 3)).rows,
       })),
@@ -49,7 +62,7 @@ export async function DayPage({ date }: { date: ISODate }) {
   const teamsById = new Map(allTeams.map((team) => [team.id, team]));
 
   const snapshots = await Promise.all(
-    competitions.map(async (c) => {
+    focus.shown.map(async (c) => {
       const s = await repo.getStandings(c.id);
       const top = s.rows.slice(0, 3);
       const teams = new Map((await repo.listTeams(c.id)).map((team) => [team.id, team]));
@@ -102,9 +115,16 @@ export async function DayPage({ date }: { date: ISODate }) {
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
         <WorthWatching picks={picks} />
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
-          {t("atTheTop")}
-        </h2>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
+            {t("atTheTop")}
+          </h2>
+          {focus.rest.length > 0 && (
+            <Link href="/leagues" className="text-[11px] text-muted hover:text-ink">
+              {t("moreLeagues", { n: focus.rest.length })}
+            </Link>
+          )}
+        </div>
         {snapshots.map(({ competition, top, teams }) => (
           <div key={competition.id} className="card overflow-hidden">
             <Link

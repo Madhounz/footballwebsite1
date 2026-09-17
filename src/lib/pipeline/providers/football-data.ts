@@ -115,6 +115,12 @@ export interface FootballDataOptions {
   apiKey: string;
   /** Season start year, e.g. 2026 for 2026/27. */
   season: number;
+  /**
+   * The season number for one competition, where it is not the run's. Brazil
+   * plays a season inside a single calendar year, so asking for 2026/27 would
+   * fetch the back half of one season and the front half of the next.
+   */
+  seasonOf?: (competitionId: string) => number;
   /** Mutable: teams discovered by fetchTeams are appended so later calls resolve them. */
   knownTeams: { id: string; name: string; shortName: string }[];
   fetchImpl?: typeof fetch;
@@ -166,6 +172,10 @@ export class FootballDataProvider implements Provider {
     return Boolean(COMPETITION_CODES[competitionId]?.footballData);
   }
 
+  private season(competitionId: string): number {
+    return this.opts.seasonOf?.(competitionId) ?? this.opts.season;
+  }
+
   private async get<T>(path: string): Promise<T> {
     if (!this.opts.noThrottle) {
       const wait = this.lastRequest + this.minGap - Date.now();
@@ -211,7 +221,7 @@ export class FootballDataProvider implements Provider {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     if (!code) return [];
     const data = await this.get<{ matches: FDMatch[] }>(
-      `/competitions/${code}/matches?season=${this.opts.season}`,
+      `/competitions/${code}/matches?season=${this.season(competition.id)}`,
     );
     const out: ProviderRecord<ProviderMatch>[] = [];
     for (const m of data.matches) {
@@ -380,7 +390,7 @@ export class FootballDataProvider implements Provider {
     const code = COMPETITION_CODES[competition.id]?.footballData;
     if (!code) return [];
     const data = await this.get<{ teams: FDTeam[] }>(
-      `/competitions/${code}/teams?season=${this.opts.season}`,
+      `/competitions/${code}/teams?season=${this.season(competition.id)}`,
     );
     return data.teams.map((t) => {
       const known =

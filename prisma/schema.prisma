@@ -19,6 +19,7 @@ model Competition {
   country     String
   countryCode String
   kind        String // league | cup
+  tier        Int               @default(1) // 1 = top flight, 2 = the division below it
   order       Int
   season      String
   teamCount   Int

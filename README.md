@@ -2,7 +2,7 @@
   <img src="public/brand/mark-green.svg" width="72" alt="" />
 </p>
 <h1 align="center">ninety</h1>
-<p align="center"><strong>Ninety minutes. Nothing else.</strong><br/>A calm, fast football scores site for the Premier League, La Liga, Bundesliga, Serie A, Champions League and Europa League.</p>
+<p align="center"><strong>Ninety minutes. Nothing else.</strong><br/>A calm, fast football scores site for eleven competitions — the Premier League, La Liga, Bundesliga, Serie A, Ligue 1, the Eredivisie, the Primeira Liga, the Championship, the Brasileirão, the Champions League and the Europa League.</p>
 
 ---
 

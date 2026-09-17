@@ -40,6 +40,10 @@ export default async function LeagueLayout({
   // `getLiveMatches` is already bounded by kick-off, so a stale record cannot
   // put a pulsing badge on a competition that finished playing hours ago.
   const live = (await repo.getLiveMatches()).filter((v) => v.competition.id === c.id).length;
+  // Past winners are curated by hand, so a competition can be fully covered
+  // and still have none. A tab that only ever says "nothing here" is worse
+  // than no tab.
+  const hasHistory = Boolean(await repo.getHonours(c.id));
   const name = competitionName(c, locale);
   return (
     <div className="space-y-5">
@@ -52,7 +56,11 @@ export default async function LeagueLayout({
               aria-hidden="true"
             />
             {countryName(c.countryCode, locale, c.country)} ·{" "}
-            {c.kind === "cup" ? t("uefa") : t("topFlight")}
+            {c.kind === "cup"
+              ? t("uefa")
+              : (c.tier ?? 1) > 1
+                ? t("tier", { n: c.tier ?? 1 })
+                : t("topFlight")}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>
         </div>
@@ -74,7 +82,7 @@ export default async function LeagueLayout({
           { href: `${base}/race`, label: t("tabRace") },
           { href: `${base}/halves`, label: t("tabHalves") },
           { href: `${base}/stats`, label: t("tabScorers") },
-          { href: `${base}/history`, label: t("tabHistory") },
+          ...(hasHistory ? [{ href: `${base}/history`, label: t("tabHistory") }] : []),
         ]}
       />
       {children}

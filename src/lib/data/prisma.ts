@@ -482,6 +482,7 @@ function toCompetition(c: DbCompetition): Competition {
     country: c.country,
     countryCode: c.countryCode,
     kind: c.kind as Competition["kind"],
+    tier: c.tier,
     order: c.order,
     season: c.season,
     teamCount: c.teamCount,

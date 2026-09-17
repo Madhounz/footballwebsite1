@@ -22,6 +22,7 @@ export async function SiteHeader({
   const nav = [
     { href: "/", label: t("matches"), exact: true },
     { href: "/leagues", label: t("leagues") },
+    { href: "/scorers", label: t("scorers") },
     { href: "/teams", label: t("teams") },
     { href: "/about", label: t("about") },
   ];

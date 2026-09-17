@@ -1,4 +1,6 @@
 import type { CatchUpWindow, DetailStore, PlayerResolver, Provider } from "../types";
+import { todayISO } from "../../dates";
+import { isCalendarYear, seasonYear } from "../../season";
 import { FootballDataProvider } from "./football-data";
 import { ApiFootballProvider } from "./api-football";
 
@@ -8,6 +10,12 @@ export type ProviderEnv = Record<string, string | undefined>;
 export interface ProviderSetup {
   knownTeams: { id: string; name: string; shortName: string }[];
   seasonStartYear: number;
+  /**
+   * Overrides the season number for one competition. Left alone, a league
+   * played inside a single calendar year is asked for that year and every
+   * other competition is asked for `seasonStartYear`.
+   */
+  seasonOf?: (competitionId: string) => number;
   resolvePlayer: PlayerResolver;
   detailStore: DetailStore;
   /** Maps football-data's scorer-chart players onto ours; without it no chart is fetched. */
@@ -35,12 +43,18 @@ export interface ProviderSetup {
 /** Builds every provider that has credentials. Order does not matter; weights do. */
 export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provider[] {
   const { knownTeams, seasonStartYear, onUnknownTeam } = setup;
+  const today = todayISO();
+  const seasonOf =
+    setup.seasonOf ??
+    ((competitionId: string) =>
+      isCalendarYear(competitionId) ? seasonYear(competitionId, today) : seasonStartYear);
   const list: Provider[] = [];
   if (env.FOOTBALL_DATA_API_KEY) {
     list.push(
       new FootballDataProvider({
         apiKey: env.FOOTBALL_DATA_API_KEY,
         season: seasonStartYear,
+        seasonOf,
         knownTeams,
         minGapMs: setup.mode === "live" ? 1_200 : undefined,
         resolvePlayer: setup.resolveScorerPlayer,
@@ -63,6 +77,7 @@ export function providersFromEnv(env: ProviderEnv, setup: ProviderSetup): Provid
       new ApiFootballProvider({
         apiKey: env.API_FOOTBALL_KEY,
         season: seasonStartYear,
+        seasonOf,
         knownTeams,
         resolvePlayer: setup.resolvePlayer,
         detailStore: setup.detailStore,

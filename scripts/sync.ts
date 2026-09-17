@@ -18,6 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { addDays, todayISO } from "../src/lib/dates";
+import { europeanSeasonYear, seasonLabel, seasonWindowFor } from "../src/lib/season";
 import type { Competition, Team } from "../src/lib/types";
 import { AIValidator } from "../src/lib/pipeline/ai-validator";
 import { providersFromEnv } from "../src/lib/pipeline/providers";
@@ -67,15 +68,8 @@ async function main() {
   if (flag("refresh")) return refresh();
 
   const today = todayISO();
-  // European seasons run July -> June.
-  const seasonStart =
-    today.slice(5) >= "07-01" ? Number(today.slice(0, 4)) : Number(today.slice(0, 4)) - 1;
-  const season = `${seasonStart}/${String(seasonStart + 1).slice(2)}`;
+  const seasonStart = europeanSeasonYear(today);
   const live = flag("live");
-  const window = {
-    fromDate: arg("from") ?? (live ? addDays(today, -1) : `${seasonStart}-07-01`),
-    toDate: arg("to") ?? (live ? addDays(today, 1) : `${seasonStart + 1}-06-30`),
-  };
   const dryRun = flag("dry-run");
   const seed = flag("seed");
   const reset = flag("reset");
@@ -90,9 +84,23 @@ async function main() {
     fs.readFileSync(path.join(root, "data/demo/competitions.json"), "utf8"),
   ) as Omit<Competition, "season">[];
   const wanted = arg("competitions")?.split(",");
+  // Each competition carries its own season label, because not every season is
+  // a European one: 2026/27 for the leagues that run July to June, 2026 for
+  // the ones played inside a single calendar year.
   const competitions: Competition[] = competitionsSrc
-    .map((c) => ({ ...c, season }))
-    .filter((c) => !wanted || wanted.includes(c.id));
+    .filter((c) => !wanted || wanted.includes(c.id))
+    .map((c) => ({ ...c, season: seasonLabel(c.id, today) }));
+  // One window wide enough for every season in the run. The provider is asked
+  // for one season at a time and the window only trims the answer, so a range
+  // that spans both shapes drops nothing.
+  const full = seasonWindowFor(
+    competitions.map((c) => c.id),
+    today,
+  );
+  const window = {
+    fromDate: arg("from") ?? (live ? addDays(today, -1) : full.fromDate),
+    toDate: arg("to") ?? (live ? addDays(today, 1) : full.toDate),
+  };
   const teamsJson = JSON.parse(
     fs.readFileSync(path.join(root, "data/demo/teams.json"), "utf8"),
   ) as { teams: [string, string, string, ...unknown[]][] };
@@ -138,7 +146,7 @@ async function main() {
   }
   const ai = useAI ? new AIValidator() : null;
   console.log(
-    `sync ${window.fromDate}..${window.toDate} season=${season} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} mode=${live ? "live" : "full"} details=${detailsEnabled} catch-up=${catchUpLimit} ${dryRun ? "(dry run)" : ""}`,
+    `sync ${window.fromDate}..${window.toDate} season=${[...new Set(competitions.map((c) => c.season))].join("+")} providers=${providers.map((p) => p.id).join(",")} ai=${ai ? ai.model : "off"} seed=${seed} mode=${live ? "live" : "full"} details=${detailsEnabled} catch-up=${catchUpLimit} ${dryRun ? "(dry run)" : ""}`,
   );
 
   if (reset) {

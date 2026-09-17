@@ -191,7 +191,7 @@ and sweeps the whole season.
 
 ### How the two free tiers are combined
 
-- **football-data.org** carries every season fixture and result for PL, La Liga, Bundesliga, Serie A and the Champions League: one request per competition per run, so tables are always complete.
+- **football-data.org** carries every season fixture and result for the eleven competitions listed in `data/demo/competitions.json` (every one on the free plan except the Europa League): one request per competition per run, so tables are always complete.
 - **Scorer charts** come from football-data's own chart for the competition,
   one request at a time: every refresh takes whichever competition has been
   left longest, provided its chart is over 30 minutes old. Each competition is

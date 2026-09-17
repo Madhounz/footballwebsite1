@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { slugify } from "../src/lib/slug";
+import { isCalendarYear } from "../src/lib/season";
 import type { Competition, Player, Position, Team } from "../src/lib/types";
 import type { DemoDataset, DemoEvent, DemoLineup, DemoMatch } from "../src/lib/data/demo-format";
 
@@ -1042,7 +1043,12 @@ const COACH_SURNAMES = [
 // ---------------------------------------------------------------------------
 // Build teams and players
 // ---------------------------------------------------------------------------
-const competitions: Competition[] = competitionsSrc.map((c) => ({ ...c, season: SEASON }));
+// A league played inside one calendar year is labelled with that year, the
+// same way the real pipeline labels it.
+const competitions: Competition[] = competitionsSrc.map((c) => ({
+  ...c,
+  season: isCalendarYear(c.id) ? SEASON.slice(0, 4) : SEASON,
+}));
 
 const teams: Team[] = teamsSrc.teams.map((t) => {
   const [id, name, shortName, code, countryCode, city, stadium, founded, c1, c2, leagueId] = t;
