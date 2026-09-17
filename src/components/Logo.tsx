@@ -1,3 +1,5 @@
+import { brandName } from "@/lib/brand";
+
 export function Mark({ size = 28, className = "" }: { size?: number; className?: string }) {
   return (
     <svg
@@ -29,6 +31,7 @@ export function Mark({ size = 28, className = "" }: { size?: number; className?:
  * less height than Latin ones at the same size, and without the tight Latin
  * tracking, which only makes Arabic harder to read.
  */
+
 export function Wordmark({ locale, className = "" }: { locale?: string; className?: string }) {
   const arabic = locale === "ar";
   return (
@@ -41,7 +44,7 @@ export function Wordmark({ locale, className = "" }: { locale?: string; classNam
             : "text-[22px] font-semibold leading-none tracking-[-0.03em]"
         }
       >
-        {arabic ? "تسعون" : "ninety"}
+        {brandName(locale ?? "en")}
         <span className="text-accent">′</span>
       </span>
     </span>

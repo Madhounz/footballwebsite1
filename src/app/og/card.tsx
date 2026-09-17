@@ -14,6 +14,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ReactNode } from "react";
+import { brandName } from "@/lib/brand";
 import type { Team } from "@/lib/types";
 import { readableOn } from "@/lib/colors";
 
@@ -290,9 +291,10 @@ export function Card({
             fontWeight: 700,
             color: OG.text,
             letterSpacing: dir === "rtl" ? 0 : "-0.03em",
+            flexDirection: dir === "rtl" ? "row-reverse" : "row",
           }}
         >
-          ninety
+          {brandName(dir === "rtl" ? "ar" : "en")}
           <div style={{ display: "flex", color: accent }}>.</div>
         </div>
       </div>

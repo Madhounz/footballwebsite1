@@ -144,7 +144,9 @@
     "drawnN": "{n} drawn",
     "buildUp": "How they arrive",
     "noUpdate": "No update",
-    "noForm": "No results yet"
+    "noForm": "No results yet",
+    "headingScore": "{home} {home_goals}–{away_goals} {away}, {competition}",
+    "headingFixture": "{home} v {away}, {competition}"
   },
   "league": {
     "topFlight": "Top flight",

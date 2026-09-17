@@ -30,11 +30,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!d) return {};
   const { match: m, home, away, competition } = d.view;
   const score = m.score ? `${m.score.home}–${m.score.away}` : "v";
+  // While it is being played the tab is the scoreboard: the page refreshes
+  // itself every twenty seconds, and the title comes back with it.
+  const clock = isLive(m) ? (m.phase === "HT" ? "HT" : m.minute != null ? `${m.minute}′` : "") : "";
   const t = await getTranslations({ locale, namespace: "match" });
   return pageMeta({
     locale,
     path: `/match/${m.slug}`,
-    title: `${teamShortName(home, locale)} ${score} ${teamShortName(away, locale)}`,
+    title:
+      `${teamShortName(home, locale)} ${score} ${teamShortName(away, locale)}${clock ? ` ${clock}` : ""}`.trim(),
     description: t("metaDescription", {
       home: teamName(home, locale),
       away: teamName(away, locale),
@@ -112,6 +116,25 @@ export default async function MatchPage({ params }: { params: Params }) {
       </nav>
 
       <section className="card px-4 py-6 sm:px-8">
+        {/* The scoreboard below is a picture of the match: three columns, no
+            sentence anywhere in it. This is the same thing in words, for a
+            screen reader and for a search engine, which otherwise met the
+            most-linked page on the site with no heading at all. */}
+        <h1 className="sr-only">
+          {m.score
+            ? t("headingScore", {
+                home: teamName(home, locale),
+                away: teamName(away, locale),
+                home_goals: m.score.home,
+                away_goals: m.score.away,
+                competition: competitionName(competition, locale),
+              })
+            : t("headingFixture", {
+                home: teamName(home, locale),
+                away: teamName(away, locale),
+                competition: competitionName(competition, locale),
+              })}
+        </h1>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
           <TeamHeader team={home} align="end" locale={locale} />
           <div className="flex flex-col items-center gap-1">

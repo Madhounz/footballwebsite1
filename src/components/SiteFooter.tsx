@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { DataSourceInfo } from "@/lib/types";
+import { brandName } from "@/lib/brand";
 import { SITE } from "@/lib/site";
 import { InstallButton } from "./InstallButton";
 import { Mark } from "./Logo";
@@ -28,9 +29,7 @@ export async function SiteFooter({ info }: { info: DataSourceInfo }) {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-ink">
             <Mark size={20} />
-            <span className="font-semibold tracking-tight">
-              {locale === "ar" ? "تسعون" : "ninety"}
-            </span>
+            <span className="font-semibold tracking-tight">{brandName(locale)}</span>
           </div>
           <p className="max-w-xs leading-relaxed">{t("tagline")}</p>
         </div>

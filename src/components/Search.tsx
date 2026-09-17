@@ -1,9 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { SearchItem } from "@/lib/types";
+
+const optionId = (item: SearchItem) => `search-${item.type}-${item.id}`;
 
 /**
  * Command-palette style search. Fed a static index (competitions + teams) at
@@ -14,6 +16,7 @@ export function Search({ items }: { items: SearchItem[] }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [cursor, setCursor] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
 
   function openPalette() {
@@ -56,6 +59,12 @@ export function Search({ items }: { items: SearchItem[] }) {
       .slice(0, 12)
       .map((x) => x.item);
   }, [q, items]);
+
+  // The list scrolls at half the viewport, so arrowing down past the fold used
+  // to highlight a result nobody could see.
+  useEffect(() => {
+    listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [cursor, q]);
 
   function go(item: SearchItem) {
     setOpen(false);
@@ -102,6 +111,10 @@ export function Search({ items }: { items: SearchItem[] }) {
           >
             <input
               autoFocus
+              role="combobox"
+              aria-expanded
+              aria-controls="search-results"
+              aria-activedescendant={results[cursor] ? optionId(results[cursor]) : undefined}
               value={q}
               onChange={(e) => {
                 setQ(e.target.value);
@@ -121,18 +134,30 @@ export function Search({ items }: { items: SearchItem[] }) {
               placeholder={t("placeholder")}
               className="w-full border-b border-line bg-transparent px-4 py-3.5 text-base outline-none placeholder:text-faint"
             />
-            <ul className="max-h-[50vh] overflow-y-auto py-1">
+            <ul
+              id="search-results"
+              ref={listRef}
+              role="listbox"
+              aria-label={t("button")}
+              className="max-h-[50vh] overflow-y-auto py-1"
+            >
               {results.length === 0 && (
                 <li className="px-4 py-6 text-center text-sm text-muted">
                   {t("noMatch", { query: q })}
                 </li>
               )}
               {results.map((item, i) => (
-                <li key={`${item.type}-${item.id}`}>
-                  <button
-                    type="button"
+                <li key={`${item.type}-${item.id}`} role="none">
+                  {/* A link rather than a button: a search result is a place,
+                      so it should be openable in a new tab and show where it
+                      goes on hover, like every other result list on the web. */}
+                  <Link
+                    id={optionId(item)}
+                    role="option"
+                    aria-selected={i === cursor}
+                    href={item.href}
                     onMouseEnter={() => setCursor(i)}
-                    onClick={() => go(item)}
+                    onClick={() => setOpen(false)}
                     className={`flex w-full items-center justify-between px-4 py-2.5 text-start text-sm ${i === cursor ? "bg-surface-2" : ""}`}
                   >
                     <span className="flex flex-col">
@@ -142,7 +167,7 @@ export function Search({ items }: { items: SearchItem[] }) {
                     <span className="text-[10px] uppercase tracking-wide text-faint">
                       {t(item.type)}
                     </span>
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>

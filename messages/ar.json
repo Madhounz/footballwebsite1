@@ -144,7 +144,9 @@
     "drawnN": "{n} تعادل",
     "buildUp": "كيف يصلان",
     "noUpdate": "لا تحديث",
-    "noForm": "لا نتائج بعد"
+    "noForm": "لا نتائج بعد",
+    "headingScore": "{home} {home_goals}–{away_goals} {away}، {competition}",
+    "headingFixture": "{home} ضد {away}، {competition}"
   },
   "league": {
     "topFlight": "الدرجة الأولى",

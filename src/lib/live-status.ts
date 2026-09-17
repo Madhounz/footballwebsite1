@@ -39,3 +39,16 @@ export function isLive(m: Timed, now: Date = new Date()): boolean {
 export function isStaleLive(m: Timed, now: Date = new Date()): boolean {
   return m.status === "live" && minutesSinceKickoff(m.kickoff, now) > LIVE_LIMIT_MIN;
 }
+
+/**
+ * What the browser tab says while matches are being played.
+ *
+ * A scores site gets left open in a background tab, and a background tab shows
+ * about fifteen characters and a favicon. So those characters may as well
+ * carry the news: the count sits in front of the title the way an inbox
+ * carries its unread count, and a match page puts the score itself there.
+ */
+/** The unread-count trick, for a page that is watching several at once. */
+export function liveCountTitle(count: number, title: string): string {
+  return count > 0 ? `(${count}) ${title}` : title;
+}

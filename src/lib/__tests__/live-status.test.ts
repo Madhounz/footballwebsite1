@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { LIVE_LIMIT_MIN, isLive, isStaleLive, minutesSinceKickoff } from "../live-status";
+import {
+  LIVE_LIMIT_MIN,
+  isLive,
+  isStaleLive,
+  minutesSinceKickoff,
+  liveCountTitle,
+} from "../live-status";
 
 const at = (minutesAgo: number) => ({
   status: "live" as const,
@@ -40,5 +46,12 @@ describe("live status", () => {
       expect(isLive(m, now)).toBe(false);
       expect(isStaleLive(m, now)).toBe(false);
     }
+  });
+});
+
+describe("what the tab says", () => {
+  it("counts the matches in play, and keeps quiet when there are none", () => {
+    expect(liveCountTitle(3, "ninety")).toBe("(3) ninety");
+    expect(liveCountTitle(0, "ninety")).toBe("ninety");
   });
 });

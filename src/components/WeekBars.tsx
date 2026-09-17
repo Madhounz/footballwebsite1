@@ -23,6 +23,10 @@ export async function WeekBars({ days, today }: { days: WeekDay[]; today: ISODat
         {days.map((day, i) => {
           const share = day.goals / most;
           const isToday = day.date === today;
+          const weekday = new Date(`${day.date}T12:00:00Z`).toLocaleDateString(tag, {
+            weekday: "long",
+          });
+          const label = `${weekday} — ${t("dayTitle", { matches: day.matches, goals: day.goals })}`;
           return (
             <li key={day.date} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
               <span className="tnum text-[11px] font-semibold text-muted">
@@ -30,7 +34,8 @@ export async function WeekBars({ days, today }: { days: WeekDay[]; today: ISODat
               </span>
               <Link
                 href={`/matches/${day.date}`}
-                title={t("dayTitle", { matches: day.matches, goals: day.goals })}
+                title={label}
+                aria-label={label}
                 className="flex w-full items-end justify-center rounded-t-[3px] bg-surface-2/50"
                 style={{ height: 96 }}
               >

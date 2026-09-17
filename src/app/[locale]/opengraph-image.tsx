@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
 import { Card, OG, OG_CACHE, OG_CONTENT_TYPE, OG_SIZE, ogFonts, Words } from "@/app/og/card";
+import { brandName } from "@/lib/brand";
 import { getRepository } from "@/lib/data";
 import { isRtl } from "@/i18n/routing";
 
@@ -15,8 +16,11 @@ export default async function SiteCard({ params }: { params: Promise<{ locale: s
   const repo = await getRepository();
   const competitions = await repo.listCompetitions();
   const dir = isRtl(locale) ? "rtl" : "ltr";
-  // The title carries the promise after the dash: "ninety — the full 90, all in one place".
-  const [name, tagline] = t("title").split("—");
+  // The title carries the promise after the dash: "ninety — the full 90, all
+  // in one place". The name itself comes from the brand rather than the front
+  // of that string, so the Arabic card says what the Arabic header says.
+  const tagline = t("title").split("—").slice(1).join("—").trim();
+  const name = brandName(locale);
 
   return new ImageResponse(
     <Card dir={dir} eyebrow={[competitions[0]?.season ?? ""]}>
@@ -35,9 +39,14 @@ export default async function SiteCard({ params }: { params: Promise<{ locale: s
             fontSize: 132,
             fontWeight: 700,
             letterSpacing: dir === "rtl" ? 0 : "-0.05em",
+            // One word, and in Arabic a word with no digits in it — satori
+            // shapes that correctly on its own. Routing it through `Words`
+            // wrapped it in a box that took the whole width, which pushed the
+            // full stop halfway across the card.
+            flexDirection: dir === "rtl" ? "row-reverse" : "row",
           }}
         >
-          <Words dir={dir}>{name}</Words>
+          {name}
           <div style={{ display: "flex", color: OG.accent }}>.</div>
         </div>
         <div
@@ -49,7 +58,7 @@ export default async function SiteCard({ params }: { params: Promise<{ locale: s
             maxWidth: 900,
           }}
         >
-          <Words dir={dir}>{tagline ?? t("description")}</Words>
+          <Words dir={dir}>{tagline}</Words>
         </div>
         {/* What is covered, as colours rather than a row of names no card can fit. */}
         <div style={{ display: "flex", marginTop: 44 }}>
