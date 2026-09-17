@@ -115,4 +115,17 @@ describe("DemoRepository", () => {
     // "no source" sentence. The check exists for a deployment that has none.
     await expect(repo.holdsLineups()).resolves.toBe(true);
   });
+
+  it("lists only competitions that hold matches", async () => {
+    const repo = new DemoRepository();
+    const listed = await repo.listCompetitions();
+    for (const c of listed) {
+      const matches = await repo.getCompetitionMatches(c.id);
+      expect(matches.length).toBeGreaterThan(0);
+    }
+    // A competition configured but not yet seeded is not in the navigation,
+    // which is what the database repository has always done.
+    const slugs = listed.map((c) => c.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
 });

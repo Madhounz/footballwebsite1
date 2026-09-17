@@ -231,8 +231,16 @@ export class DemoRepository implements Repository {
   }
 
   // ---- competitions & teams --------------------------------------------
+  /**
+   * Only competitions that actually hold matches, which is what the database
+   * repository has always returned. A competition the site is configured for
+   * but has no football in — one added ahead of its first seed — is a name in
+   * the navigation leading to empty pages, and both repositories should agree
+   * about that.
+   */
   async listCompetitions(): Promise<Competition[]> {
-    return [...DATA.competitions].sort((a, b) => a.order - b.order);
+    const played = new Set(DATA.matches.map((m) => m.competitionId));
+    return DATA.competitions.filter((c) => played.has(c.id)).sort((a, b) => a.order - b.order);
   }
   async getCompetitionBySlug(slug: string): Promise<Competition | null> {
     return DATA.competitions.find((c) => c.slug === slug) ?? null;

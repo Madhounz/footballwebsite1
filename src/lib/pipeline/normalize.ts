@@ -302,6 +302,7 @@ export const COMPETITION_CODES: Record<string, { footballData?: string; apiFootb
   laliga: { footballData: "PD", apiFootball: 140 },
   bundesliga: { footballData: "BL1", apiFootball: 78 },
   seriea: { footballData: "SA", apiFootball: 135 },
+  ligue1: { footballData: "FL1", apiFootball: 61 },
   ucl: { footballData: "CL", apiFootball: 2 },
   uel: { footballData: "EL", apiFootball: 3 },
 };
