@@ -204,17 +204,49 @@ export class PrismaRepository implements Repository {
   async holdsLineups(): Promise<boolean> {
     return (await this.db.lineup.findFirst({ select: { matchId: true } })) !== null;
   }
+  /**
+   * The season every competition is currently in — one value in practice, but
+   * read rather than assumed.
+   */
+  private async currentSeasons(): Promise<string[]> {
+    const rows = await this.db.competition.findMany({
+      select: { season: true },
+      distinct: ["season"],
+    });
+    return rows.map((r) => r.season);
+  }
+
+  /**
+   * This season's matches, and only this season's.
+   *
+   * The table has always filtered by season and these two never did, which
+   * agrees perfectly right up to the morning a second season exists in the
+   * database — next July, or the first time anyone seeds a past one. From then
+   * on the table would say 2027/28 while the fixtures, the results, the grid,
+   * the race, the half tables and a club's own match list quietly served two
+   * seasons at once as though they were one.
+   */
   async getCompetitionMatches(competitionId: string): Promise<MatchView[]> {
+    const comp = await this.db.competition.findUnique({
+      where: { id: competitionId },
+      select: { season: true },
+    });
     const rows = await this.db.match.findMany({
-      where: { competitionId },
+      where: { competitionId, ...(comp ? { season: comp.season } : {}) },
       include: this.include,
       orderBy: { kickoff: "asc" },
     });
     return this.views(rows);
   }
   async getTeamMatches(teamId: string): Promise<MatchView[]> {
+    // A club plays in several competitions, so this is every competition's
+    // current season rather than one competition's.
+    const seasons = await this.currentSeasons();
     const rows = await this.db.match.findMany({
-      where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] },
+      where: {
+        OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+        ...(seasons.length ? { season: { in: seasons } } : {}),
+      },
       include: this.include,
       orderBy: { kickoff: "asc" },
     });

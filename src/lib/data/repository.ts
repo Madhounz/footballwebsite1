@@ -79,7 +79,9 @@ export interface Repository {
    * whose line-ups have not landed yet.
    */
   holdsLineups(): Promise<boolean>;
+  /** This season's matches only — a stored past season is not part of them. */
   getCompetitionMatches(competitionId: string): Promise<MatchView[]>;
+  /** This season's matches only, across every competition the club is in. */
   getTeamMatches(teamId: string): Promise<MatchView[]>;
 
   /** The full table, or only each team's home or away half of it. */
