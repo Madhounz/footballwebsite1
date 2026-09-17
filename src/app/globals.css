@@ -417,3 +417,24 @@ html[dir="rtl"] .uppercase {
   color: var(--text-faint);
   box-shadow: inset 0 0 0 1px var(--border);
 }
+
+/* A week's goals growing out of the axis, one day after another. */
+.week-bar {
+  block-size: var(--h);
+  animation: week-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes week-grow {
+  from {
+    block-size: 2px;
+    opacity: 0.3;
+  }
+  to {
+    block-size: var(--h);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .week-bar {
+    animation: none;
+  }
+}

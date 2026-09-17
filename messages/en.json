@@ -10,7 +10,8 @@
     "descriptionPlain": "Live scores, tables, fixtures, squads and history — in English and Arabic.",
     "andMore": "{n, plural, one {# more competition} other {# more competitions}}",
     "scorers": "Top scorers",
-    "following": "Your clubs"
+    "following": "Your clubs",
+    "week": "The week"
   },
   "nav": {
     "matches": "Matches",
@@ -27,7 +28,8 @@
     "toLight": "Switch to light",
     "scorers": "Scorers",
     "following": "Your clubs",
-    "moreLeagues": "+{n} more"
+    "moreLeagues": "+{n} more",
+    "week": "The week"
   },
   "search": {
     "button": "Search",
@@ -444,5 +446,35 @@
     "inN": "{n, plural, one {# competition} other {# competitions}}",
     "key": "Which colour is which",
     "leading": "Leading each competition"
+  },
+  "week": {
+    "title": "The week",
+    "range": "{from} – {to}",
+    "lead": "Seven days across every competition we follow, sorted by arithmetic rather than by taste. Each match shows the number that put it on the list.",
+    "quiet": "No football in the last seven days.",
+    "matches": "Matches",
+    "goals": "Goals",
+    "perMatch": "{n} a match",
+    "results": "H · D · A",
+    "resultsHint": "Home wins, draws, away wins",
+    "cleanSheets": "Clean sheets",
+    "goalless": "{n, plural, =0 {No goalless draws} one {# goalless draw} other {# goalless draws}}",
+    "byDay": "Goals by day",
+    "dayTitle": "{matches} matches, {goals} goals",
+    "comebacks": "Came from behind",
+    "upsets": "Upsets",
+    "thrillers": "Thrillers",
+    "thrashings": "Thrashings",
+    "comebacksBadge": "{n, plural, one {from # down} other {from # down}}",
+    "upsetsBadge": "{n} places up",
+    "thrillersBadge": "{n} goals",
+    "thrashingsBadge": "by {n}",
+    "noComebacks": "Nobody trailed at half time and won.",
+    "noUpsets": "The table held: every win came from a club level with or above its opponent.",
+    "noThrillers": "Nothing reached five goals.",
+    "noThrashings": "No win by three or more.",
+    "note": "Comebacks are read from half-time scores. Upsets are the biggest table-place gaps a winner overturned, measured against the table as it stands today — a club's place may have changed since the match. Thrashings are wins by three or more, thrillers are matches of five goals or more.",
+    "home": "The week",
+    "homeCta": "Seven days, every competition →"
   }
 }

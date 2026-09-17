@@ -74,6 +74,7 @@ export async function SiteHeader({
   const nav = [
     { href: "/", label: t("matches"), exact: true },
     { href: "/leagues", label: t("leagues") },
+    { href: "/week", label: t("week") },
     { href: "/scorers", label: t("scorers") },
     { href: "/following", label: t("following") },
     { href: "/teams", label: t("teams") },
