@@ -148,6 +148,24 @@ export function distinctColors(
   return out;
 }
 
+/**
+ * One colour to carry a club across a card: its spine, its wash, its accent.
+ *
+ * The same problem as a chart line, one club at a time. A kit colour is chosen
+ * to look good on a shirt, not on a page that is sometimes black and
+ * sometimes paper: a navy vanishes into one theme and a white into the other.
+ * The hue is kept and the lightness pulled into a band that survives both.
+ * Clubs who play in white, black or grey have no hue to keep, and get null —
+ * a card in the site's own accent beats one in a colour nobody can see.
+ */
+export function clubTint(colors: readonly string[] | undefined): string | null {
+  for (const hex of colors ?? []) {
+    const usable = asLineColor(hex);
+    if (usable) return usable;
+  }
+  return null;
+}
+
 export function barColors(home: Team, away: Team): { home: string; away: string } {
   const h = home.colors?.[0] ?? "var(--accent)";
   const first = away.colors?.[0] ?? NEUTRAL;

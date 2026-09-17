@@ -9,7 +9,8 @@
     "aboutDescription": "Why ninety exists and how its data is kept right.",
     "descriptionPlain": "Live scores, tables, fixtures, squads and history — in English and Arabic.",
     "andMore": "{n, plural, one {# more competition} other {# more competitions}}",
-    "scorers": "Top scorers"
+    "scorers": "Top scorers",
+    "following": "Your clubs"
   },
   "nav": {
     "matches": "Matches",
@@ -24,7 +25,8 @@
     "switchToLabel": "Switch to Arabic",
     "toDark": "Switch to dark",
     "toLight": "Switch to light",
-    "scorers": "Scorers"
+    "scorers": "Scorers",
+    "following": "Your clubs"
   },
   "search": {
     "button": "Search",
@@ -137,7 +139,8 @@
     "winsN": "{n} won",
     "drawnN": "{n} drawn",
     "buildUp": "How they arrive",
-    "noUpdate": "No update"
+    "noUpdate": "No update",
+    "noForm": "No results yet"
   },
   "league": {
     "topFlight": "Top flight",
@@ -404,7 +407,27 @@
     "followTitle": "Follow {name} — their matches lead your home page",
     "followingTitle": "Following {name}. Tap to stop.",
     "yourClubs": "Your clubs",
-    "noFixture": "No fixture yet"
+    "noFixture": "No fixture yet",
+    "title": "Your clubs",
+    "lead": "Everyone you follow, wherever they play, in the order you would actually check them: in play, then today, then soon.",
+    "emptyTitle": "This page is yours to fill",
+    "emptyLead": "Follow a club and it turns up here — its table place, its form, and the next time it plays — however many countries you follow across. The list stays on this device. No account, ever.",
+    "emptyCta": "Find your clubs",
+    "nClubs": "{n, plural, one {# club} other {# clubs}}",
+    "nLive": "{n, plural, one {# in play} other {# in play}}",
+    "nToday": "{n, plural, one {# playing today} other {# playing today}}",
+    "nextIs": "Next: {when}",
+    "pts": "{n} pts",
+    "canFinish": "Can finish {range}",
+    "unfollow": "Stop following {team}",
+    "h": "H",
+    "a": "A",
+    "nextIsClub": "Next: {team}, {when}",
+    "climbed": "Up {n} since last round",
+    "fell": "Down {n} since last round",
+    "gdTitle": "Goal difference",
+    "edit": "Edit",
+    "done": "Done"
   },
   "install": {
     "add": "Add to home screen",

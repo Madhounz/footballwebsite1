@@ -5,6 +5,13 @@ import type { Team } from "@/lib/types";
 import { readableOn } from "@/lib/colors";
 
 /**
+ * Only what a crest is drawn from. Taking the whole `Team` would mean a club
+ * arriving from an API route — with a name, a crest and its colours, and no
+ * stadium or founding year — could not be drawn, for no reason at all.
+ */
+export type CrestTeam = Pick<Team, "colors" | "code"> & { crestUrl?: string | null };
+
+/**
  * A club crest. Uses the provider's official image when the team has one and
  * it loads; otherwise a generated badge from the club colours and code, which
  * is also what the demo dataset shows.
@@ -14,7 +21,7 @@ export function TeamCrest({
   size = 28,
   className = "",
 }: {
-  team: Team;
+  team: CrestTeam;
   size?: number;
   className?: string;
 }) {
@@ -59,7 +66,7 @@ export function GeneratedCrest({
   size,
   className = "",
 }: {
-  team: Team;
+  team: CrestTeam;
   size: number;
   className?: string;
 }) {

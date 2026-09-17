@@ -23,6 +23,7 @@ export async function SiteHeader({
     { href: "/", label: t("matches"), exact: true },
     { href: "/leagues", label: t("leagues") },
     { href: "/scorers", label: t("scorers") },
+    { href: "/following", label: t("following") },
     { href: "/teams", label: t("teams") },
     { href: "/about", label: t("about") },
   ];

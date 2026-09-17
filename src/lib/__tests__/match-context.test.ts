@@ -8,7 +8,7 @@ import {
   resultFor,
   teamRecord,
 } from "../data/match-context";
-import { barColors, distinctColors } from "../colors";
+import { barColors, clubTint, distinctColors } from "../colors";
 import type { Competition, MatchView, Team } from "../types";
 
 const competition = { id: "epl", shortName: "PL" } as Competition;
@@ -361,5 +361,25 @@ describe("two lines a reader can tell apart", () => {
     for (let i = 0; i < drawn.length; i++)
       for (let j = i + 1; j < drawn.length; j++)
         expect(apart(drawn[i], drawn[j])).toBeGreaterThanOrEqual(35);
+  });
+});
+
+describe("clubTint", () => {
+  it("keeps a club's hue and makes it survive both themes", () => {
+    // Arsenal red comes back red; a navy is lifted until it can be seen.
+    expect(clubTint(["#EF0107", "#FFFFFF"])).toMatch(/^#/);
+    const navy = clubTint(["#0b1d51"])!;
+    expect(navy).not.toBe("#0b1d51");
+    expect(navy).toMatch(/^#/);
+  });
+
+  it("falls through a colourless first choice to the second", () => {
+    expect(clubTint(["#FFFFFF", "#1b458f"])).not.toBeNull();
+  });
+
+  it("gives nothing for a club that plays in black and white", () => {
+    expect(clubTint(["#FFFFFF", "#000000"])).toBeNull();
+    expect(clubTint([])).toBeNull();
+    expect(clubTint(undefined)).toBeNull();
   });
 });
