@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -25,24 +26,49 @@ export async function generateMetadata({
     title: { default: t("title"), template: "%s · ninety" },
     description: t("description"),
     applicationName: "ninety",
-    openGraph: { siteName: "ninety", type: "website", locale: locale === "ar" ? "ar_EG" : "en_GB" },
+    openGraph: {
+      siteName: "ninety",
+      type: "website",
+      locale: locale === "ar" ? "ar_EG" : "en_GB",
+      // The address the card belongs to. A crawler that is handed a link with
+      // a tracking parameter on it still files the preview under this one.
+      url: locale === "ar" ? `${SITE.url}/ar` : SITE.url,
+    },
     // Pages set their own canonical through `pageMeta`; this covers the rest.
-    alternates: { languages: { en: "/", ar: "/ar", "x-default": "/" } },
+    alternates: {
+      canonical: locale === "ar" ? `${SITE.url}/ar` : SITE.url,
+      languages: { en: "/", ar: "/ar", "x-default": "/" },
+    },
     twitter: { card: "summary_large_image" },
   };
 }
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f6f3" },
+    { media: "(prefers-color-scheme: light)", color: "#eae9e4" },
     { media: "(prefers-color-scheme: dark)", color: "#0f0f0e" },
   ],
   width: "device-width",
   initialScale: 1,
 };
 
-// Applies the saved theme before first paint to avoid a flash.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("ninety:theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}`;
+/**
+ * The reader's theme, from the cookie the toggle writes.
+ *
+ * It has to be rendered by the server rather than set by a script, because
+ * switching language re-renders this `<html>` element on the client: React
+ * writes back the attributes it knows about and drops the ones it does not, so
+ * a theme applied only by script was wiped every time somebody tapped
+ * العربية — chosen light, back to dark, preference still saved and ignored.
+ * An attribute the server puts there is one React keeps.
+ */
+export const THEME_COOKIE = "ninety-theme";
+
+/**
+ * Still applied before first paint for anyone whose choice predates the
+ * cookie, and harmless once the cookie agrees with it.
+ */
+const THEME_SCRIPT = `try{var t=localStorage.getItem("ninety:theme");if((t==="dark"||t==="light")&&!document.documentElement.getAttribute("data-theme")){document.documentElement.setAttribute("data-theme",t);document.cookie="ninety-theme="+t+";path=/;max-age=31536000;samesite=lax"}}catch(e){}`;
 
 export default async function LocaleLayout({
   children,
@@ -54,6 +80,8 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  const chosen = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = chosen === "light" || chosen === "dark" ? chosen : undefined;
 
   const repo = await getRepository();
   const [competitions, rawSearch] = await Promise.all([
@@ -73,6 +101,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
+      data-theme={theme}
       className="h-full antialiased"
       suppressHydrationWarning
     >

@@ -5,24 +5,33 @@
    One accent. Warm neutrals. Tabular numerals everywhere a score can appear.
    Light is the default; dark follows the system or an explicit data-theme.
 --------------------------------------------------------------------------- */
+/*
+ * Light is paper, not a lightbulb. A near-white page under pure white cards
+ * glares on a phone at night and gives the cards nothing to sit on: at #f6f6f3
+ * under #ffffff there was barely a twentieth of a stop between them, so the
+ * brightest thing on screen was every card at once and the layout read flat.
+ * The page is now a warm grey and the cards an off-white above it — about a
+ * seventh of a stop apart, which is what makes a card look like a card — and
+ * the type and the accent gained contrast rather than losing it in the move.
+ */
 :root {
   color-scheme: light;
-  --bg: #f6f6f3;
-  --surface: #ffffff;
-  --surface-2: #f0f0ec;
-  --text: #121211;
-  --text-muted: #6d6d67;
-  --text-faint: #9a9a93;
-  --border: #e5e5e0;
-  --border-strong: #cfcfc8;
-  --accent: #0e9f6e;
-  --accent-soft: #e3f5ee;
-  --live: #16a34a;
-  --win: #1f9d55;
-  --draw: #8a8a84;
-  --loss: #d64545;
-  --review: #b45309;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -16px rgb(0 0 0 / 0.12);
+  --bg: #eae9e4;
+  --surface: #f8f8f5;
+  --surface-2: #e0dfd9;
+  --text: #14140f;
+  --text-muted: #5f5f58;
+  --text-faint: #8b8b82;
+  --border: #dcdbd3;
+  --border-strong: #c4c3ba;
+  --accent: #0b8c60;
+  --accent-soft: #dff0e7;
+  --live: #14883f;
+  --win: #1b8f4c;
+  --draw: #80807a;
+  --loss: #c93c3c;
+  --review: #a3490a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px -16px rgb(0 0 0 / 0.18);
 }
 
 :root[data-theme="dark"] {

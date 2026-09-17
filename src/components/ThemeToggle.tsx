@@ -5,11 +5,23 @@ import { useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark" | "system";
 const KEY = "ninety:theme";
+/**
+ * The choice is kept in a cookie as well as in storage, because the server
+ * renders it onto `<html>` and only the cookie reaches the server. Storage
+ * stays because reading it is synchronous and because it is where the choice
+ * of anyone who visited before this existed still lives.
+ */
+const COOKIE = "ninety-theme";
 const listeners = new Set<() => void>();
+
+function fromCookie(): Theme | null {
+  const m = document.cookie.match(/(?:^|;\s*)ninety-theme=(light|dark|system)/);
+  return m ? (m[1] as Theme) : null;
+}
 
 function read(): Theme {
   try {
-    const v = localStorage.getItem(KEY);
+    const v = fromCookie() ?? localStorage.getItem(KEY);
     return v === "dark" || v === "light" ? v : "system";
   } catch {
     return "system";
@@ -23,6 +35,8 @@ function write(theme: Theme) {
   try {
     localStorage.setItem(KEY, theme);
   } catch {}
+  // A year, on every path, and not sent across sites.
+  document.cookie = `${COOKIE}=${theme};path=/;max-age=31536000;samesite=lax`;
   listeners.forEach((l) => l());
 }
 
