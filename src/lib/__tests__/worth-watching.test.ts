@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { worthWatching } from "../data/worth-watching";
 import type { Competition, MatchView, StandingRow, Team } from "../types";
 
-const competition = { id: "epl", shortName: "PL" } as Competition;
+const competition = { id: "epl", shortName: "PL", order: 1 } as Competition;
+const second = { id: "championship", shortName: "ELC", order: 10 } as Competition;
 const team = (id: string, city = id) => ({ id, slug: id, name: id, shortName: id, city }) as Team;
 
 let n = 0;
@@ -29,6 +30,44 @@ function tables(rows: StandingRow[]) {
 }
 
 describe("worth watching", () => {
+  // Real-sized tables: "second of twenty" only means something if the table
+  // knows it has twenty clubs in it.
+  const fullTable = (prefix: string, size: number) =>
+    new Map(
+      Array.from({ length: size }, (_, i) => [
+        `${prefix}${i + 1}`,
+        row(`${prefix}${i + 1}`, i + 1),
+      ]),
+    );
+
+  it("prefers the bigger stage when two fixtures are otherwise alike", () => {
+    // The same fixture, place for place, in the first and the tenth
+    // competition on the site's list. The top flight leads the page.
+    const views = [{ ...fixture("elc2", "elc3"), competition: second }, fixture("pl2", "pl3")];
+    const t = new Map([
+      ["epl", fullTable("pl", 20)],
+      ["championship", fullTable("elc", 24)],
+    ]);
+    const teams = new Map(["pl2", "pl3", "elc2", "elc3"].map((id) => [id, team(id)]));
+    const picks = worthWatching(views, t, teams);
+    expect(picks[0].view.home.id).toBe("pl2");
+    // ...but it is a thumb on the scale, not a veto: the other one is still
+    // worth watching, and still on the page.
+    expect(picks[1].view.home.id).toBe("elc2");
+  });
+
+  it("still leads with the better match from further down the list", () => {
+    // Second against third in the tenth competition beats fourteenth against
+    // seventeenth in the first. Three per cent a place cannot buy that.
+    const views = [{ ...fixture("elc2", "elc3"), competition: second }, fixture("pl14", "pl17")];
+    const t = new Map([
+      ["epl", fullTable("pl", 20)],
+      ["championship", fullTable("elc", 24)],
+    ]);
+    const teams = new Map(["pl14", "pl17", "elc2", "elc3"].map((id) => [id, team(id)]));
+    expect(worthWatching(views, t, teams)[0].view.home.id).toBe("elc2");
+  });
+
   it("puts a meeting near the top above one near the bottom", () => {
     const views = [fixture("fourteenth", "seventeenth"), fixture("second", "fourth")];
     const t = tables([

@@ -36,6 +36,12 @@ function runLength(form: StandingRow["form"] | undefined): number {
   return streak && (streak.kind === "W" || streak.kind === "unbeaten") ? streak.count : 0;
 }
 
+/**
+ * What one place further down the competition list costs a fixture. Small on
+ * purpose: `order` is an editorial ranking, not a fact about the football.
+ */
+const PLACE_COST = 0.03;
+
 export function worthWatching(
   views: MatchView[],
   tables: Map<string, Map<string, StandingRow>>,
@@ -73,7 +79,15 @@ export function worthWatching(
     const awayCity = teams.get(away.id)?.city?.trim().toLowerCase();
     const derby = Boolean(homeCity && awayCity && homeCity === awayCity);
 
-    const score = height * 2 + closeness + (runs >= 3 ? 0.5 : 0) + (derby ? 0.75 : 0);
+    // ...and then how big a stage it is on. Second against third in a second
+    // division is a good match; second against third in the Premier League is
+    // the one the page should lead with, and without this the arithmetic could
+    // not tell them apart. It is a thumb on the scale, not a veto: each place
+    // down the site's own list costs a fixture a few per cent, so a genuinely
+    // better match still wins from further down.
+    const place = Number.isFinite(competition.order) ? Math.max(0, competition.order - 1) : 0;
+    const stage = 1 / (1 + place * PLACE_COST);
+    const score = (height * 2 + closeness + (runs >= 3 ? 0.5 : 0) + (derby ? 0.75 : 0)) * stage;
 
     // The reason is whichever of the three actually applies, strongest first.
     const reason: Reason = derby
