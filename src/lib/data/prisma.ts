@@ -29,6 +29,7 @@ import type {
 import { honoursFor, allHonours } from "./honours";
 import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
+import { playerSeasonStats, type PlayerSeasonStats } from "./player-stats";
 import { computeScorers, computeStandings } from "./standings";
 import { LIVE_LIMIT_MIN } from "../live-status";
 
@@ -285,24 +286,33 @@ export class PrismaRepository implements Repository {
         apps.set(p.playerId, (apps.get(p.playerId) ?? 0) + 1);
     return computeScorers(events.map(toEvent), apps, limit);
   }
-  async getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null> {
+  /**
+   * The competition's own chart first, our own events second — the same rule
+   * `getTopScorers` follows. Reading the events alone is how this page came to
+   * show nothing for a striker the top scorers table had on eight goals: those
+   * events need the secondary provider, and the chart does not.
+   */
+  async getPlayerSeasonStats(playerId: string): Promise<PlayerSeasonStats | null> {
     const p = await this.db.player.findUnique({ where: { id: playerId } });
     if (!p) return null;
+    const competitions = await this.db.competition.findMany({ select: { id: true, season: true } });
+    const chart = competitions.length
+      ? await this.db.seasonScorer.findMany({
+          where: {
+            playerId,
+            OR: competitions.map((c) => ({ competitionId: c.id, season: c.season })),
+          },
+        })
+      : [];
     const events = await this.db.matchEvent.findMany({
       where: {
         OR: [{ playerId }, { relatedPlayerId: playerId }],
         type: { in: ["goal", "penalty"] },
       },
     });
-    const rows = computeScorers(events.map(toEvent), new Map(), 10_000);
-    const r = rows.find((x) => x.playerId === playerId) ?? {
-      playerId,
-      teamId: p.teamId,
-      goals: 0,
-      assists: 0,
-      penalties: 0,
-      appearances: 0,
-    };
+    const counted =
+      computeScorers(events.map(toEvent), new Map(), 10_000).find((x) => x.playerId === playerId) ??
+      null;
     const lineups = await this.db.lineup.findMany({
       where: { teamId: p.teamId, match: { status: { in: ["live", "finished"] } } },
       select: { starting: true, bench: true, matchId: true },
@@ -312,12 +322,25 @@ export class PrismaRepository implements Repository {
       select: { matchId: true },
     });
     const on = new Set(subsOn.map((s) => s.matchId));
-    r.appearances = lineups.filter(
-      (l) =>
-        (l.starting as unknown as LineupPlayer[]).some((x) => x.playerId === playerId) ||
-        on.has(l.matchId),
-    ).length;
-    return r;
+    return playerSeasonStats({
+      playerId,
+      teamId: p.teamId,
+      chart: chart.map((r) => ({
+        playerId,
+        teamId: r.teamId,
+        goals: r.goals,
+        assists: r.assists,
+        penalties: r.penalties,
+        appearances: r.appearances,
+      })),
+      counted,
+      appearances: lineups.filter(
+        (l) =>
+          (l.starting as unknown as LineupPlayer[]).some((x) => x.playerId === playerId) ||
+          on.has(l.matchId),
+      ).length,
+      holdsDetail: events.length > 0 || lineups.length > 0,
+    });
   }
 
   /**

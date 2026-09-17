@@ -41,10 +41,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const repo = await getRepository();
   const player = await repo.getPlayerBySlug((await params).slug);
   if (!player) notFound();
-  const [team, stats, appearances] = await Promise.all([
+  const [team, stats, appearances, anyLineups] = await Promise.all([
     repo.getTeamById(player.teamId),
     repo.getPlayerSeasonStats(player.id),
     repo.getPlayerMatches(player.id),
+    repo.holdsLineups(),
   ]);
   if (!team) notFound();
   const squad = await repo.getSquad(team.id);
@@ -58,6 +59,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
   const goals = stats?.goals ?? 0;
   // Goals per 90, once there is enough football behind it to mean anything.
   const per90 = minutes >= 180 ? Math.round((goals / minutes) * 90 * 100) / 100 : null;
+  // Whether we hold anything about this player's season at all. Without the
+  // second provider we hold no line-ups and no events, and only the players in
+  // a competition's scorer chart have numbers — for everyone else the honest
+  // answer is a dash, because nought is a claim we cannot make.
+  const known = stats !== null && stats.source !== "none";
+  const apps = appearances.length || (known ? stats.appearances : 0);
+  const dash = "—";
 
   return (
     <div className="space-y-8">
@@ -89,7 +97,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           label={t("goals")}
-          value={goals}
+          value={known ? goals : dash}
           hint={
             stats?.penalties
               ? t("fromPens", { n: stats.penalties })
@@ -98,21 +106,38 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
                 : t("thisSeason")
           }
         />
-        <Stat label={t("assists")} value={stats?.assists ?? 0} hint={t("thisSeason")} />
+        <Stat label={t("assists")} value={known ? stats.assists : dash} hint={t("thisSeason")} />
         <Stat
           label={t("appearances")}
-          value={appearances.length}
+          value={apps || (known ? 0 : dash)}
           hint={appearances.length ? t("starts", { n: starts }) : t("allComps")}
         />
-        <Stat label={t("minutes")} value={minutes} hint={t("thisSeason")} />
+        <Stat
+          label={t("minutes")}
+          value={minutes || dash}
+          hint={minutes ? t("thisSeason") : t("fromLineups")}
+        />
       </div>
+      {/* Say which of the two the reader is looking at, exactly as the scorer
+          chart on a league page does. A number with no provenance is the thing
+          this site is trying not to be. */}
+      {stats?.source === "provider" ? (
+        <p className="-mt-6 text-xs text-faint">{t("statsProvider")}</p>
+      ) : stats?.source === "none" ? (
+        <p className="-mt-6 text-xs text-faint">{t("statsNone")}</p>
+      ) : (
+        repo.info().kind === "db" && <p className="-mt-6 text-xs text-faint">{t("statsCounted")}</p>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-base font-semibold">{t("matches")}</h2>
         {appearances.length ? (
           <PlayerMatches entries={appearances} teamId={team.id} />
         ) : (
-          <Empty>{t("noMatches")}</Empty>
+          // "No appearances yet" is a claim about the player. Where the site
+          // holds no line-up at all it is a claim about us, and a wrong one
+          // about him — he has been playing every week.
+          <Empty>{anyLineups ? t("noMatches") : t("matchesNoSource")}</Empty>
         )}
       </section>
 

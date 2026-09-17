@@ -25,6 +25,7 @@ import { matchSlug } from "../match-slug";
 import { honoursFor, allHonours } from "./honours";
 import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
+import type { PlayerSeasonStats } from "./player-stats";
 import { computeScorers, computeStandings } from "./standings";
 import dataset from "../../../data/demo/dataset.json";
 import { isLive } from "../live-status";
@@ -354,7 +355,7 @@ export class DemoRepository implements Repository {
     }
     return { rows: computeScorers(events, apps, limit), source: "matches" };
   }
-  async getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null> {
+  async getPlayerSeasonStats(playerId: string): Promise<PlayerSeasonStats | null> {
     const p = this.playersById.get(playerId);
     if (!p) return null;
     const team = this.teamsById.get(p.teamId);
@@ -383,7 +384,9 @@ export class DemoRepository implements Repository {
       const cameOn = (m.events ?? []).some((e) => e[3] === "substitution" && e[5] === playerId);
       if (side.starting.includes(playerId) || cameOn) total.appearances++;
     }
-    return total;
+    // The demo season is complete in itself: counting it is the whole truth,
+    // so it reports what it is rather than borrowing a provider's authority.
+    return { ...total, source: "matches" };
   }
 
   async getPlayerMatches(playerId: string): Promise<PlayerMatch[]> {

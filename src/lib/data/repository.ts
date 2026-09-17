@@ -1,4 +1,5 @@
 import type { ISODate } from "../dates";
+import type { PlayerSeasonStats } from "./player-stats";
 import type {
   Competition,
   DataSourceInfo,
@@ -9,7 +10,6 @@ import type {
   MatchView,
   Player,
   ScorerChart,
-  ScorerRow,
   TableSide,
   SearchItem,
   Standings,
@@ -85,7 +85,12 @@ export interface Repository {
   /** The full table, or only each team's home or away half of it. */
   getStandings(competitionId: string, side?: TableSide): Promise<Standings>;
   getTopScorers(competitionId: string, limit?: number): Promise<ScorerChart>;
-  getPlayerSeasonStats(playerId: string): Promise<ScorerRow | null>;
+  /**
+   * A player's season, with where the numbers came from: the competition's
+   * chart, our own events, or nowhere at all — which a page has to be able to
+   * tell apart from a genuine nought.
+   */
+  getPlayerSeasonStats(playerId: string): Promise<PlayerSeasonStats | null>;
   /** Every match the player appeared in this season, most recent first. */
   getPlayerMatches(playerId: string): Promise<PlayerMatch[]>;
 

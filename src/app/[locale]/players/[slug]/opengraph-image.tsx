@@ -36,6 +36,9 @@ export default async function PlayerCard({
     repo.getTeamById(player.teamId),
     repo.getPlayerSeasonStats(player.id),
   ]);
+  // A share card that says "0 goals" about a player we hold nothing for is
+  // the loudest possible way to be wrong, since it travels into group chats.
+  const known = stats !== null && stats.source !== "none";
   const crest = await loadCrest(team?.crestUrl);
   const dir = isRtl(locale) ? "rtl" : "ltr";
 
@@ -120,9 +123,9 @@ export default async function PlayerCard({
               marginTop: 26,
             }}
           >
-            <Figure n={stats?.goals ?? 0} label={t("goals")} />
-            <Figure n={stats?.assists ?? 0} label={t("assists")} />
-            <Figure n={stats?.appearances ?? 0} label={t("appearances")} />
+            <Figure n={known ? stats.goals : "—"} label={t("goals")} />
+            <Figure n={known ? stats.assists : "—"} label={t("assists")} />
+            <Figure n={known ? stats.appearances : "—"} label={t("appearances")} />
           </div>
         </div>
       </div>
@@ -131,7 +134,7 @@ export default async function PlayerCard({
   );
 }
 
-function Figure({ n, label }: { n: number; label: ReactNode }) {
+function Figure({ n, label }: { n: ReactNode; label: ReactNode }) {
   return (
     <div
       style={{
