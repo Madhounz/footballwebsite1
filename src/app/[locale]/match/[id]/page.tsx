@@ -224,6 +224,7 @@ export default async function MatchPage({ params }: { params: Params }) {
                 away={away}
                 players={players}
                 halfTime={m.halfTimeScore}
+                fullTime={m.score}
                 finished={m.status === "finished"}
                 complete={m.timelineComplete}
               />

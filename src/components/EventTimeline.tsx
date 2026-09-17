@@ -24,6 +24,7 @@ export async function EventTimeline({
   away,
   players,
   halfTime,
+  fullTime = null,
   finished = false,
   complete,
 }: {
@@ -32,6 +33,8 @@ export async function EventTimeline({
   away: Team;
   players: Record<string, Player>;
   halfTime: { home: number; away: number } | null;
+  /** The final score, which we hold for every match even when the events are missing. */
+  fullTime?: { home: number; away: number } | null;
   finished?: boolean;
   /** False while a finished match still has only what the live feed saw. */
   complete?: boolean;
@@ -41,6 +44,37 @@ export async function EventTimeline({
   // A timeline that stops mid-match says so rather than passing for the whole story.
   const pending = finished && complete === false;
   if (events.length === 0) {
+    // A finished match still has its scoreline, and we hold that for every
+    // match. Two marks on the spine are a small timeline, and they are true —
+    // which an empty card claiming nothing was recorded is not, above a 3–2.
+    if (finished && (halfTime || fullTime)) {
+      return (
+        <div className="card px-6 py-6">
+          <ol className="relative space-y-2">
+            <span
+              className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-line"
+              aria-hidden="true"
+            />
+            {[
+              halfTime && ([t("ht"), halfTime] as const),
+              fullTime && ([t("ft"), fullTime] as const),
+            ]
+              .filter((x) => x !== null && x !== undefined)
+              .map(([label, score]) => (
+                <li key={label} className="relative flex justify-center">
+                  <span className="rounded-full border border-line bg-surface px-3 py-0.5 text-[11px] font-medium text-muted">
+                    {label}{" "}
+                    <Score home={score.home} away={score.away} className="[&>span]:mx-0.5" />
+                  </span>
+                </li>
+              ))}
+          </ol>
+          <p className="mt-4 border-t border-line pt-3 text-center text-[11px] text-faint">
+            {pending ? t("timelinePending") : t("eventsUnavailable")}
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="card px-6 py-10 text-center text-sm text-muted">
         {!finished ? t("noEvents") : pending ? t("timelinePending") : t("eventsUnavailable")}
