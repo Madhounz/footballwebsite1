@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getRepository } from "@/lib/data";
+import { getRepository, matchesOnDate } from "@/lib/data";
 import { competitionFocus } from "@/lib/data/focus";
 import { clubsInForm } from "@/lib/data/match-context";
 import { worthWatching } from "@/lib/data/worth-watching";
@@ -31,7 +31,8 @@ export async function DayPage({ date }: { date: ISODate }) {
   const repo = await getRepository();
   const today = todayISO();
   const [views, competitions] = await Promise.all([
-    repo.getMatchesOnDate(date),
+    // Shared with the header, which asks the same thing for today.
+    matchesOnDate(date),
     repo.listCompetitions(),
   ]);
   const live = views.filter((v) => isLive(v.match)).length;

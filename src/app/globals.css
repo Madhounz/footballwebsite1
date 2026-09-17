@@ -346,3 +346,74 @@ html[dir="rtl"] .uppercase {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* ---------------------------------------------------------------------------
+   The competition bar
+   ---------------------------------------------------------------------------
+   A pill per competition, wearing that competition's colour when it is the one
+   being read. The fade at both ends is what tells a thumb there is more to the
+   side; it is symmetric, so it needs no mirroring for Arabic.
+*/
+.strip-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 18px,
+    #000 calc(100% - 18px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 18px,
+    #000 calc(100% - 18px),
+    transparent 100%
+  );
+}
+
+/* No `display` here: the element carries Tailwind's `inline-flex`, so that a
+   `hidden md:inline-flex` beside it still decides whether the pill is there at
+   all. A display rule in this file would land after the utilities and quietly
+   win. */
+.comp-pill {
+  /* The phone shortlist is ordered by where the football is; the full bar on a
+     larger screen goes back to the order the markup is in. */
+  order: var(--o, 0);
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.comp-pill:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.comp-pill.is-active {
+  color: var(--text);
+  /* The competition's own colour, at a strength that survives both themes. */
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 40%, transparent);
+}
+@media (min-width: 768px) {
+  .comp-pill {
+    order: 0;
+  }
+}
+
+.comp-dot {
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  flex: none;
+  border-radius: 9999px;
+  background: var(--c);
+}
+.comp-more {
+  color: var(--text-faint);
+  box-shadow: inset 0 0 0 1px var(--border);
+}

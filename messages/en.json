@@ -26,7 +26,8 @@
     "toDark": "Switch to dark",
     "toLight": "Switch to light",
     "scorers": "Scorers",
-    "following": "Your clubs"
+    "following": "Your clubs",
+    "moreLeagues": "+{n} more"
   },
   "search": {
     "button": "Search",
