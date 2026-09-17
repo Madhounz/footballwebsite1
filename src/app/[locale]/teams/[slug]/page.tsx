@@ -7,10 +7,12 @@ import { LocalTime } from "@/components/LocalTime";
 import { MatchRow } from "@/components/MatchRow";
 import { Empty, Section, Stat } from "@/components/Section";
 import { Score } from "@/components/Score";
+import { SeasonArc } from "@/components/SeasonArc";
 import { StandingsTable } from "@/components/StandingsTable";
 import { TeamCrest } from "@/components/TeamCrest";
 import { FollowButton } from "@/components/FollowButton";
 import { getRepository } from "@/lib/data";
+import { arcExtremes, seasonArc } from "@/lib/data/season-arc";
 import { pageMeta } from "@/lib/seo";
 import { ageFromDOB } from "@/lib/dates";
 import { ordinal, signed } from "@/lib/format";
@@ -61,6 +63,19 @@ export default async function TeamPage({ params }: { params: Params }) {
     ? new Map((await repo.listTeams(league.id)).map((x) => [x.id, x]))
     : new Map();
   const row = standings?.rows.find((r) => r.teamId === team.id);
+  // Where they have been all season, from the same scorelines as the table.
+  // A club with no league of their own — a European side we hold only for the
+  // matches they play against ours — has no line to draw.
+  const arc = league
+    ? seasonArc(
+        league.id,
+        league.season,
+        [...leagueTeams.keys()],
+        (await repo.getCompetitionMatches(league.id)).map((v) => v.match),
+        team.id,
+      )
+    : [];
+  const extremes = arcExtremes(arc);
 
   const live = matches.find((v) => isLive(v.match));
   const results = matches
@@ -144,6 +159,22 @@ export default async function TeamPage({ params }: { params: Params }) {
           }
         />
       </div>
+
+      {league && extremes && arc.length >= 3 && (
+        <Section
+          title={t("arcTitle")}
+          action={
+            <span className="tnum">
+              {t("arcSummary", {
+                best: isArabic ? extremes.best : ordinal(extremes.best),
+                worst: isArabic ? extremes.worst : ordinal(extremes.worst),
+              })}
+            </span>
+          }
+        >
+          <SeasonArc points={arc} team={team} competition={league} />
+        </Section>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Section title={t("recent")} action={<a href="#all-matches">{t("all")}</a>}>

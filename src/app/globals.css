@@ -216,9 +216,25 @@ html[dir="rtl"] .uppercase {
   animation: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* The season arc's line draws itself in. `pathLength="1"` on the polyline
+   normalises its length, so the dash can be written without measuring the
+   path — and the resting state is the finished line, which is what the
+   reduced-motion rule below leaves behind. */
+@keyframes arc-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.arc-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: arc-draw 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tape-fill,
-  .rise {
+  .rise,
+  .arc-line {
     animation: none;
   }
 }
