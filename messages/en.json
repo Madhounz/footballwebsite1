@@ -61,6 +61,10 @@
     "emptyToday": "No matches in the tracked competitions today. Try tomorrow or pick a date.",
     "emptyDay": "No matches in the tracked competitions on this day.",
     "atTheTop": "At the top",
+    "worthWatching": "Worth watching",
+    "reasonDerby": "{city} derby",
+    "reasonTop": "{home} against {away}",
+    "reasonForm": "both unbeaten in {n}",
     "scoringRaces": "Scoring races",
     "goalsN": "{n, plural, one {# goal} other {# goals}}",
     "inForm": "In form"

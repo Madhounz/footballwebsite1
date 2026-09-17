@@ -32,7 +32,7 @@ Copy `.env.example` to `.env.local` (Next.js) and `.env` (Prisma and scripts) to
 
 ## What is in the box
 
-- **Home** — today's matches grouped by competition, live clock and auto-refresh, a date strip (±3 days) and a real date picker, plus the top three of every table.
+- **Home** — today's matches grouped by competition, live clock and auto-refresh, a date strip (±3 days) and a real date picker, **the two or three fixtures worth watching and why**, the scoring races, the clubs on a run, plus the top three of every table.
 - **Leagues** — full table with zone markers and form, fixtures and results by matchday, top scorers and assists, past winners and most titles. Same layout for the UEFA league phases.
 - **Teams** — position, form, goals, next match, **the club's path through the table drawn matchday by matchday**, recent results, upcoming fixtures, the table around the club, the full squad by position, honours, every match this season.
 - **Players** — season goals, assists, appearances, profile facts and position-mates.

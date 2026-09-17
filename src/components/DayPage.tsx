@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getRepository } from "@/lib/data";
 import { clubsInForm } from "@/lib/data/match-context";
+import { worthWatching } from "@/lib/data/worth-watching";
 import { todayISO, type ISODate } from "@/lib/dates";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { isLive } from "@/lib/live-status";
@@ -12,6 +13,7 @@ import { InForm } from "./InForm";
 import { MatchList } from "./MatchList";
 import { ScoringRaces, type Race } from "./ScoringRaces";
 import { TeamCrest } from "./TeamCrest";
+import { WorthWatching } from "./WorthWatching";
 
 /** Shared body for `/` and `/matches/[date]`. */
 export async function DayPage({ date }: { date: ISODate }) {
@@ -61,6 +63,23 @@ export async function DayPage({ date }: { date: ISODate }) {
     snapshots.map(({ competition, rows }) => ({ competitionId: competition.id, rows })),
   );
   const competitionsById = new Map(competitions.map((c) => [c.id, c]));
+  // The same day, read by what is at stake rather than by kick-off time. Built
+  // from the tables and form already loaded above, so it costs no query — and
+  // only for a day still to be played, since there is nothing to recommend
+  // about a Saturday that has been and gone.
+  const picks =
+    date >= today
+      ? worthWatching(
+          views,
+          new Map(
+            snapshots.map(({ competition, rows }) => [
+              competition.id,
+              new Map(rows.map((r) => [r.teamId, r])),
+            ]),
+          ),
+          teamsById,
+        )
+      : [];
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -82,6 +101,7 @@ export async function DayPage({ date }: { date: ISODate }) {
         <InForm entries={inForm} teams={teamsById} competitions={competitionsById} />
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
+        <WorthWatching picks={picks} />
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
           {t("atTheTop")}
         </h2>
