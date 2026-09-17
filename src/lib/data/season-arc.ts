@@ -1,4 +1,4 @@
-import type { FormResult, Match } from "../types";
+import type { FormResult, Match, StandingRow } from "../types";
 import { computeStandings } from "./standings";
 
 /**
@@ -37,6 +37,39 @@ function resultOf(m: Match, teamId: string): FormResult | null {
   return own > other ? "W" : own < other ? "L" : "D";
 }
 
+/** The table as it stood after one round, by club. */
+export interface RoundTable {
+  round: number;
+  rows: Map<string, StandingRow>;
+}
+
+/**
+ * The season replayed: the whole table after each round it was played.
+ *
+ * One pass per round serves every club at once, so a page drawing twenty lines
+ * costs what a page drawing one costs. It is also the only place the replay is
+ * written, which is what keeps a club's line and a competition's race telling
+ * the same story.
+ */
+export function replaySeason(
+  competitionId: string,
+  season: string,
+  teamIds: string[],
+  matches: Match[],
+): RoundTable[] {
+  const finished = matches.filter((m) => m.status === "finished" && m.score);
+  const rounds = [...new Set(finished.map((m) => m.round))].sort((a, b) => a - b);
+  return rounds.map((round) => {
+    const { rows } = computeStandings(
+      competitionId,
+      season,
+      teamIds,
+      finished.filter((m) => m.round <= round),
+    );
+    return { round, rows: new Map(rows.map((r) => [r.teamId, r])) };
+  });
+}
+
 export function seasonArc(
   competitionId: string,
   season: string,
@@ -45,12 +78,9 @@ export function seasonArc(
   teamId: string,
 ): ArcPoint[] {
   const finished = matches.filter((m) => m.status === "finished" && m.score);
-  const rounds = [...new Set(finished.map((m) => m.round))].sort((a, b) => a - b);
   const out: ArcPoint[] = [];
-  for (const round of rounds) {
-    const upTo = finished.filter((m) => m.round <= round);
-    const { rows } = computeStandings(competitionId, season, teamIds, upTo);
-    const row = rows.find((r) => r.teamId === teamId);
+  for (const { round, rows } of replaySeason(competitionId, season, teamIds, matches)) {
+    const row = rows.get(teamId);
     // Before a club's first match everybody is level and a "position" is only
     // the order the clubs happened to arrive in. The line starts when they do.
     if (!row || row.played === 0) continue;

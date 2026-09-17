@@ -239,6 +239,59 @@ html[dir="rtl"] .uppercase {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   The race
+   Twenty lines on one chart are readable only if the reader can pull one out
+   of the pile. Pointing at a line dims the rest and brings that one forward
+   with its name; `:has()` scopes the dimming to the moment a line is actually
+   under the pointer, so hovering the empty part of the card changes nothing.
+   Where there is no pointer at all, nothing here applies and the chart keeps
+   its resting state — which is why the clubs in the qualifying places carry
+   their colour without being asked.
+--------------------------------------------------------------------------- */
+
+.race .race-club {
+  transition:
+    opacity 160ms ease,
+    stroke-width 160ms ease;
+}
+.race:has(.race-club:hover) .race-club {
+  opacity: 0.14;
+}
+/* Matched through `:has()` as well, or the rule above out-specifies it and
+   pointing at a line dims that line along with the other nineteen. */
+.race:has(.race-club:hover) .race-club:hover {
+  opacity: 1;
+}
+.race .race-club:hover .race-stroke {
+  stroke-width: 3.5;
+  stroke-opacity: 1;
+}
+.race .race-name {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.race .race-club:hover .race-name {
+  opacity: 1;
+}
+/* The end labels belong to the coloured lines, and are too small to read
+   before the chart is wide enough to space them out. */
+.race-endlabel {
+  display: none;
+}
+@media (min-width: 640px) {
+  .race-endlabel {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race .race-club,
+  .race .race-name {
+    transition: none;
+  }
+}
+
 .scrollbar-none {
   scrollbar-width: none;
 }

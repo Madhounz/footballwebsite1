@@ -33,6 +33,7 @@ Kickoff times are rendered in UTC on the server and in the visitor's timezone af
 | `/leagues/[slug]`                          | full table + next matchday                         |
 | `/leagues/[slug]/fixtures`                 | remaining matches by matchday                      |
 | `/leagues/[slug]/results`                  | played matches by matchday, latest first           |
+| `/leagues/[slug]/race`                     | every club's position after every matchday         |
 | `/leagues/[slug]/stats`                    | top scorers and assists                            |
 | `/leagues/[slug]/history`                  | past winners and most titles                       |
 | `/teams`, `/teams/[slug]`                  | club directory and club page                       |

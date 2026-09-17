@@ -71,6 +71,7 @@ export default async function LeagueLayout({
           { href: base, label: t("tabTable"), exact: true },
           { href: `${base}/fixtures`, label: t("tabFixtures") },
           { href: `${base}/results`, label: t("tabResults") },
+          { href: `${base}/race`, label: t("tabRace") },
           { href: `${base}/stats`, label: t("tabScorers") },
           { href: `${base}/history`, label: t("tabHistory") },
         ]}

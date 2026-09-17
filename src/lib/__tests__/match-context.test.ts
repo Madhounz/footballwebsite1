@@ -8,7 +8,7 @@ import {
   resultFor,
   teamRecord,
 } from "../data/match-context";
-import { barColors } from "../colors";
+import { barColors, distinctColors } from "../colors";
 import type { Competition, MatchView, Team } from "../types";
 
 const competition = { id: "epl", shortName: "PL" } as Competition;
@@ -237,5 +237,129 @@ describe("clubs in form", () => {
   it("takes the best few across every competition", () => {
     const rows = ["a", "b", "c", "d", "e", "f", "g"].map((id) => row(id, "LWWWW"));
     expect(clubsInForm([{ competitionId: "epl", rows }], 3)).toHaveLength(3);
+  });
+});
+
+describe("distinct colours", () => {
+  const club = (id: string, colors: string[]) => ({ id, colors });
+
+  const hue = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const max = Math.max(r, g, b);
+    const d = max - Math.min(r, g, b);
+    if (d === 0) return 0;
+    const h =
+      max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+  };
+
+  it("leaves a club its own colour when it is readable and nobody else is wearing it", () => {
+    const c = distinctColors([club("city", ["#6CABDD", "#1C2C5B"])]);
+    expect(c.get("city")).toBe("#6CABDD");
+  });
+
+  it("keeps a dark club colour's hue and only lifts it into view", () => {
+    // Chelsea blue against a near-black page is barely a line at all. What is
+    // drawn is the same blue, brighter — not a different club's colour.
+    const drawn = distinctColors([club("chelsea", ["#034694", "#ffffff"])]).get(
+      "chelsea",
+    ) as string;
+    expect(drawn).not.toBe("#034694");
+    expect(Math.abs(hue(drawn) - hue("#034694"))).toBeLessThan(4);
+  });
+
+  it("moves the second of two reds onto its own second colour", () => {
+    const c = distinctColors([
+      club("liverpool", ["#C8102E", "#00B2A9"]),
+      club("united", ["#DA291C", "#FBE122"]),
+    ]);
+    expect(c.get("liverpool")).toBe("#C8102E");
+    expect(c.get("united")).toBe("#FBE122");
+  });
+
+  it("reaches for a spare when a club has no colour of its own left to give", () => {
+    const c = distinctColors([
+      club("a", ["#C8102E", "#C9112F"]),
+      club("b", ["#DA291C", "#D5202A"]),
+    ]);
+    expect(c.get("a")).toBe("#C8102E");
+    expect(c.get("b")).not.toBe(c.get("a"));
+    expect(c.get("b")).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it("gives every club on a crowded chart a colour of its own", () => {
+    const reds = [
+      "#C8102E",
+      "#DA291C",
+      "#EF0107",
+      "#D00027",
+      "#E30613",
+      "#C70101",
+      "#B80A1E",
+      "#FF0000",
+    ];
+    const c = distinctColors(reds.map((hex, i) => club(`t${i}`, [hex])));
+    expect(new Set(c.values()).size).toBe(reds.length);
+  });
+
+  it("is the same chart every time", () => {
+    const clubs = [club("a", ["#C8102E"]), club("b", ["#DA291C"]), club("c", ["#034694"])];
+    expect([...distinctColors(clubs)]).toEqual([...distinctColors(clubs)]);
+  });
+});
+
+describe("line colours survive both themes", () => {
+  it("refuses a club's white second colour, which the light theme would swallow", () => {
+    const c = distinctColors([
+      { id: "brighton", colors: ["#0057B8", "#FFFFFF"] },
+      { id: "chelsea", colors: ["#034694", "#FFFFFF"] },
+    ]);
+    expect(c.get("chelsea")).not.toBe("#FFFFFF");
+    expect(c.get("chelsea")).not.toBe("#034694");
+  });
+
+  it("refuses a near-black one too", () => {
+    const c = distinctColors([{ id: "a", colors: ["#111111", "#000000"] }]);
+    expect(c.get("a")).not.toBe("#111111");
+    expect(c.get("a")).not.toBe("#000000");
+  });
+});
+
+describe("two lines a reader can tell apart", () => {
+  const hueOf = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const max = Math.max(r, g, b);
+    const d = max - Math.min(r, g, b);
+    if (d === 0) return 0;
+    const h =
+      max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+  };
+  const apart = (a: string, b: string) => {
+    const d = Math.abs(hueOf(a) - hueOf(b));
+    return Math.min(d, 360 - d);
+  };
+
+  it("does not hand two blue clubs two blues, however far apart the arithmetic says they are", () => {
+    // Brighton and Chelsea. One of them has to take a colour that is not
+    // theirs, because two blue lines on one chart cannot be followed — which
+    // is the whole job of the chart, and why the key names every colour.
+    const c = distinctColors([
+      { id: "brighton", colors: ["#0057B8", "#FFFFFF"] },
+      { id: "chelsea", colors: ["#034694", "#FFFFFF"] },
+    ]);
+    expect(apart(c.get("brighton") as string, c.get("chelsea") as string)).toBeGreaterThanOrEqual(
+      35,
+    );
+  });
+
+  it("keeps every line on a crowded chart in a different colour family", () => {
+    const reds = ["#C8102E", "#DA291C", "#EF0107", "#D00027", "#E30613", "#C70101"];
+    const drawn = [
+      ...distinctColors(reds.map((hex, i) => ({ id: `t${i}`, colors: [hex] }))).values(),
+    ];
+    for (let i = 0; i < drawn.length; i++)
+      for (let j = i + 1; j < drawn.length; j++)
+        expect(apart(drawn[i], drawn[j])).toBeGreaterThanOrEqual(35);
   });
 });
