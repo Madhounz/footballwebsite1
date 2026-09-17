@@ -76,7 +76,7 @@ export async function RaceChart({
         </div>
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="race h-auto w-full"
+          className="chart h-auto w-full"
           role="img"
           aria-label={t("raceAria", { n: race.lines.length, rounds: rounds.length })}
         >
@@ -99,7 +99,7 @@ export async function RaceChart({
             );
             const last = line.points[line.points.length - 1];
             return (
-              <g key={line.teamId} className="race-club">
+              <g key={line.teamId} className="chart-line">
                 {/* A transparent stroke wide enough to be pointed at without
                     making the drawn line any thicker. */}
                 <polyline
@@ -110,7 +110,7 @@ export async function RaceChart({
                   pointerEvents="stroke"
                 />
                 <polyline
-                  className="race-stroke"
+                  className="chart-stroke"
                   points={d.join(" ")}
                   fill="none"
                   stroke={colour ?? "var(--text-faint)"}
@@ -128,7 +128,7 @@ export async function RaceChart({
                 />
                 {team && (
                   <text
-                    className={colour ? "race-endlabel" : "race-name"}
+                    className={colour ? "chart-endlabel" : "chart-name"}
                     x={x(last.round) + 7}
                     y={y(last.position) + 3}
                     fill={colour ?? "var(--text-muted)"}

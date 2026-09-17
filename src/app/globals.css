@@ -250,44 +250,44 @@ html[dir="rtl"] .uppercase {
    their colour without being asked.
 --------------------------------------------------------------------------- */
 
-.race .race-club {
+.chart .chart-line {
   transition:
     opacity 160ms ease,
     stroke-width 160ms ease;
 }
-.race:has(.race-club:hover) .race-club {
+.chart:has(.chart-line:hover) .chart-line {
   opacity: 0.14;
 }
 /* Matched through `:has()` as well, or the rule above out-specifies it and
    pointing at a line dims that line along with the other nineteen. */
-.race:has(.race-club:hover) .race-club:hover {
+.chart:has(.chart-line:hover) .chart-line:hover {
   opacity: 1;
 }
-.race .race-club:hover .race-stroke {
+.chart .chart-line:hover .chart-stroke {
   stroke-width: 3.5;
   stroke-opacity: 1;
 }
-.race .race-name {
+.chart .chart-name {
   opacity: 0;
   transition: opacity 160ms ease;
 }
-.race .race-club:hover .race-name {
+.chart .chart-line:hover .chart-name {
   opacity: 1;
 }
 /* The end labels belong to the coloured lines, and are too small to read
    before the chart is wide enough to space them out. */
-.race-endlabel {
+.chart-endlabel {
   display: none;
 }
 @media (min-width: 640px) {
-  .race-endlabel {
+  .chart-endlabel {
     display: block;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .race .race-club,
-  .race .race-name {
+  .chart .chart-line,
+  .chart .chart-name {
     transition: none;
   }
 }
