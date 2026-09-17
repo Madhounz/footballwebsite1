@@ -108,4 +108,11 @@ describe("DemoRepository", () => {
       for (const season of seasons) expect(season).toMatch(/^\d{4}(\/\d{2})?$/);
     }
   });
+
+  it("knows whether the deployment holds line-ups at all", async () => {
+    const repo = new DemoRepository();
+    // The demo season carries its own, so a match page here never shows the
+    // "no source" sentence. The check exists for a deployment that has none.
+    await expect(repo.holdsLineups()).resolves.toBe(true);
+  });
 });

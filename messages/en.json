@@ -82,6 +82,7 @@
     "lineups": "Line-ups",
     "lineupsLater": "Line-ups are published about an hour before kick-off.",
     "lineupsUnavailable": "We do not hold the line-ups for this match. They come from a second source.",
+    "lineupsNoSource": "No line-ups here yet — they come from a second source we are not receiving.",
     "eventsUnavailable": "We do not hold the timeline for this match — goals, cards and substitutions come from a second source, and it has nothing for this one.",
     "timeline": "Timeline",
     "noEvents": "No events yet.",

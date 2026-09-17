@@ -271,6 +271,9 @@ export class DemoRepository implements Repository {
     const list = this.shifted().byDate.get(today) ?? [];
     return list.map((m) => this.toView(m, now)).filter((v) => isLive(v.match, now));
   }
+  async holdsLineups(): Promise<boolean> {
+    return DATA.matches.some((m) => m.lineups);
+  }
   async getMatch(idOrSlug: string): Promise<MatchDetail | null> {
     const shifted = this.shifted();
     const m =

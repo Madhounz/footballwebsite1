@@ -200,6 +200,9 @@ export class PrismaRepository implements Repository {
       players: Object.fromEntries(players.map((p) => [p.id, toPlayer(p)])),
     };
   }
+  async holdsLineups(): Promise<boolean> {
+    return (await this.db.lineup.findFirst({ select: { matchId: true } })) !== null;
+  }
   async getCompetitionMatches(competitionId: string): Promise<MatchView[]> {
     const rows = await this.db.match.findMany({
       where: { competitionId },

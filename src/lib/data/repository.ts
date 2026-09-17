@@ -69,6 +69,16 @@ export interface Repository {
   getMatchesOnDate(date: ISODate): Promise<MatchView[]>;
   getLiveMatches(): Promise<MatchView[]>;
   getMatch(id: string): Promise<MatchDetail | null>;
+  /**
+   * Whether this deployment holds any line-up at all.
+   *
+   * Line-ups come from the secondary provider, and a deployment running
+   * without one holds none — so "line-ups are published about an hour before
+   * kick-off" is a promise it cannot keep, on every fixture, for as long as
+   * that is true. The page needs to be able to tell that from a single match
+   * whose line-ups have not landed yet.
+   */
+  holdsLineups(): Promise<boolean>;
   getCompetitionMatches(competitionId: string): Promise<MatchView[]>;
   getTeamMatches(teamId: string): Promise<MatchView[]>;
 

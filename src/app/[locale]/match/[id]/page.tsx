@@ -56,10 +56,13 @@ export default async function MatchPage({ params }: { params: Params }) {
   const live = isLive(m);
   const stale = isStaleLive(m);
 
-  const [homeMatches, awayMatches, standings] = await Promise.all([
+  const [homeMatches, awayMatches, standings, anyLineups] = await Promise.all([
     repo.getTeamMatches(home.id),
     repo.getTeamMatches(away.id),
     repo.getStandings(competition.id).catch(() => null),
+    // Not "this match has none yet" but "there are none here at all", which is
+    // a different sentence and the true one while the second source is away.
+    lineups ? Promise.resolve(true) : repo.holdsLineups(),
   ]);
   // Everything a match page can say without a provider's match detail. The
   // fixture is left out of its own build-up: a result cannot be part of the
@@ -208,7 +211,13 @@ export default async function MatchPage({ params }: { params: Params }) {
               players={players}
             />
           ) : (
-            <Empty>{m.status === "scheduled" ? t("lineupsLater") : t("lineupsUnavailable")}</Empty>
+            <Empty>
+              {!anyLineups
+                ? t("lineupsNoSource")
+                : m.status === "scheduled"
+                  ? t("lineupsLater")
+                  : t("lineupsUnavailable")}
+            </Empty>
           )}
         </Section>
         <div className="space-y-8">
