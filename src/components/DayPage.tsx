@@ -149,7 +149,7 @@ export async function DayPage({ date }: { date: ISODate }) {
                   <li key={r.teamId}>
                     <Link
                       href={`/teams/${team.slug}`}
-                      className="row-hover flex items-center gap-2 px-4 py-1.5"
+                      className="row-hover flex min-h-9 items-center gap-2 px-4 py-1.5"
                     >
                       <span className="w-4 text-faint">{r.position}</span>
                       <TeamCrest team={team} size={18} />

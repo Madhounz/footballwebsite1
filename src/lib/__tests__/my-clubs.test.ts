@@ -1,8 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { pulse, shownMatch, sortClubs, type ClubLike } from "../data/my-clubs";
 import type { ISODate } from "../dates";
 
 const today = "2026-09-17" as ISODate;
+
+// `isLive` reads the wall clock — a match is only in play for so long after
+// kick-off. Without a fixed clock these tests pass in the afternoon and fail
+// in the evening, which is the worst kind of test there is.
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-09-17T19:20:00.000Z"));
+});
+afterAll(() => vi.useRealTimers());
 
 const m = (
   kickoff: string,

@@ -55,7 +55,8 @@
     "sourceDemo": "Demo data.",
     "sourceDemoText": "Synthetic season generated for development. Results, players and lineups are not real.",
     "sourceLive": "Live data.",
-    "sourceLiveText": "Today's matches are re-read every minute from licensed providers."
+    "sourceLiveText": "Today's matches are re-read every minute from licensed providers.",
+    "pages": "All pages"
   },
   "dates": {
     "today": "Today",

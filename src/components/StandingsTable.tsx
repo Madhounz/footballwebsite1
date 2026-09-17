@@ -97,7 +97,7 @@ export async function StandingsTable({
                   key={r.teamId}
                   className={`row-hover border-b border-line last:border-0 ${highlighted ? "bg-accent-soft/60" : ""}`}
                 >
-                  <td className="relative py-2 ps-3 sm:ps-4">
+                  <td className="relative py-2.5 sm:py-2 ps-3 sm:ps-4">
                     {zone && (
                       <span
                         className={`absolute inset-y-0 start-0 w-[3px] ${TONE[zone.tone]}`}
@@ -116,10 +116,13 @@ export async function StandingsTable({
                       )}
                     </span>
                   </td>
-                  <td className="py-2">
+                  {/* No padding on the cell: the link carries it instead, so
+                      the whole height of the row is the thing a thumb hits
+                      rather than the 22px of text inside it. */}
+                  <td className="py-0">
                     <Link
                       href={`/teams/${team.slug}`}
-                      className="flex items-center gap-2.5 hover:underline"
+                      className="flex items-center gap-2.5 py-2.5 hover:underline sm:py-2"
                     >
                       <TeamCrest team={team} size={22} />
                       <span className="truncate font-medium">
@@ -128,25 +131,34 @@ export async function StandingsTable({
                       </span>
                     </Link>
                   </td>
-                  <td className="py-2 text-center text-muted">{r.played}</td>
+                  <td className="py-2.5 sm:py-2 text-center text-muted">{r.played}</td>
                   {!compact && (
                     <>
-                      <td className="hidden py-2 text-center text-muted sm:table-cell">{r.won}</td>
-                      <td className="hidden py-2 text-center text-muted sm:table-cell">
+                      <td className="hidden py-2.5 sm:py-2 text-center text-muted sm:table-cell">
+                        {r.won}
+                      </td>
+                      <td className="hidden py-2.5 sm:py-2 text-center text-muted sm:table-cell">
                         {r.drawn}
                       </td>
-                      <td className="hidden py-2 text-center text-muted sm:table-cell">{r.lost}</td>
-                      <td className="hidden py-2 text-center text-muted md:table-cell" dir="ltr">
+                      <td className="hidden py-2.5 sm:py-2 text-center text-muted sm:table-cell">
+                        {r.lost}
+                      </td>
+                      <td
+                        className="hidden py-2.5 sm:py-2 text-center text-muted md:table-cell"
+                        dir="ltr"
+                      >
                         {r.goalsFor}:{r.goalsAgainst}
                       </td>
                     </>
                   )}
-                  <td className="py-2 text-center text-muted" dir="ltr">
+                  <td className="py-2.5 sm:py-2 text-center text-muted" dir="ltr">
                     {signed(r.goalDifference)}
                   </td>
-                  <td className="py-2 pe-3 text-center font-semibold sm:pe-4">{r.points}</td>
+                  <td className="py-2.5 sm:py-2 pe-3 text-center font-semibold sm:pe-4">
+                    {r.points}
+                  </td>
                   {!compact && (
-                    <td className="hidden py-2 pe-4 text-end lg:table-cell">
+                    <td className="hidden py-2.5 sm:py-2 pe-4 text-end lg:table-cell">
                       <FormBadges form={r.form} />
                     </td>
                   )}

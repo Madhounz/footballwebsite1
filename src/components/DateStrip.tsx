@@ -69,7 +69,7 @@ function Chip({
     <Link
       href={href}
       aria-current={active ? "date" : undefined}
-      className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm transition-colors ${
+      className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 text-sm transition-colors sm:min-h-0 sm:py-1.5 ${
         active
           ? "bg-ink text-on-ink"
           : emphasis

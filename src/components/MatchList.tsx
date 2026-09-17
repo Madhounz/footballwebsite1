@@ -42,7 +42,7 @@ export async function MatchList({
               <Link
                 href={`/leagues/${competition.slug}`}
                 id={`comp-${competition.id}`}
-                className="flex items-center gap-2 text-sm font-semibold hover:underline"
+                className="flex min-h-9 items-center gap-2 text-sm font-semibold hover:underline"
               >
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-full"
@@ -66,7 +66,10 @@ export async function MatchList({
                     <span className="live-dot" /> {t("live", { count: liveCount })}
                   </span>
                 )}
-                <Link href={`/leagues/${competition.slug}`} className="hover:text-ink">
+                <Link
+                  href={`/leagues/${competition.slug}`}
+                  className="inline-flex min-h-9 items-center hover:text-ink"
+                >
                   {t("table")}
                 </Link>
               </span>

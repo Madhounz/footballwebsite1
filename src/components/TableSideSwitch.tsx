@@ -23,7 +23,7 @@ export async function TableSideSwitch({ slug, side }: { slug: string; side: Tabl
             key={o.value}
             href={o.value === "all" ? `/leagues/${slug}` : `/leagues/${slug}?table=${o.value}`}
             aria-current={active ? "true" : undefined}
-            className={`rounded-full px-2.5 py-1 font-medium transition-colors ${
+            className={`rounded-full inline-flex min-h-9 items-center px-2.5 sm:min-h-0 sm:py-1 font-medium transition-colors ${
               active ? "bg-surface-2 text-ink" : "text-muted hover:text-ink"
             }`}
           >

@@ -82,10 +82,10 @@ export async function SiteHeader({
   ];
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/70">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-4 px-4 sm:h-14 sm:px-6">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center" aria-label={t("home")}>
-            <Wordmark />
+          <Link href="/" className="flex min-h-10 items-center" aria-label={t("home")}>
+            <Wordmark locale={locale} />
           </Link>
           <nav className="hidden items-center gap-1 md:flex" aria-label={t("primary")}>
             {nav.map((n) => (
@@ -111,21 +111,6 @@ export async function SiteHeader({
         </div>
       </div>
       <div className="border-t border-line/60">
-        {/* The primary nav only appears down here on a phone, where the
-            header itself has no room for it. It scrolls behind the same fade
-            as the competitions, so both rows behave the same way. */}
-        <div className="strip-fade scrollbar-none overflow-x-auto md:hidden">
-          <nav
-            className="mx-auto flex max-w-6xl items-center gap-1 px-4 pt-1.5 sm:px-6"
-            aria-label={t("primary")}
-          >
-            {nav.map((n) => (
-              <NavLink key={n.href} href={n.href} exact={n.exact} small>
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
         <CompetitionStrip items={strip} more={t("moreLeagues", { n: hidden })} />
       </div>
     </header>

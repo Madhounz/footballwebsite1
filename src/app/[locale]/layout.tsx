@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import "../globals.css";
+import { BottomNav } from "@/components/BottomNav";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ServiceWorker } from "@/components/ServiceWorker";
@@ -108,10 +109,19 @@ export default async function LocaleLayout({
   const theme = chosen === "light" || chosen === "dark" ? chosen : undefined;
 
   const repo = await getRepository();
-  const [competitions, rawSearch] = await Promise.all([
+  const [competitions, rawSearch, nav] = await Promise.all([
     repo.listCompetitions(),
     repo.searchIndex(),
+    getTranslations({ locale, namespace: "nav" }),
   ]);
+  const navLabels = {
+    matches: nav("matches"),
+    week: nav("week"),
+    scorers: nav("scorers"),
+    following: nav("following"),
+    leagues: nav("leagues"),
+    primary: nav("primary"),
+  };
   const info = repo.info();
   // Localise search labels; keep English in keywords so either script matches.
   const searchItems = rawSearch.map((item) => {
@@ -141,6 +151,9 @@ export default async function LocaleLayout({
           />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-6 sm:px-6">{children}</main>
           <SiteFooter info={info} />
+          {/* Under the thumb on a phone, absent on anything wider. */}
+          <BottomNav labels={navLabels} />
+          <div className="bottom-nav-gap md:hidden" aria-hidden="true" />
           <ServiceWorker />
         </NextIntlClientProvider>
       </body>
