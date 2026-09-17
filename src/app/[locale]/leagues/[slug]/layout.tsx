@@ -80,6 +80,7 @@ export default async function LeagueLayout({
           { href: `${base}/fixtures`, label: t("tabFixtures") },
           { href: `${base}/results`, label: t("tabResults") },
           { href: `${base}/race`, label: t("tabRace") },
+          { href: `${base}/run-in`, label: t("tabRunIn") },
           { href: `${base}/halves`, label: t("tabHalves") },
           { href: `${base}/stats`, label: t("tabScorers") },
           ...(hasHistory ? [{ href: `${base}/history`, label: t("tabHistory") }] : []),

@@ -221,7 +221,11 @@
       "season": "Season",
       "winner": "Winner",
       "runnerUp": "Runner-up",
-      "note": "Note"
+      "note": "Note",
+      "left": "Left",
+      "max": "Max",
+      "pace": "Pace",
+      "canFinish": "Can finish"
     },
     "zones": {
       "Champions League": "Champions League",
@@ -262,7 +266,20 @@
     "assistsFromScorers": "Assists among the players in the competition's scorer chart, so a player who creates goals without scoring them will not appear.",
     "groupLeagues": "Domestic leagues",
     "groupCups": "European competitions",
-    "tier": "{n, plural, =2 {Second tier} =3 {Third tier} other {Tier #}}"
+    "tier": "{n, plural, =2 {Second tier} =3 {Third tier} other {Tier #}}",
+    "tabRunIn": "Run-in",
+    "runInTitle": "What is still possible",
+    "runInLead": "Every place each club can still finish, worked out from the points left on the table. The bar only ever shrinks: in August it spans the league, by April it is the season.",
+    "runInBound": "A club cannot finish above the first number — that many clubs already hold more points than it can reach — or below the second, for the same reason in reverse. Inside the bar means not ruled out by the points; with three for a win, whether a place is truly still reachable depends on who plays whom, and we do not claim to know.",
+    "runInEarly": "Too early for the bars to say much: with this many matches left, every club can still finish anywhere. They pull apart as the season does.",
+    "runInHardest": "Hardest run-in",
+    "runInEasiest": "Kindest run-in",
+    "runInOver": "Nothing left to play.",
+    "runInDifficultyNote": "Run-in difficulty is the average table place of a club's next five opponents — a rough measure, and one you can check. The dot marks a home match.",
+    "avgOpponent": "Average opponent: {n}th",
+    "atHome": "Home",
+    "away": "Away",
+    "canFinishTitle": "Cannot finish above {best} or below {worst}"
   },
   "team": {
     "intro": "Every club in the tracked leagues, plus the European sides they meet in UEFA competition.",

@@ -55,6 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         "/fixtures",
         "/results",
         "/race",
+        "/run-in",
         "/halves",
         "/stats",
         ...(honours.has(c.id) ? ["/history"] : []),
