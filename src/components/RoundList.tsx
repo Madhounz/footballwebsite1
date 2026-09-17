@@ -10,16 +10,25 @@ export async function RoundList({
   views,
   competition,
   mode,
+  emptyText,
 }: {
   views: MatchView[];
   competition: Competition;
   mode: "fixtures" | "results";
+  /**
+   * What to say when there is nothing to list. The default reads as though a
+   * season is under way — "no fixtures left", "no results yet" — which is the
+   * wrong sentence for a competition holding no matches at all.
+   */
+  emptyText?: string;
 }) {
   const t = await getTranslations("league");
   const tm = await getTranslations("match");
   const locale = await getLocale();
   if (views.length === 0)
-    return <Empty>{mode === "fixtures" ? t("noFixturesLeft") : t("noResultsYet")}</Empty>;
+    return (
+      <Empty>{emptyText ?? (mode === "fixtures" ? t("noFixturesLeft") : t("noResultsYet"))}</Empty>
+    );
   const rounds = new Map<number, MatchView[]>();
   for (const v of views) {
     const list = rounds.get(v.match.round) ?? [];

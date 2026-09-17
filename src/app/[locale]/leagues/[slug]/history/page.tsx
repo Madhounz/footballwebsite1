@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { Empty, Section } from "@/components/Section";
+import { NameCrest } from "@/components/NameCrest";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
 import { teamName } from "@/lib/i18n/names";
@@ -58,7 +59,9 @@ export default async function HistoryPage({ params }: { params: Promise<{ slug: 
                           <TeamCrest team={w} size={20} /> {nameOf(e.winnerTeamId, e.winner)}
                         </Link>
                       ) : (
-                        e.winner
+                        <span className="inline-flex items-center gap-2">
+                          <NameCrest name={e.winner} size={20} /> {e.winner}
+                        </span>
                       )}
                     </td>
                     <td className="hidden py-2 text-muted sm:table-cell">
@@ -91,11 +94,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ slug: 
               return (
                 <li key={m.team} className="flex items-center gap-3 px-4 py-2">
                   <span className="w-4 text-faint">{i + 1}</span>
-                  {team ? (
-                    <TeamCrest team={team} size={20} />
-                  ) : (
-                    <span className="inline-block h-5 w-5 rounded-full bg-surface-2" />
-                  )}
+                  {team ? <TeamCrest team={team} size={20} /> : <NameCrest name={m.team} />}
                   <span className="flex-1 truncate">
                     {team ? (
                       <Link href={`/teams/${team.slug}`} className="hover:underline">

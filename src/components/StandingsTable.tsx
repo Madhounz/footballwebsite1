@@ -4,6 +4,7 @@ import type { Competition, Standings, TableZone, Team } from "@/lib/types";
 import { signed } from "@/lib/format";
 import { teamName, teamShortName } from "@/lib/i18n/names";
 import { FormBadges } from "./Form";
+import { Empty } from "./Section";
 import { TeamCrest } from "./TeamCrest";
 
 const TONE: Record<TableZone["tone"], string> = {
@@ -38,6 +39,11 @@ export async function StandingsTable({
 }) {
   const t = await getTranslations("league");
   const locale = await getLocale();
+  // A competition can exist here with nothing played in it — the day before a
+  // season starts, or one we carry no fixtures for. A row per club with zeros
+  // all the way across is not a table, it is a list of clubs pretending to be
+  // one, and with no clubs either it is column headings over nothing.
+  if (standings.rows.every((r) => r.played === 0)) return <Empty>{t("noTableYet")}</Empty>;
   const zonesUsed = zones
     ? competition.zones.filter((z) =>
         standings.rows.some((r) => r.position >= z.from && r.position <= z.to),

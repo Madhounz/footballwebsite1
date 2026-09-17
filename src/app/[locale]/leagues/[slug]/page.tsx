@@ -58,7 +58,11 @@ export default async function LeagueTablePage({
           title={nextRound ? tm("matchday", { n: nextRound }) : t("fixtures")}
           action={<Link href={`/leagues/${c.slug}/fixtures`}>{t("allFixtures")}</Link>}
         >
-          <MatchList views={nextMatches} competitions={[c]} emptyText={t("seasonComplete")} />
+          <MatchList
+            views={nextMatches}
+            competitions={[c]}
+            emptyText={matches.length === 0 ? t("noMatchesYet") : t("seasonComplete")}
+          />
         </Section>
       </div>
     </div>

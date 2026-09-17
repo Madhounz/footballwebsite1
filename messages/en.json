@@ -146,6 +146,8 @@
     "fixtures": "Fixtures",
     "allFixtures": "All fixtures →",
     "seasonComplete": "Season complete.",
+    "noMatchesYet": "No matches recorded in this competition yet.",
+    "noTableYet": "No table yet — nothing has been played in this competition.",
     "noFixturesLeft": "No fixtures left this season.",
     "noResultsYet": "No results yet.",
     "topScorers": "Top scorers",
