@@ -19,10 +19,8 @@
     "demoTitle": "This deployment runs on a synthetic dataset",
     "switchTo": "العربية",
     "switchToLabel": "Switch to Arabic",
-    "theme": "Theme: {mode}",
-    "themeSystem": "system",
-    "themeDark": "dark",
-    "themeLight": "light"
+    "toDark": "Switch to dark",
+    "toLight": "Switch to light"
   },
   "search": {
     "button": "Search",

@@ -13,19 +13,22 @@
  * The page is now a warm grey and the cards an off-white above it — about a
  * seventh of a stop apart, which is what makes a card look like a card — and
  * the type and the accent gained contrast rather than losing it in the move.
+ * Taken one notch further since: body text at 16.5:1, secondary at 5.7:1 and
+ * the accent at 4.5:1 against a card, all of which is more headroom than the
+ * near-white had.
  */
 :root {
   color-scheme: light;
-  --bg: #eae9e4;
-  --surface: #f8f8f5;
-  --surface-2: #e0dfd9;
+  --bg: #e3e2dc;
+  --surface: #f2f2ee;
+  --surface-2: #d8d7d0;
   --text: #14140f;
   --text-muted: #5f5f58;
   --text-faint: #8b8b82;
-  --border: #dcdbd3;
-  --border-strong: #c4c3ba;
-  --accent: #0b8c60;
-  --accent-soft: #dff0e7;
+  --border: #d4d3ca;
+  --border-strong: #bcbbb2;
+  --accent: #0a7f57;
+  --accent-soft: #daeee4;
   --live: #14883f;
   --win: #1b8f4c;
   --draw: #80807a;
@@ -73,6 +76,32 @@
     --loss: #f87171;
     --review: #fbbf24;
     --shadow: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The theme button
+   It shows what a tap will do, and which of the two it shows is decided in CSS
+   by the same two conditions the tokens above use. That way it is right on the
+   first paint, before any script has run — and the label inside it is right
+   with it, because a hidden one is not part of the button's name.
+--------------------------------------------------------------------------- */
+
+.theme-to-light {
+  display: none;
+}
+:root[data-theme="dark"] .theme-to-light {
+  display: inline-flex;
+}
+:root[data-theme="dark"] .theme-to-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-to-light {
+    display: inline-flex;
+  }
+  :root:not([data-theme="light"]) .theme-to-dark {
+    display: none;
   }
 }
 

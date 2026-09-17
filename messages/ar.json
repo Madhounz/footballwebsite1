@@ -19,10 +19,8 @@
     "demoTitle": "هذه النسخة تعمل ببيانات اصطناعية",
     "switchTo": "English",
     "switchToLabel": "التبديل إلى الإنجليزية",
-    "theme": "المظهر: {mode}",
-    "themeSystem": "تلقائي",
-    "themeDark": "داكن",
-    "themeLight": "فاتح"
+    "toDark": "التبديل إلى الداكن",
+    "toLight": "التبديل إلى الفاتح"
   },
   "search": {
     "button": "بحث",
