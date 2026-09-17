@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
-import { competitionName, teamName } from "@/lib/i18n/names";
+import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
 import type { Team } from "@/lib/types";
 
 export async function generateMetadata({
@@ -58,11 +58,18 @@ function Grid({ teams, locale }: { teams: Team[]; locale: string }) {
         <li key={team.id}>
           <Link
             href={`/teams/${team.slug}`}
-            className="card row-hover flex items-center gap-3 px-3 py-2.5"
+            className="card row-hover @container flex items-center gap-3 px-3 py-2.5"
           >
             <TeamCrest team={team} size={30} />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium">{teamName(team, locale)}</span>
+              {/* Two cards across a phone leave about 110px for a name, and
+                  "Brighton & Hove Albion" is not 110px. Below the width where
+                  the full name fits, the card carries the name everyone says
+                  out loud instead of the first half of the formal one. */}
+              <span className="block truncate text-sm font-medium">
+                <span className="hidden @[240px]:inline">{teamName(team, locale)}</span>
+                <span className="@[240px]:hidden">{teamShortName(team, locale)}</span>
+              </span>
               <span className="block truncate text-xs text-muted">{team.city}</span>
             </span>
           </Link>
