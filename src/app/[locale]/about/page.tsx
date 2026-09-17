@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Mark } from "@/components/Logo";
+import { getRepository } from "@/lib/data";
+import { competitionName } from "@/lib/i18n/names";
 import { SITE } from "@/lib/site";
 
 export async function generateMetadata({
@@ -15,6 +17,15 @@ export async function generateMetadata({
 
 export default async function AboutPage() {
   const t = await getTranslations("about");
+  const locale = await getLocale();
+  // What the site covers is not a sentence anybody should be maintaining. Both
+  // repositories list only competitions that actually hold matches, so this is
+  // the same list the navigation is built from: it cannot claim a competition
+  // the site does not have, and it names a new one the day its fixtures land.
+  const competitions = await (await getRepository()).listCompetitions();
+  const covered = new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(
+    competitions.map((c) => competitionName(c, locale)),
+  );
   return (
     <article className="mx-auto max-w-2xl space-y-10">
       <header className="space-y-4">
@@ -28,7 +39,7 @@ export default async function AboutPage() {
         <p className="leading-relaxed">{t("why")}</p>
         <ul className="list-disc space-y-1 ps-5 leading-relaxed">
           <li>{t("why1")}</li>
-          <li>{t("why2")}</li>
+          <li>{t("why2", { count: competitions.length })}</li>
           <li>{t("why3")}</li>
           <li>{t("why4")}</li>
         </ul>
@@ -39,7 +50,7 @@ export default async function AboutPage() {
         id="testing"
       >
         <h2 className="text-xl font-semibold tracking-tight">{t("testingTitle")}</h2>
-        <p className="leading-relaxed">{t("testing")}</p>
+        <p className="leading-relaxed">{t("testing", { competitions: covered })}</p>
         <p className="leading-relaxed text-muted">
           {t("feedback")}{" "}
           {SITE.feedbackUrl && (

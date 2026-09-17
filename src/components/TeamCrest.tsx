@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Team } from "@/lib/types";
+import { readableOn } from "@/lib/colors";
 
 /**
  * A club crest. Uses the provider's official image when the team has one and
@@ -42,6 +43,17 @@ export function TeamCrest({
   return <GeneratedCrest team={team} size={size} className={className} />;
 }
 
+/**
+ * The badge a club falls back to.
+ *
+ * The second colour is a ring, not a diagonal across the face. Split
+ * diagonally, the letters sat on both halves at once and whichever half was
+ * near the ink lost them: Chelsea's blue and white swallowed the E, Villarreal's
+ * yellow and navy swallowed the L. A club's code is the whole point of the
+ * badge, so the face stays one colour, the ink is chosen against that colour
+ * alone, and the second colour keeps its place around the edge — which is also
+ * exactly how the crest on a share card is drawn.
+ */
 export function GeneratedCrest({
   team,
   size,
@@ -52,30 +64,24 @@ export function GeneratedCrest({
   className?: string;
 }) {
   const [a, b] = team.colors;
-  const light = isLight(a);
+  const ring = Math.max(1, Math.round(size * 0.06));
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold ${className}`}
       style={{
         width: size,
         height: size,
-        background: `linear-gradient(135deg, ${a} 0 60%, ${b} 60% 100%)`,
-        color: light ? "#111" : "#fff",
+        background: a,
+        color: readableOn(a),
         fontSize: Math.max(8, Math.round(size * 0.32)),
         letterSpacing: "-0.02em",
-        boxShadow: "inset 0 0 0 1px rgb(0 0 0 / 0.12)",
+        // The ring sits inside the circle, so the badge keeps the size it was
+        // given and still lines up with a provider crest beside it.
+        boxShadow: `inset 0 0 0 ${ring}px ${b ?? "rgb(0 0 0 / 0.12)"}, inset 0 0 0 ${ring + 1}px rgb(0 0 0 / 0.12)`,
       }}
       aria-hidden="true"
     >
       {team.code.slice(0, 3)}
     </span>
   );
-}
-
-function isLight(hex: string): boolean {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 165;
 }

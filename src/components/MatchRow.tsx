@@ -11,6 +11,12 @@ import { TeamCrest } from "./TeamCrest";
 /**
  * One fixture. Reads start-to-end: home · score/time · away, with status under
  * the score. Live matches get the pulsing dot; finished ones bold the winner.
+ *
+ * Every measurement here is a container query, never a breakpoint. The same row
+ * is used across the full width of a day's list and inside a 340px sidebar, and
+ * on a wide screen a breakpoint says "roomy" to both — which spent forty pixels
+ * of a narrow column on padding and a score box, and left the club names to be
+ * cut to "Nott'm…" and "Crysta…". The row can see how wide the row is.
  */
 export async function MatchRow({
   view,
@@ -55,7 +61,7 @@ export async function MatchRow({
   return (
     <Link
       href={`/match/${m.slug}`}
-      className="row-hover @container grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4"
+      className="row-hover @container grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-2.5 @[520px]:gap-3 @[520px]:px-4"
       aria-label={`${teamName(home, locale)} ${m.score ? `${m.score.home}–${m.score.away}` : t("vs")} ${teamName(away, locale)}`}
     >
       <span
@@ -68,7 +74,7 @@ export async function MatchRow({
         <TeamCrest team={home} size={24} />
       </span>
 
-      <span className="flex w-[72px] shrink-0 flex-col items-center justify-center sm:w-[96px]">
+      <span className="flex w-[72px] shrink-0 flex-col items-center justify-center @[520px]:w-[96px]">
         {m.score ? (
           <Score
             home={m.score.home}

@@ -32,7 +32,7 @@ export async function ScorersTable({
       <table className="tnum w-full text-sm">
         <thead>
           <tr className="border-b border-line text-start text-[11px] uppercase tracking-wide text-faint">
-            <th className="w-8 py-2.5 ps-4 text-start font-medium">{t("th.pos")}</th>
+            <th className="w-11 py-2.5 pe-2 ps-4 text-start font-medium">{t("th.pos")}</th>
             <th className="py-2.5 text-start font-medium">{t("th.player")}</th>
             {!compact && (
               <th className="hidden w-12 py-2.5 text-center font-medium sm:table-cell">
@@ -59,7 +59,7 @@ export async function ScorersTable({
             if (!p || !team) return null;
             return (
               <tr key={r.playerId} className="row-hover border-b border-line last:border-0">
-                <td className="py-2 ps-4 text-muted">{i + 1}</td>
+                <td className="py-2 pe-2 ps-4 text-muted">{i + 1}</td>
                 <td className="py-2">
                   <Link
                     href={`/players/${p.slug}`}

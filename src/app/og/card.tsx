@@ -15,6 +15,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ReactNode } from "react";
 import type { Team } from "@/lib/types";
+import { readableOn } from "@/lib/colors";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
@@ -177,7 +178,7 @@ export function Crest({ team, src, size }: { team: Team; src: string | null; siz
         height: size,
         borderRadius: size / 2,
         background: team.colors[0],
-        color: readable(team.colors[0]),
+        color: readableOn(team.colors[0]),
         fontSize: size * 0.36,
         fontWeight: 700,
         border: `${Math.max(2, size * 0.025)}px solid ${team.colors[1] ?? "#00000022"}`,
@@ -320,15 +321,3 @@ function initials(team: Team): string {
 }
 
 /** Black or white, whichever the club colour can carry. */
-function readable(hex: string): string {
-  const h = hex.replace("#", "");
-  const n =
-    h.length === 3
-      ? [...h].map((c) => parseInt(c + c, 16))
-      : [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const [r, g, b] = n.map((v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 ? "#111" : "#fff";
-}

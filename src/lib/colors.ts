@@ -34,3 +34,25 @@ export function barColors(home: Team, away: Team): { home: string; away: string 
   if (second && farApart(h, second)) return { home: h, away: second };
   return { home: h, away: NEUTRAL };
 }
+
+/**
+ * Black or white, whichever can be read on that colour.
+ *
+ * Relative luminance rather than a brightness average, because the eye is not
+ * evenly sensitive: a saturated yellow and a saturated blue of the same
+ * "brightness" need opposite ink.
+ */
+export function readableOn(hex: string): "#111" | "#fff" {
+  const m = /^#?([\da-f]{3}|[\da-f]{6})$/i.exec(hex.trim());
+  if (!m) return "#fff";
+  const h = m[1];
+  const parts =
+    h.length === 3
+      ? [...h].map((c) => parseInt(c + c, 16))
+      : [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [r, g, b] = parts.map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 ? "#111" : "#fff";
+}
