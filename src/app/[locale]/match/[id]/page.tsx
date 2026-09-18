@@ -11,10 +11,13 @@ import { MatchRow } from "@/components/MatchRow";
 import { Empty, Section } from "@/components/Section";
 import { Score } from "@/components/Score";
 import { StageLabel } from "@/components/StageLabel";
+import { WhyItMatters } from "@/components/WhyItMatters";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
 import { buildMatchContext } from "@/lib/data/match-context";
 import { parseMatchRef } from "@/lib/data/match-lookup";
+import { stakes } from "@/lib/data/scenarios";
+import { whyItMatters } from "@/lib/data/why";
 import { pageMeta } from "@/lib/seo";
 import { livePhaseLabel } from "@/lib/format";
 import { isLive, isStaleLive } from "@/lib/live-status";
@@ -125,6 +128,25 @@ export default async function MatchPage({ params }: { params: Params }) {
     rows: standings?.rows ?? [],
     excludeMatchId: m.id,
   });
+  // What is riding on it, for a match still to be played. The table is
+  // recomputed with each of the three results, which is free because the table
+  // is computed from matches in the first place.
+  const seasonTeams = m.status === "finished" ? [] : await repo.listTeams(competition.id);
+  const why =
+    seasonTeams.length > 0 && standings
+      ? whyItMatters({
+          stakes: stakes(
+            view,
+            (await repo.getCompetitionMatches(competition.id)).map((v) => v.match),
+            seasonTeams.map((team) => team.id),
+          ),
+          home: context.home,
+          away: context.away,
+          h2h: context.h2h,
+          places: standings.rows.length,
+        })
+      : [];
+
   const goals = events.filter(
     (e) => e.type === "goal" || e.type === "penalty" || e.type === "own_goal",
   );
@@ -264,6 +286,14 @@ export default async function MatchPage({ params }: { params: Params }) {
           {m.referee && <span>{t("referee", { name: m.referee })}</span>}
         </div>
       </section>
+
+      {why.length > 0 && (
+        <WhyItMatters
+          why={why}
+          home={teamShortName(home, locale)}
+          away={teamShortName(away, locale)}
+        />
+      )}
 
       <Section title={t("buildUp")}>
         <MatchBuildUp context={context} home={home} away={away} locale={locale} />

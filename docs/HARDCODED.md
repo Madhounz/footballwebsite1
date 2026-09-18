@@ -64,6 +64,9 @@ Deliberate numbers. Each is one line, none is a fact about football.
 | `SCORER_INTERVAL_MIN`, `CATCH_UP_DAILY_BUDGET`, `LOCK_SECONDS`, detail windows and intervals | `src/lib/pipeline/live.ts`                           |
 | `FOLLOW_LIMIT = 20`, `MAX_TEAMS = 20`                                                        | `src/lib/following.ts`, `app/api/following/route.ts` |
 | `RAIL = 6` — competitions the front page leads with                                          | `src/components/DayPage.tsx`                         |
+| `AWAY_MINUTES = 90` — how long away counts as away                                           | `src/components/SinceYouLeft.tsx`                    |
+| `FULL_MATCH_MIN = 130` — when a match is safely over, for "finished while you were away"     | `src/lib/data/scenarios.ts`                          |
+| `REFRESH_MINUTES = 1` — what the about page says about freshness                             | `src/lib/data/coverage.ts`                           |
 | `NAMED = 4` — competitions named in the `<meta>` description before the count                | `app/[locale]/layout.tsx`                            |
 | Sitemap window: 120 days back, 45 ahead                                                      | `src/app/sitemap.ts`                                 |
 | Home page: top 3 of each table, 3 scorers, 6 clubs in form                                   | `src/components/DayPage.tsx`, `clubsInForm`          |

@@ -489,5 +489,32 @@
     "note": "Comebacks are read from half-time scores. Upsets are the biggest table-place gaps a winner overturned, measured against the table as it stands today — a club's place may have changed since the match. Thrashings are wins by three or more, thrillers are matches of five goals or more.",
     "home": "The week",
     "homeCta": "Seven days, every competition →"
+  },
+  "since": {
+    "title": "While you were away",
+    "hours": "{n, plural, one {since an hour ago} other {since # hours ago}}",
+    "days": "{n, plural, one {since yesterday} other {over the last # days}}",
+    "matches": "{n, plural, one {match finished} other {matches finished}}",
+    "goals": "{n, plural, one {goal} other {goals}}",
+    "live": "{n, plural, one {# in play now} other {# in play now}}",
+    "youWon": "{team} beat {other} {score}",
+    "youLost": "{team} lost {score} to {other}",
+    "youDrew": "{team} drew {score} with {other}",
+    "next": "{home} v {away} at {time}",
+    "catchUp": "Catch me up →",
+    "movedUp": "{team} climbed to {to, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}",
+    "movedDown": "{team} slipped to {to, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+  },
+  "why": {
+    "title": "What is at stake",
+    "aHomeWin": "A home win",
+    "anAwayWin": "An away win",
+    "climb": "{result} puts {team} {to, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}.",
+    "hold": "A draw leaves {team} {at, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}.",
+    "gap": "{low} are {places} places below {high}.",
+    "h2hRun": "{team} have not lost to {other} in their last {n}.",
+    "streakWon": "{team} have won {n} in a row.",
+    "streakUnbeaten": "{team} are unbeaten in {n}.",
+    "caveat": "Positions are what this result alone would make them, with the rest of the table as it stands."
   }
 }

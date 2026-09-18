@@ -13,6 +13,7 @@ import { DateStrip } from "./DateStrip";
 import { FollowedTeams } from "./FollowedTeams";
 import { InForm } from "./InForm";
 import { MatchList } from "./MatchList";
+import { SinceYouLeft } from "./SinceYouLeft";
 import { ScoringRaces, type Race } from "./ScoringRaces";
 import { TeamCrest } from "./TeamCrest";
 import { WorthWatching } from "./WorthWatching";
@@ -101,6 +102,9 @@ export async function DayPage({ date }: { date: ISODate }) {
       <AutoRefresh enabled={isToday && live > 0} seconds={30} />
       <div className="min-w-0 space-y-5">
         <DateStrip date={date} today={today} />
+        {/* Only on today: what you missed is about now, not about a Tuesday
+            three weeks ago that you navigated to on purpose. */}
+        {isToday && <SinceYouLeft names={teamNames} />}
         {isToday && <FollowedTeams names={teamNames} />}
         {live > 0 && (
           <p className="flex items-center gap-2 text-sm text-live">
