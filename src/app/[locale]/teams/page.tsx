@@ -70,7 +70,7 @@ function Grid({ teams, locale }: { teams: Team[]; locale: string }) {
                 <span className="hidden @[240px]:inline">{teamName(team, locale)}</span>
                 <span className="@[240px]:hidden">{teamShortName(team, locale)}</span>
               </span>
-              <span className="block truncate text-xs text-muted">{team.city}</span>
+              {team.city && <span className="block truncate text-xs text-muted">{team.city}</span>}
             </span>
           </Link>
         </li>

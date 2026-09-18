@@ -4,7 +4,8 @@ import { getRepository, matchesOnDate } from "@/lib/data";
 import { competitionFocus } from "@/lib/data/focus";
 import { clubsInForm } from "@/lib/data/match-context";
 import { worthWatching } from "@/lib/data/worth-watching";
-import { todayISO, type ISODate } from "@/lib/dates";
+import type { ISODate } from "@/lib/dates";
+import { viewerToday } from "@/lib/viewer";
 import { competitionName, teamShortName } from "@/lib/i18n/names";
 import { isLive } from "@/lib/live-status";
 import { AutoRefresh } from "./AutoRefresh";
@@ -29,7 +30,7 @@ export async function DayPage({ date }: { date: ISODate }) {
   const t = await getTranslations("home");
   const locale = await getLocale();
   const repo = await getRepository();
-  const today = todayISO();
+  const today = await viewerToday();
   const [views, competitions] = await Promise.all([
     // Shared with the header, which asks the same thing for today.
     matchesOnDate(date),

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { todayISO, type ISODate } from "@/lib/dates";
+import { localToday, type ISODate } from "@/lib/dates";
 
 export function DatePicker({ value }: { value: ISODate }) {
   const router = useRouter();
@@ -29,7 +29,7 @@ export function DatePicker({ value }: { value: ISODate }) {
         onChange={(e) => {
           const v = e.target.value as ISODate;
           if (!v) return;
-          router.push(v === todayISO() ? "/" : `/matches/${v}`);
+          router.push(v === localToday() ? "/" : `/matches/${v}`);
         }}
         className="bg-transparent text-ink outline-none [color-scheme:inherit]"
       />

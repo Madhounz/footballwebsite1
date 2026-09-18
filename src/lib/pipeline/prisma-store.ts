@@ -1,4 +1,5 @@
 import { getPrisma } from "../db";
+import { foundedYear, place } from "../clean";
 import type { Competition } from "../types";
 import type { ReconciledMatch } from "./reconcile";
 import type { SyncStore } from "./store";
@@ -278,9 +279,9 @@ export class PrismaSyncStore implements SyncStore {
         code: t.code,
         country: t.country,
         countryCode: t.countryCode,
-        city: t.city,
-        stadium: t.stadium,
-        founded: t.founded,
+        city: place(t.city),
+        stadium: place(t.stadium),
+        founded: foundedYear(t.founded) ?? 0,
         colors: t.colors ? [...t.colors] : ["#555555", "#ffffff"],
         manager: t.manager ?? null,
         crestUrl: t.crestUrl ?? null,

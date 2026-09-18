@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { clubTint } from "@/lib/colors";
 import { signed } from "@/lib/format";
 import { pulse, shownMatch, sortClubs } from "@/lib/data/my-clubs";
-import { todayISO } from "@/lib/dates";
+import { localToday } from "@/lib/dates";
 import { isLive } from "@/lib/live-status";
 import type { FormResult } from "@/lib/types";
 import { FormBadges } from "./Form";
@@ -62,13 +62,26 @@ interface Club {
   };
 }
 
+export interface Suggestion {
+  id: string;
+  name: string;
+  code: string;
+  colors: [string, string];
+  crestUrl: string | null;
+  competition: string;
+  color: string;
+}
+
 export function MyClubs({
   names,
   competitions,
+  suggestions,
 }: {
   /** Localised club names, by id: the browser knows the ids, not how to say them. */
   names: Record<string, string>;
   competitions: Record<string, string>;
+  /** Somewhere to start on an empty page: whoever is top of each table today. */
+  suggestions: Suggestion[];
 }) {
   const t = useTranslations("follow");
   const tm = useTranslations("match");
@@ -97,13 +110,12 @@ export function MyClubs({
   // flash of "follow some clubs" for somebody who follows twelve is worse than
   // a moment of quiet.
   if (!mounted) return <Skeleton />;
-  if (!key) return <NoClubs title={t("emptyTitle")} lead={t("emptyLead")} cta={t("emptyCta")} />;
+  if (!key) return <NoClubs names={names} suggestions={suggestions} />;
   const clubs = data?.key === key ? data.clubs : null;
   if (!clubs) return <Skeleton />;
-  if (clubs.length === 0)
-    return <NoClubs title={t("emptyTitle")} lead={t("emptyLead")} cta={t("emptyCta")} />;
+  if (clubs.length === 0) return <NoClubs names={names} suggestions={suggestions} />;
 
-  const today = todayISO();
+  const today = localToday();
   const ordered = sortClubs(clubs, today);
   const p = pulse(clubs, today);
   const label = (id: string, fallback: string) => names[id] ?? fallback;
@@ -392,21 +404,119 @@ function Skeleton() {
   );
 }
 
-/** The first thing a new visitor sees here, so it had better be inviting. */
-function NoClubs({ title, lead, cta }: { title: string; lead: string; cta: string }) {
+/**
+ * The first thing anybody sees here, and for a while the only thing.
+ *
+ * An empty page that says "you have no clubs" is a dead end. This one is the
+ * whole feature in one screen: what it does, a box that finds any club in the
+ * site as you type, and six clubs to start from. Nothing is sold and nothing
+ * is asked for — following is one tap and it never leaves the device.
+ *
+ * The six are whoever is top of each competition today. That is a fact rather
+ * than a recommendation, it explains itself, and it changes without anybody
+ * curating it.
+ */
+function NoClubs({
+  names,
+  suggestions,
+}: {
+  names: Record<string, string>;
+  suggestions: Suggestion[];
+}) {
+  const t = useTranslations("follow");
+  const [q, setQ] = useState("");
+  const following = useFollowing();
+
+  const needle = q.trim().toLowerCase();
+  const results = needle
+    ? Object.entries(names)
+        .filter(([, name]) => name.toLowerCase().includes(needle))
+        .sort(([, a], [, b]) => {
+          const at = a.toLowerCase().startsWith(needle) ? 0 : 1;
+          const bt = b.toLowerCase().startsWith(needle) ? 0 : 1;
+          return at - bt || a.localeCompare(b);
+        })
+        .slice(0, 8)
+    : [];
+
   return (
-    <div className="card flex flex-col items-center gap-4 px-6 py-14 text-center">
-      <Mark size={40} className="text-faint" />
-      <div className="space-y-1.5">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted">{lead}</p>
+    <div className="space-y-8">
+      <div className="card overflow-hidden px-5 py-10 text-center sm:px-8 sm:py-14">
+        <Mark size={40} className="mx-auto text-faint" />
+        <h2 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
+          {t("emptyTitle")}
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">{t("emptyLead")}</p>
+
+        <div className="mx-auto mt-6 max-w-sm text-start">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("emptySearch", { n: Object.keys(names).length })}
+            aria-label={t("emptySearch", { n: Object.keys(names).length })}
+            className="w-full rounded-full border border-line bg-surface-2 px-4 py-3 text-base outline-none transition-colors placeholder:text-faint focus:border-accent"
+          />
+          {results.length > 0 && (
+            <ul className="mt-2 overflow-hidden rounded-2xl border border-line">
+              {results.map(([id, name]) => (
+                <li key={id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleFollow(id)}
+                    className="row-hover flex min-h-11 w-full items-center gap-2 px-4 text-start text-sm"
+                  >
+                    <span className="min-w-0 flex-1 truncate">{name}</span>
+                    <span className="shrink-0 text-xs font-medium text-accent">
+                      {following.includes(id) ? t("followingWord") : t("followWord")}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {needle && results.length === 0 && (
+            <p className="mt-3 text-center text-sm text-muted">{t("emptyNoMatch", { q })}</p>
+          )}
+        </div>
+
+        <p className="mt-2 text-xs text-faint">{t("emptyNoAccount")}</p>
       </div>
-      <Link
-        href="/teams"
-        className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-      >
-        {cta}
-      </Link>
+
+      {suggestions.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wide text-faint">
+            {t("emptySuggest")}
+          </h3>
+          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {suggestions.map((club) => (
+              <li key={club.id}>
+                <button
+                  type="button"
+                  onClick={() => toggleFollow(club.id)}
+                  aria-pressed={following.includes(club.id)}
+                  className={`card flex w-full flex-col items-center gap-2 px-2 py-4 transition-colors hover:bg-surface-2 ${
+                    following.includes(club.id) ? "ring-1 ring-accent" : ""
+                  }`}
+                  style={{ "--c": club.color } as React.CSSProperties}
+                >
+                  <TeamCrest team={club} size={40} />
+                  <span className="w-full truncate text-center text-[12px] font-medium">
+                    {club.name}
+                  </span>
+                  <span className="flex w-full items-center justify-center gap-1 truncate text-[10px] text-faint">
+                    <span
+                      className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: club.color }}
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">{club.competition}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

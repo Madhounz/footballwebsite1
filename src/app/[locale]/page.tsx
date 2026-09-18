@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { DayPage } from "@/components/DayPage";
 import { matchesOnDate } from "@/lib/data";
-import { todayISO } from "@/lib/dates";
+import { viewerToday } from "@/lib/viewer";
 import { isLive, liveCountTitle } from "@/lib/live-status";
 import { coverageLine } from "@/lib/seo";
 
@@ -27,7 +27,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta" });
-  const live = (await matchesOnDate(todayISO())).filter((v) => isLive(v.match)).length;
+  const live = (await matchesOnDate(await viewerToday())).filter((v) => isLive(v.match)).length;
   return {
     title: { absolute: liveCountTitle(live, t("title")) },
     description: await coverageLine(locale),
@@ -35,5 +35,5 @@ export async function generateMetadata({
 }
 
 export default async function HomePage() {
-  return <DayPage date={todayISO()} />;
+  return <DayPage date={await viewerToday()} />;
 }

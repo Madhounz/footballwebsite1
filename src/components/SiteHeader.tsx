@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { matchesOnDate } from "@/lib/data";
 import { competitionFocus } from "@/lib/data/focus";
-import { todayISO } from "@/lib/dates";
+import { viewerToday } from "@/lib/viewer";
 import { isLive } from "@/lib/live-status";
 import type { Competition, SearchItem } from "@/lib/types";
 import { competitionNavName } from "@/lib/i18n/names";
@@ -32,7 +32,7 @@ export async function SiteHeader({
   const locale = await getLocale();
   // What is on today, in one query, so the bar can say where the football is
   // rather than just listing competitions.
-  const today = await matchesOnDate(todayISO());
+  const today = await matchesOnDate(await viewerToday());
   const counts = new Map<string, { live: number; today: number }>();
   for (const v of today) {
     const c = counts.get(v.competition.id) ?? { live: 0, today: 0 };

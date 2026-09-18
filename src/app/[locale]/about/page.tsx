@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Mark } from "@/components/Logo";
 import { getRepository } from "@/lib/data";
+import { siteCoverage } from "@/lib/data/coverage";
 import { competitionName } from "@/lib/i18n/names";
 import { SITE } from "@/lib/site";
 
@@ -15,18 +16,38 @@ export async function generateMetadata({
   return { title: t("about"), description: t("aboutDescription") };
 }
 
+/**
+ * The page that describes the product.
+ *
+ * Nothing factual on it is typed out. What is covered, what is live, what is
+ * missing and how often it refreshes all come from `siteCoverage()`, which
+ * counts rows. A page of claims maintained by hand is a page that is wrong a
+ * month later, and this one had got there: six competitions when there were
+ * eleven, the Europa League promised as future while it sat in the navigation.
+ */
 export default async function AboutPage() {
   const t = await getTranslations("about");
   const locale = await getLocale();
   const repo = await getRepository();
-  // What the site covers is not a sentence anybody should be maintaining. Both
-  // repositories list only competitions that actually hold matches, so this is
-  // the same list the navigation is built from: it cannot claim a competition
-  // the site does not have, and it names a new one the day its fixtures land.
-  const competitions = await repo.listCompetitions();
-  const covered = new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(
-    competitions.map((c) => competitionName(c, locale)),
-  );
+  const coverage = await siteCoverage();
+  const list = new Intl.ListFormat(locale, { style: "long", type: "conjunction" });
+  const covered = list.format(coverage.competitions.map((c) => competitionName(c, locale)));
+
+  // Said only where it is true, and said the same way whether it is good news
+  // or bad: the timeline inside a match either exists or it does not.
+  const live = [
+    t("liveTables", { count: coverage.competitions.length }),
+    coverage.scorers !== "none" &&
+      t(coverage.scorers === "provider" ? "liveScorersProvider" : "liveScorersCounted"),
+    coverage.matchEvents && t("liveEvents"),
+    coverage.lineups && t("liveLineups"),
+    t("liveRefresh", { n: coverage.refreshMinutes }),
+  ].filter((x): x is string => typeof x === "string");
+
+  const missing = [
+    !coverage.matchEvents && t("missingEvents"),
+    !coverage.lineups && t("missingLineups"),
+  ].filter((x): x is string => typeof x === "string");
 
   return (
     <article className="mx-auto max-w-2xl space-y-12">
@@ -40,17 +61,26 @@ export default async function AboutPage() {
 
       <Block title={t("hereTitle")}>
         <Points
-          items={[t("here1", { count: competitions.length }), t("here2"), t("here3"), t("here4")]}
+          items={[
+            t("here1", { count: coverage.competitions.length }),
+            t("here2"),
+            t("here3"),
+            t("here4"),
+          ]}
         />
       </Block>
 
-      <Block title={t("testingTitle")}>
-        <p className="leading-relaxed text-muted">{t("testing", { competitions: covered })}</p>
+      <Block title={t("nowTitle")}>
+        <p className="leading-relaxed text-muted">{t("covering", { competitions: covered })}</p>
+        <Points items={live} />
       </Block>
 
-      <Block title={t("nextTitle")}>
-        <Points items={[t("next1"), t("next2"), t("next3"), t("next4")]} muted />
-      </Block>
+      {missing.length > 0 && (
+        <Block title={t("missingTitle")}>
+          <Points items={missing} muted />
+          <p className="text-sm leading-relaxed text-faint">{t("missingWhy")}</p>
+        </Block>
+      )}
 
       <Block title={t("sourcesTitle")}>
         <p className="leading-relaxed text-muted">{t("sources")}</p>

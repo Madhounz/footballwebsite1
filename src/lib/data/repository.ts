@@ -79,6 +79,12 @@ export interface Repository {
    * whose line-ups have not landed yet.
    */
   holdsLineups(): Promise<boolean>;
+  /**
+   * Whether any match carries a timeline — goals, cards, substitutions. The
+   * about page asks rather than being told, so nothing on it can go stale the
+   * day a provider starts or stops serving them.
+   */
+  holdsMatchEvents(): Promise<boolean>;
   /** This season's matches only — a stored past season is not part of them. */
   getCompetitionMatches(competitionId: string): Promise<MatchView[]>;
   /** This season's matches only, across every competition the club is in. */

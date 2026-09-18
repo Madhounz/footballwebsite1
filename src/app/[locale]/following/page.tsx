@@ -23,11 +23,37 @@ export async function generateMetadata({
   return { title: t("following"), robots: { index: false, follow: true } };
 }
 
+/** How many clubs the empty page offers, one per competition. */
+const SUGGESTED = 6;
+
 export default async function FollowingPage() {
   const t = await getTranslations("follow");
   const locale = await getLocale();
   const repo = await getRepository();
   const [teams, competitions] = await Promise.all([repo.listTeams(), repo.listCompetitions()]);
+  const byId = new Map(teams.map((team) => [team.id, team]));
+  // Somewhere to start, chosen by the table rather than by us: whoever is top
+  // of each competition today. It needs no taste to defend and it changes on
+  // its own, which is the only kind of recommendation this site should make.
+  const leaders = (
+    await Promise.all(
+      competitions.slice(0, SUGGESTED).map(async (c) => {
+        const top = (await repo.getStandings(c.id)).rows[0];
+        const team = top ? byId.get(top.teamId) : undefined;
+        return team
+          ? {
+              id: team.id,
+              name: teamShortName(team, locale),
+              code: team.code,
+              colors: team.colors,
+              crestUrl: team.crestUrl ?? null,
+              competition: competitionName(c, locale),
+              color: c.color,
+            }
+          : null;
+      }),
+    )
+  ).filter((x) => x !== null);
 
   return (
     <div className="space-y-6">
@@ -36,6 +62,7 @@ export default async function FollowingPage() {
         <p className="text-sm text-muted">{t("lead")}</p>
       </header>
       <MyClubs
+        suggestions={leaders}
         names={Object.fromEntries(teams.map((team) => [team.id, teamShortName(team, locale)]))}
         competitions={Object.fromEntries(
           competitions.map((c) => [c.id, competitionName(c, locale)]),

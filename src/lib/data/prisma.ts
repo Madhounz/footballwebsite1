@@ -26,6 +26,7 @@ import type {
   Player as DbPlayer,
   Team as DbTeam,
 } from "@/generated/prisma/client";
+import { foundedYear, place } from "../clean";
 import { honoursFor, allHonours } from "./honours";
 import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
@@ -203,6 +204,9 @@ export class PrismaRepository implements Repository {
   }
   async holdsLineups(): Promise<boolean> {
     return (await this.db.lineup.findFirst({ select: { matchId: true } })) !== null;
+  }
+  async holdsMatchEvents(): Promise<boolean> {
+    return (await this.db.matchEvent.count({ take: 1 })) > 0;
   }
   /**
    * The season every competition is currently in — one value in practice, but
@@ -463,7 +467,7 @@ export class PrismaRepository implements Repository {
         id: t.id,
         slug: t.slug,
         label: t.name,
-        sublabel: `${t.city} · ${t.country}`,
+        sublabel: [place(t.city), t.country].filter(Boolean).join(" · "),
         href: `/teams/${t.slug}`,
         keywords: [t.shortName, t.code, t.city],
       })),
@@ -492,6 +496,11 @@ function toCompetition(c: DbCompetition): Competition {
   };
 }
 
+/**
+ * Rows already in the database were written before anything was cleaning them,
+ * and a re-sync is not a fix a reader should have to wait for. Every read goes
+ * through here, so every page is clean from the next request onwards.
+ */
 function toTeam(t: DbTeam, competitionIds: string[]): Team {
   return {
     id: t.id,
@@ -501,9 +510,9 @@ function toTeam(t: DbTeam, competitionIds: string[]): Team {
     code: t.code,
     country: t.country,
     countryCode: t.countryCode,
-    city: t.city,
-    stadium: t.stadium,
-    founded: t.founded,
+    city: place(t.city),
+    stadium: place(t.stadium),
+    founded: foundedYear(t.founded) ?? 0,
     colors: [t.colors[0] ?? "#444444", t.colors[1] ?? "#ffffff"],
     competitionIds,
     leagueId: t.leagueId ?? undefined,

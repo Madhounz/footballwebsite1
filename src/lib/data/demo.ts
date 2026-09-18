@@ -22,6 +22,7 @@ import type {
 } from "../types";
 import type { DemoDataset, DemoLineup, DemoMatch } from "./demo-format";
 import { matchSlug } from "../match-slug";
+import { place } from "../clean";
 import { honoursFor, allHonours } from "./honours";
 import { byMostRecent, playerMatchFrom } from "./player-matches";
 import type { MatchDetail, PlayerMatch, Repository, TeamHonour } from "./repository";
@@ -283,6 +284,9 @@ export class DemoRepository implements Repository {
   async holdsLineups(): Promise<boolean> {
     return DATA.matches.some((m) => m.lineups);
   }
+  async holdsMatchEvents(): Promise<boolean> {
+    return DATA.matches.some((m) => (m.events?.length ?? 0) > 0);
+  }
   async getMatch(idOrSlug: string): Promise<MatchDetail | null> {
     const shifted = this.shifted();
     const m =
@@ -451,7 +455,7 @@ export class DemoRepository implements Repository {
         id: t.id,
         slug: t.slug,
         label: t.name,
-        sublabel: `${t.city} · ${t.country}`,
+        sublabel: [place(t.city), t.country].filter(Boolean).join(" · "),
         href: `/teams/${t.slug}`,
         keywords: [t.shortName, t.code, t.city],
       });

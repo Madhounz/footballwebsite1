@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Link } from "@/i18n/navigation";
+import { Link, permanentRedirect } from "@/i18n/navigation";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { EventTimeline } from "@/components/EventTimeline";
 import { LineupPitch } from "@/components/LineupPitch";
@@ -14,10 +14,11 @@ import { StageLabel } from "@/components/StageLabel";
 import { TeamCrest } from "@/components/TeamCrest";
 import { getRepository } from "@/lib/data";
 import { buildMatchContext } from "@/lib/data/match-context";
+import { parseMatchRef } from "@/lib/data/match-lookup";
 import { pageMeta } from "@/lib/seo";
 import { livePhaseLabel } from "@/lib/format";
 import { isLive, isStaleLive } from "@/lib/live-status";
-import { dateOf, formatMediumDate } from "@/lib/dates";
+import { dateOf, daysBetween, formatMediumDate } from "@/lib/dates";
 import { competitionName, teamName, teamShortName } from "@/lib/i18n/names";
 import type { Team } from "@/lib/types";
 
@@ -48,11 +49,56 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   });
 }
 
+/**
+ * A match link published under a name we no longer write.
+ *
+ * The slug shape is allowed to improve; the links people have already pasted
+ * into group chats and the ones search engines have indexed are not allowed to
+ * die for it. Anything that names two clubs we hold is read, the match is
+ * found, and the reader is sent to the address it lives at now — permanently,
+ * so a crawler updates its index rather than asking again every week.
+ *
+ * It never guesses: a URL that could mean two different matches 404s, because
+ * sending somebody to the wrong match is worse than admitting we lost the
+ * right one.
+ */
+async function byOldLink(id: string, locale: string): Promise<null> {
+  const repo = await getRepository();
+  const teams = await repo.listTeams();
+  const ref = parseMatchRef(
+    id,
+    teams.map((team) => team.id),
+  );
+  if (!ref) return null;
+  const candidates = (await repo.getTeamMatches(ref.a)).filter(
+    (v) =>
+      (v.home.id === ref.a && v.away.id === ref.b) || (v.home.id === ref.b && v.away.id === ref.a),
+  );
+  // The date in an old link is a hint, not a key: a kickoff late in the
+  // evening is already tomorrow somewhere, and a fixture gets moved. The
+  // meeting closest to the date asked for is the one meant. With no date at
+  // all, the last one played — or the next, if they have not met yet.
+  const found = ref.date
+    ? candidates.reduce<(typeof candidates)[number] | null>((best, v) => {
+        const gap = Math.abs(daysBetween(ref.date!, dateOf(v.match.kickoff)));
+        const bestGap = best ? Math.abs(daysBetween(ref.date!, dateOf(best.match.kickoff))) : 1e9;
+        return gap < bestGap ? v : best;
+      }, null)
+    : ([...candidates].reverse().find((v) => v.match.status === "finished") ?? candidates[0]);
+  if (!found) return null;
+  // Through the locale-aware helper: English lives at the bare path, so a
+  // hand-built "/en/..." would be a permanent redirect to another redirect.
+  permanentRedirect({ href: `/match/${found.match.slug}`, locale });
+  // `permanentRedirect` throws; this is here so the signature reads honestly.
+  return null;
+}
+
 export default async function MatchPage({ params }: { params: Params }) {
   const t = await getTranslations("match");
   const locale = await getLocale();
   const repo = await getRepository();
-  const detail = await repo.getMatch((await params).id);
+  const { id } = await params;
+  const detail = (await repo.getMatch(id)) ?? (await byOldLink(id, locale));
   if (!detail) notFound();
   const { view, events, lineups, players } = detail;
   const { match: m, home, away, competition } = view;
@@ -298,7 +344,7 @@ function TeamHeader({
         <span className="block truncate text-base font-semibold sm:text-xl">
           {teamName(team, locale)}
         </span>
-        <span className="hidden text-xs text-muted sm:block">{team.city}</span>
+        {team.city && <span className="hidden text-xs text-muted sm:block">{team.city}</span>}
       </span>
     </Link>
   );

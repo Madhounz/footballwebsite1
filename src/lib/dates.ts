@@ -19,6 +19,46 @@ export function todayISO(now: Date = new Date()): ISODate {
   return toISODate(now);
 }
 
+/**
+ * What day it is *where the reader is*.
+ *
+ * A matchday is a human day, not a UTC one. At half past midnight in Warsaw it
+ * is the 18th, and a site that opens on the 17th because a server in Virginia
+ * says so is wrong about the only thing its front page is for. Kick-off times
+ * have always been rendered in the visitor's zone; the date navigation has to
+ * agree with them or the two halves of the page describe different days.
+ *
+ * `en-CA` because it formats as YYYY-MM-DD, which is the shape we store. An
+ * unknown or hostile zone name falls back to UTC rather than throwing.
+ */
+export function todayIn(timeZone: string | undefined, now: Date = new Date()): ISODate {
+  if (!timeZone) return toISODate(now);
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now) as ISODate;
+  } catch {
+    return toISODate(now);
+  }
+}
+
+/**
+ * The browser's own day, for the parts of the page that render there and do
+ * not need to wait for a cookie to make a round trip.
+ */
+export function localToday(now: Date = new Date()): ISODate {
+  return todayIn(Intl.DateTimeFormat().resolvedOptions().timeZone, now);
+}
+
+/** A zone name we are willing to hand to `Intl`. */
+export function isTimeZone(value: string | undefined | null): value is string {
+  if (!value || value.length > 64 || !/^[A-Za-z0-9+_/-]+$/.test(value)) return false;
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function isISODate(value: string | undefined | null): value is ISODate {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const d = new Date(`${value}T00:00:00Z`);

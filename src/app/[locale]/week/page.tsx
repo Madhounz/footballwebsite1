@@ -5,7 +5,8 @@ import { WeekBars } from "@/components/WeekBars";
 import { WeekSection } from "@/components/WeekSection";
 import { getRepository, matchesOnDate } from "@/lib/data";
 import { goalsPerMatch, weekReport } from "@/lib/data/week";
-import { addDays, formatMediumDate, todayISO } from "@/lib/dates";
+import { addDays, formatMediumDate } from "@/lib/dates";
+import { viewerToday } from "@/lib/viewer";
 import { pageMeta } from "@/lib/seo";
 
 /**
@@ -32,7 +33,7 @@ export default async function WeekPage() {
   const t = await getTranslations("week");
   const locale = await getLocale();
   const repo = await getRepository();
-  const today = todayISO();
+  const today = await viewerToday();
   const dates = Array.from({ length: DAYS }, (_, i) => addDays(today, -(DAYS - 1 - i)));
   const days = await Promise.all(
     dates.map(async (date) => ({ date, views: await matchesOnDate(date) })),

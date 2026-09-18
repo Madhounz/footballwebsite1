@@ -48,9 +48,13 @@ export default async function TeamCard({
         </Words>,
       ]}
       footer={[
-        <Words key="city" dir={dir}>
-          {team.city}
-        </Words>,
+        team.city ? (
+          <Words key="city" dir={dir}>
+            {team.city}
+          </Words>
+        ) : (
+          ""
+        ),
         team.founded ? (
           <Words key="founded" dir={dir}>
             {t("est", { year: team.founded })}
@@ -58,9 +62,13 @@ export default async function TeamCard({
         ) : (
           ""
         ),
-        <Words key="stadium" dir={dir}>
-          {team.stadium ?? ""}
-        </Words>,
+        team.stadium ? (
+          <Words key="stadium" dir={dir}>
+            {team.stadium}
+          </Words>
+        ) : (
+          ""
+        ),
       ]}
     >
       <div

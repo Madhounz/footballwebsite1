@@ -6,6 +6,8 @@ import {
   formatShortDate,
   isISODate,
   relativeDayKey,
+  todayIn,
+  isTimeZone,
 } from "../dates";
 
 describe("dates", () => {
@@ -32,5 +34,33 @@ describe("dates", () => {
     expect(ar).toContain("19");
     expect(ar).toMatch(/سبتمبر/);
     expect(ar).not.toMatch(/[٠-٩]/);
+  });
+});
+
+describe("the reader's own day", () => {
+  // Half past midnight in Warsaw on the 18th is half past ten at night in UTC
+  // on the 17th. The front page has to say the 18th.
+  const justAfterMidnightInWarsaw = new Date("2026-09-17T22:30:00.000Z");
+
+  it("reads the day in the visitor's zone, not the server's", () => {
+    expect(todayIn("Europe/Warsaw", justAfterMidnightInWarsaw)).toBe("2026-09-18");
+    expect(todayIn("UTC", justAfterMidnightInWarsaw)).toBe("2026-09-17");
+    expect(todayIn("America/Los_Angeles", justAfterMidnightInWarsaw)).toBe("2026-09-17");
+    expect(todayIn("Pacific/Auckland", justAfterMidnightInWarsaw)).toBe("2026-09-18");
+  });
+
+  it("falls back to UTC when it is given nothing, or nonsense", () => {
+    expect(todayIn(undefined, justAfterMidnightInWarsaw)).toBe("2026-09-17");
+    expect(todayIn("Moon/Base", justAfterMidnightInWarsaw)).toBe("2026-09-17");
+  });
+
+  it("only accepts a zone name Intl will take", () => {
+    expect(isTimeZone("Europe/Warsaw")).toBe(true);
+    expect(isTimeZone("UTC")).toBe(true);
+    expect(isTimeZone("Moon/Base")).toBe(false);
+    expect(isTimeZone("")).toBe(false);
+    expect(isTimeZone(undefined)).toBe(false);
+    expect(isTimeZone("'; DROP TABLE")).toBe(false);
+    expect(isTimeZone("a".repeat(200))).toBe(false);
   });
 });

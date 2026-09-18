@@ -98,13 +98,22 @@ export default async function TeamPage({ params }: { params: Params }) {
       <header className="flex flex-wrap items-center gap-4">
         <TeamCrest team={team} size={64} />
         <div className="min-w-0 flex-1 space-y-1">
+          {/* Built from the parts we actually have: a club with no city on
+              record gets a line about its country, not a line starting with a
+              comma. */}
           <div className="text-xs font-medium uppercase tracking-wide text-faint">
-            {team.city}, {countryName(team.countryCode, locale, team.country)} ·{" "}
-            {t("est", { year: team.founded })}
+            {[
+              [team.city, countryName(team.countryCode, locale, team.country)]
+                .filter(Boolean)
+                .join(", "),
+              team.founded ? t("est", { year: team.founded }) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-            <span>{team.stadium}</span>
+            {team.stadium && <span>{team.stadium}</span>}
             {team.manager && <span>{t("manager", { name: team.manager })}</span>}
             <span className="flex flex-wrap gap-1">
               {team.competitionIds.map((id) => {
